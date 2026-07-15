@@ -183,6 +183,24 @@ const Engine = (() => {
       }
     }
 
+    // 통신사 멤버십 등급 조건
+    if (b.required_grade) {
+      const order = split(p.grade_order);
+      const need = order.indexOf(b.required_grade);
+      const have = state.grade ? order.indexOf(state.grade) : -1;
+      if (need === -1) {
+        checks.push(`${b.required_grade} 등급 확인 필요`);
+        status = 'conditional';
+      } else if (have === -1) {
+        checks.push(`${b.required_grade} 이상 등급에서 제공 (등급 미선택)`);
+        status = 'conditional';
+      } else if (have < need) {
+        return { excluded: true, reason: `${b.required_grade} 이상 등급 필요` };
+      } else {
+        notes.push(`${b.required_grade} 이상 등급 혜택`);
+      }
+    }
+
     // 결제 수단/자금원 조건
     if (b.required_funding_method) {
       const f = b.required_funding_method;
