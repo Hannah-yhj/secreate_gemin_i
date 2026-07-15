@@ -20,14 +20,6 @@ const CARRIER_GRADES = {
 const STORAGE_KEY = 'payment-directive-v1';
 
 const Ico = {
-  home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-9.5z"/></svg>',
-  user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 19.5c1.8-3.2 4.2-4.5 7-4.5s5.2 1.3 7 4.5"/></svg>',
-  spark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/><circle cx="12" cy="12" r="3"/></svg>',
-  chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6.5A2.5 2.5 0 0 1 7.5 4h9A2.5 2.5 0 0 1 19 6.5v7a2.5 2.5 0 0 1-2.5 2.5H11l-4 3.5V16H7.5A2.5 2.5 0 0 1 5 13.5v-7z"/></svg>',
-  card: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18M7 15h4"/></svg>',
-  phone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M11 17h2"/></svg>',
-  chart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5M4 19h16"/><path d="M8 16v-5M12 16V8M16 16v-3"/></svg>',
-  bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16h12l-1.2-1.2A6 6 0 0 1 15 10.5V9a3 3 0 1 0-6 0v1.5a6 6 0 0 1-1.8 4.3L6 16z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg>',
   input: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h10M4 17h7"/><circle cx="18" cy="16" r="3"/></svg>',
   compare: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16M17 4v16M4 8h6M14 16h6"/></svg>',
   instruct: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h9a2 2 0 0 1 2 2v14l-3-2-3 2-3-2-3 2V6a2 2 0 0 1 2-2z"/><path d="M10 9h6M10 13h4"/></svg>',
@@ -111,26 +103,10 @@ function showToast(msg) {
   toastTimer = setTimeout(() => { host.innerHTML = ''; }, 2400);
 }
 
-function fillIcons(root = document) {
-  root.querySelectorAll('[data-ico]').forEach(el => {
-    const key = el.dataset.ico;
-    if (Ico[key] && !el.dataset.filled) {
-      el.innerHTML = Ico[key];
-      el.dataset.filled = '1';
-    }
-  });
-}
-
-function catMark(key) {
-  const ch = (key || '?').slice(0, 1);
-  return `<span class="cat-mark" aria-hidden="true">${esc(ch)}</span>`;
-}
-
 document.getElementById('todayLabel').textContent =
   new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' });
 
 loadPersisted();
-fillIcons(document);
 
 /* ---- 우측 메뉴 패널 ---- */
 function openDrawer() {
@@ -283,7 +259,6 @@ function render() {
   else if (S.page === 'mypage') m.innerHTML = viewMyPage();
   else if (S.page === 'benefits') m.innerHTML = viewBenefits();
   else m.innerHTML = viewMore();
-  fillIcons(m);
   bind();
   if (!S.addPanel) window.scrollTo(0, 0);
 }
@@ -531,11 +506,11 @@ function fabAndPanel() {
   <div class="fab-wrap">
     <div class="fab-menu ${menuOpen ? 'open' : ''}" ${menuOpen ? '' : 'hidden'}>
       <button type="button" data-open-add="carrier">
-        <span class="fi" data-ico="phone"></span>
+        <span class="fi">📱</span>
         <span><b>통신사 추가</b><small>통신사 · 멤버십 등급</small></span>
       </button>
       <button type="button" data-open-add="card">
-        <span class="fi" data-ico="card"></span>
+        <span class="fi">💳</span>
         <span><b>카드 추가</b><small>결제수단을 지갑에 등록</small></span>
       </button>
     </div>
@@ -678,7 +653,7 @@ function viewHome() {
   const cards = board.map(c => {
     if (!c.best) {
       return `<button type="button" class="cat" data-cat="${c.key}">
-        ${catMark(c.key)}<span class="ct">${c.key}</span>
+        <span class="ic">${c.icon}</span><span class="ct">${c.key}</span>
         <span class="none">등록된 혜택 없음</span></button>`;
     }
     const b = c.best, it = b.items[0], bf = it.benefit;
@@ -690,7 +665,7 @@ function viewHome() {
       : `${won(bf.benefit_value)}${bf.benefit_unit === '포인트' ? 'P' : '원'}`;
     return `<button type="button" class="cat" data-cat="${c.key}">
       ${dday ? `<span class="badge dday">${dday[0]}</span>` : isWknd ? `<span class="badge wknd">주말</span>` : ''}
-      ${catMark(c.key)}<span class="ct">${c.key}</span>
+      <span class="ic">${c.icon}</span><span class="ct">${c.key}</span>
       <span class="best"><b>${esc(shortName(b.product))}</b> · ${esc(bf.benefit_name)} <b>${rate}</b></span>
       <span class="val">~${won(b.grandTotal)}원 <small>${won(c.sample)}원 결제 시</small></span>
     </button>`;
@@ -711,7 +686,7 @@ function viewCalc() {
     ? Engine.brandsByCategory(S.q.category)
     : Engine.brandList();
   const catChips = Engine.HOME_CATS.map(c =>
-    `<button type="button" data-chip="${c.key}" class="${S.q.category === c.key ? 'on' : ''}">${c.key}</button>`
+    `<button type="button" data-chip="${c.key}" class="${S.q.category === c.key ? 'on' : ''}">${c.icon} ${c.key}</button>`
   ).join('');
   const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
   const brandPh = S.q.category
@@ -918,15 +893,15 @@ function viewMore() {
   <div class="more-layout">
     <div class="feature-list">
       <button type="button" class="feature-card on">
-        <span class="fi" data-ico="chat"></span>
+        <span class="fi">💬</span>
         <span><b>카드 추천 챗봇</b><small>소비 패턴에 맞는 카드를 대화로 찾아요</small></span>
       </button>
       <button type="button" class="feature-card coming">
-        <span class="fi" data-ico="chart"></span>
+        <span class="fi">📊</span>
         <span><b>월간 혜택 리포트</b><small>준비 중</small></span>
       </button>
       <button type="button" class="feature-card coming">
-        <span class="fi" data-ico="bell"></span>
+        <span class="fi">🔔</span>
         <span><b>한도 알림</b><small>준비 중</small></span>
       </button>
     </div>

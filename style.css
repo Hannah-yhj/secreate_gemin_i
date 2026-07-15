@@ -115,10 +115,8 @@ input,select,textarea{font-family:inherit;font-size:15px}
 .drawer-nav button.on{background:var(--blue-soft);box-shadow:inset 3px 0 0 var(--blue)}
 .drawer-nav .nav-ico{
   width:40px;height:40px;border-radius:10px;background:var(--bg);
-  display:flex;align-items:center;justify-content:center;flex:none;
-  color:var(--blue);
+  display:flex;align-items:center;justify-content:center;font-size:18px;flex:none;
 }
-.drawer-nav .nav-ico svg{width:20px;height:20px}
 .drawer-nav button.on .nav-ico{background:#fff;box-shadow:0 2px 8px rgba(26,86,219,.12)}
 .drawer-nav b{display:block;font-size:14px;font-weight:700}
 .drawer-nav small{display:block;font-size:11.5px;color:var(--mut);margin-top:2px}
@@ -393,9 +391,8 @@ p.sub{font-size:13px;color:var(--mut-ink);margin-bottom:12px}
 .fab-menu button:hover{background:var(--blue-soft)}
 .fab-menu .fi{
   width:40px;height:40px;border-radius:10px;background:var(--bg);
-  display:flex;align-items:center;justify-content:center;flex:none;color:var(--blue);
+  display:flex;align-items:center;justify-content:center;font-size:18px;flex:none;
 }
-.fab-menu .fi svg{width:20px;height:20px}
 .fab-menu b{display:block;font-size:14px;font-weight:700}
 .fab-menu small{display:block;font-size:11.5px;color:var(--mut);margin-top:2px}
 
@@ -506,12 +503,7 @@ p.sub{font-size:13px;color:var(--mut-ink);margin-bottom:12px}
   transition:border-color .15s, box-shadow .15s, transform .15s;
 }
 .cat:hover{border-color:var(--blue-mid);box-shadow:0 8px 24px rgba(26,86,219,.12);transform:translateY(-2px)}
-.cat-mark{
-  width:36px;height:36px;border-radius:10px;margin-bottom:4px;
-  display:inline-flex;align-items:center;justify-content:center;
-  background:var(--blue-soft);color:var(--blue);
-  font-family:var(--display);font-size:15px;font-weight:800;
-}
+.cat .ic{font-size:22px}
 .cat .ct{font-size:14.5px;font-weight:800;letter-spacing:-.3px;margin-top:2px}
 .cat .best{font-size:12px;color:var(--mut);line-height:1.45;margin-top:2px}
 .cat .best b{color:var(--ink);font-weight:700}
@@ -696,9 +688,8 @@ details.more[open] summary::before{transform:rotate(90deg)}
 .feature-card:hover:not(.coming){border-color:var(--blue-mid)}
 .feature-card .fi{
   width:44px;height:44px;border-radius:10px;background:var(--blue-soft);
-  display:flex;align-items:center;justify-content:center;flex:none;color:var(--blue);
+  display:flex;align-items:center;justify-content:center;font-size:18px;flex:none;
 }
-.feature-card .fi svg{width:22px;height:22px}
 .feature-card b{display:block;font-size:14px;font-weight:700}
 .feature-card small{display:block;font-size:12px;color:var(--mut);margin-top:2px}
 .feature-card.on{border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-soft)}
@@ -722,8 +713,8 @@ details.more[open] summary::before{transform:rotate(90deg)}
 .bottom-nav button.on{color:var(--blue);background:var(--blue-soft)}
 .bn-ico{
   width:22px;height:22px;display:flex;align-items:center;justify-content:center;
+  font-size:18px;line-height:1;
 }
-.bn-ico svg{width:20px;height:20px}
 
 /* ---- 토스트 ---- */
 .toast-host{
