@@ -1,6 +1,5 @@
 let DB = null;
 
-// kwak is babo
 
   /* ===== 결제 최적화 엔진 ===== */
 const Engine = (() => {
