@@ -73,15 +73,29 @@ function displayInitial() {
 }
 
 function avatarHtml(cls = 'avatar', opts = {}) {
-  const editable = opts.editable ? ' avatar-btn' : '';
+  const editable = opts.editable ? ' avatar-btn open-profile-edit' : '';
   const label = opts.editable ? ' aria-label="프로필 편집"' : '';
   const tag = opts.editable ? 'button' : 'span';
-  const type = opts.editable ? ' type="button" id="openProfileEdit"' : '';
+  const type = opts.editable ? ' type="button"' : '';
   const color = S.user.avatarColor || '#1A56DB';
   if (S.user.avatar) {
     return `<${tag}${type} class="${cls}${editable} has-photo"${label}><img src="${esc(S.user.avatar)}" alt=""></${tag}>`;
   }
   return `<${tag}${type} class="${cls}${editable}"${label} style="background:${esc(color)}">${esc(displayInitial())}</${tag}>`;
+}
+
+function updateDrawerProfile() {
+  const box = $('#drawerProfile');
+  if (!box) return;
+  const sub = S.user.loggedIn ? (S.user.email || '프로필 편집') : '프로필 편집';
+  box.innerHTML = `
+    <button type="button" class="drawer-profile open-profile-edit" aria-label="프로필 편집">
+      ${avatarHtml('avatar')}
+      <span class="drawer-profile-text">
+        <b>${esc(displayName())}</b>
+        <small>${esc(sub)}</small>
+      </span>
+    </button>`;
 }
 
 function openProfileEditor() {
@@ -93,6 +107,9 @@ function openProfileEditor() {
   S.showProfileEdit = true;
   S.showLoginForm = false;
   S.addPanel = null;
+  S.page = 'mypage';
+  closeDrawer();
+  savePersisted();
   render();
 }
 
@@ -198,10 +215,8 @@ function showToast(msg) {
   toastTimer = setTimeout(() => { host.innerHTML = ''; }, 2400);
 }
 
-document.getElementById('todayLabel').textContent =
-  new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' });
-
 loadPersisted();
+updateDrawerProfile();
 
 /* ---- 우측 메뉴 패널 ---- */
 function openDrawer() {
@@ -362,6 +377,7 @@ function render() {
   else if (S.page === 'mypage') m.innerHTML = viewMyPage();
   else if (S.page === 'benefits') m.innerHTML = viewBenefits();
   else m.innerHTML = viewMore();
+  updateDrawerProfile();
   bind();
   if (!S.addPanel) window.scrollTo(0, 0);
 }
@@ -1159,8 +1175,9 @@ function bind() {
     render();
   });
 
-  const openProfileEdit = $('#openProfileEdit');
-  if (openProfileEdit) openProfileEdit.addEventListener('click', openProfileEditor);
+  $$('.open-profile-edit').forEach(el => {
+    el.addEventListener('click', openProfileEditor);
+  });
   const closeProfileEdit = $('#closeProfileEdit');
   if (closeProfileEdit) closeProfileEdit.addEventListener('click', () => closeProfileEditor(true));
   const saveProfileBtn = $('#saveProfileBtn');

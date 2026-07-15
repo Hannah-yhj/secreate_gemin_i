@@ -121,8 +121,23 @@ input,select,textarea{font-family:inherit;font-size:15px}
 .drawer-nav b{display:block;font-size:14px;font-weight:700}
 .drawer-nav small{display:block;font-size:11.5px;color:var(--mut);margin-top:2px}
 .sidebar-foot{
-  padding:14px 20px 20px;border-top:1px solid var(--line);
-  font-family:var(--mono);font-size:11.5px;color:var(--mut);
+  padding:12px;border-top:1px solid var(--line);
+}
+.drawer-profile{
+  display:flex;align-items:center;gap:12px;width:100%;
+  border:none;background:transparent;text-align:left;
+  padding:10px 10px;border-radius:12px;color:var(--ink);
+  cursor:pointer;transition:background .15s;
+}
+.drawer-profile:hover{background:var(--blue-soft)}
+.drawer-profile .avatar{width:42px;height:42px;font-size:15px}
+.drawer-profile-text{flex:1;min-width:0}
+.drawer-profile-text b{
+  display:block;font-size:14px;font-weight:700;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.drawer-profile-text small{
+  display:block;font-size:11.5px;color:var(--mut);margin-top:2px;
 }
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 
@@ -284,12 +299,6 @@ p.sub{font-size:13px;color:var(--mut-ink);margin-bottom:12px}
 .user-chip .avatar img,.avatar img{width:100%;height:100%;object-fit:cover;display:block}
 .avatar-btn{cursor:pointer;transition:transform .15s, box-shadow .15s}
 .avatar-btn:hover{transform:scale(1.06);box-shadow:0 0 0 3px var(--blue-soft)}
-.avatar-btn::after{
-  content:'✎';position:absolute;right:-2px;bottom:-2px;
-  width:16px;height:16px;border-radius:50%;background:var(--ink);color:#fff;
-  font-size:9px;display:flex;align-items:center;justify-content:center;
-  box-shadow:0 1px 4px rgba(0,0,0,.2);
-}
 .user-chip .nm{font-weight:700;font-size:14px}
 .user-chip .em{font-size:12px;color:var(--mut)}
 .user-chip.guest .avatar:not(.has-photo){background:var(--mut-ink)}
