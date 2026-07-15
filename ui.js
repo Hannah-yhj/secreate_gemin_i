@@ -342,6 +342,21 @@ function shortName(p) {
     .replace(' 카드', '').replace(' 체크카드', '').replace(' 체크', '');
 }
 
+function telecomProductId() {
+  if (!DB || !S.carrier || !S.grade) return null;
+  const p = DB.products.find(p => p.service_type === '통신사' && p.carrier_code === S.carrier);
+  return p ? p.product_id : null;
+}
+
+function effectiveWallet() {
+  const tid = telecomProductId();
+  return tid ? [...new Set([...S.wallet, tid])] : S.wallet;
+}
+
+function engineState() {
+  return { ...S.state, grade: S.grade };
+}
+
 function spendStatus(pid) {
   const spend = S.state.spend[pid];
   if (spend == null) return { cls: 'unk', label: '실적 미입력' };
@@ -710,7 +725,7 @@ const PROVIDER_SHORT = {
 };
 
 function providerList() {
-  return [...new Set(DB.products.map(p => p.provider))];
+  return [...new Set(DB.products.filter(p => p.service_type !== '통신사').map(p => p.provider))];
 }
 
 function renderProviderTabs() {
@@ -726,6 +741,7 @@ function renderProviderTabs() {
 function filteredAddableCards() {
   const q = S.cardSearch.trim().toLowerCase();
   return DB.products.filter(p => {
+    if (p.service_type === '통신사') return false;
     if (S.wallet.includes(p.product_id)) return false;
     if (S.cardProvider !== 'all' && p.provider !== S.cardProvider) return false;
     if (!q) return true;
@@ -737,6 +753,7 @@ function filteredAddableCards() {
 function renderAddCardList() {
   const inWallet = new Set(S.wallet);
   const pool = DB.products.filter(p => {
+    if (p.service_type === '통신사') return false;
     if (inWallet.has(p.product_id)) return false;
     if (S.cardProvider !== 'all' && p.provider !== S.cardProvider) return false;
     return true;
@@ -819,14 +836,15 @@ function viewBenefits() {
 }
 
 function viewHome() {
-  if (!S.wallet.length) {
+  const wallet = effectiveWallet();
+  if (!wallet.length) {
     return emptyWalletHtml({
       ctaId: 'goMyPageAdd',
       ctaLabel: '카드 추가하기',
-      hint: '카드를 등록하면 카테고리별 최적 수단이 보여요.',
+      hint: '카드나 통신사를 등록하면 카테고리별 최적 수단이 보여요.',
     });
   }
-  const board = Engine.homeBoard(S.state, S.wallet, new Date());
+  const board = Engine.homeBoard(engineState(), wallet, new Date());
   const cards = board.map(c => {
     if (!c.best) {
       return `<button type="button" class="cat" data-cat="${c.key}">
@@ -923,11 +941,12 @@ function viewCalc() {
 function renderResults() {
   const box = $('#results');
   if (!box) return;
-  if (!S.wallet.length) {
+  const wallet = effectiveWallet();
+  if (!wallet.length) {
     box.innerHTML = emptyWalletHtml({
       ctaId: 'goMyPageAdd',
       ctaLabel: '카드 추가하기',
-      hint: '마이페이지에서 결제수단을 먼저 등록해 주세요.',
+      hint: '마이페이지에서 결제수단이나 통신사를 먼저 등록해 주세요.',
     });
     $('#goMyPageAdd')?.addEventListener('click', () => {
       S.page = 'mypage';
@@ -950,7 +969,7 @@ function renderResults() {
     date: paymentDate(),
     time: S.q.time || null,
   };
-  const combos = Engine.buildCombos(input, S.state, S.wallet);
+  const combos = Engine.buildCombos(input, engineState(), wallet);
   const target = S.q.brand || S.q.category;
   if (!combos.length) {
     box.innerHTML = `<div class="res-head"><span><span class="q">${esc(target)}</span> · ${won(S.q.amount)}원</span></div>
