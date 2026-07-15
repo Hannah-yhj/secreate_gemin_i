@@ -272,13 +272,12 @@ function goPage(page) {
   render();
 }
 
-$$('.drawer-nav [data-page]').forEach(btn => {
-  btn.addEventListener('click', () => goPage(btn.dataset.page));
+document.addEventListener('click', e => {
+  const nav = e.target.closest('.drawer-nav [data-page], #bottomNav [data-page], .logo-btn[data-page]');
+  if (!nav) return;
+  e.preventDefault();
+  goPage(nav.dataset.page || 'home');
 });
-$$('#bottomNav [data-page]').forEach(btn => {
-  btn.addEventListener('click', () => goPage(btn.dataset.page));
-});
-document.querySelector('.logo-btn')?.addEventListener('click', () => goPage('home'));
 
 function startApp() {
   if (!S.wallet.length) {
@@ -300,19 +299,32 @@ function startApp() {
 
 /* ---- 데이터 로드 ---- */
 render();
+function applyDB(data) {
+  DB = data;
+  Engine.init(DB);
+  const spend = { ...Object.fromEntries(DB.products.map(p => [p.product_id, null])), ...S.state.spend };
+  S.state.spend = spend;
+  S.wallet = S.wallet.filter(id => DB.products.some(p => p.product_id === id));
+  savePersisted();
+  render();
+}
 fetch('/api/benefits')
-  .then(res => res.json())
-  .then(data => {
-    DB = data;
-    Engine.init(DB);
-    const spend = { ...Object.fromEntries(DB.products.map(p => [p.product_id, null])), ...S.state.spend };
-    S.state.spend = spend;
-    S.wallet = S.wallet.filter(id => DB.products.some(p => p.product_id === id));
-    savePersisted();
-    if (S.page !== 'home') render();
+  .then(res => {
+    if (!res.ok) throw new Error('api');
+    return res.json();
   })
-  .catch(err => {
-    console.error('DB 로딩 실패:', err);
+  .then(applyDB)
+  .catch(() => {
+    fetch('db.json')
+      .then(res => {
+        if (!res.ok) throw new Error('db.json');
+        return res.json();
+      })
+      .then(applyDB)
+      .catch(err => {
+        console.error('DB 로딩 실패:', err);
+        if (S.page !== 'home') render();
+      });
   });
 
 function paymentDate() {
@@ -365,21 +377,27 @@ function render() {
   $$('.drawer-nav [data-page]').forEach(b => b.classList.toggle('on', b.dataset.page === S.page));
   $$('#bottomNav [data-page]').forEach(b => b.classList.toggle('on', b.dataset.page === S.page));
   document.querySelector('.app')?.classList.toggle('landing-mode', S.page === 'home');
-  const bottom = $('#bottomNav');
-  if (bottom) bottom.hidden = S.page === 'home';
 
   const m = $('#main');
-  if (!DB && S.page !== 'home') {
-    m.innerHTML = `<div class="emptywallet"><b>불러오는 중…</b></div>`;
-    return;
+  try {
+    if (S.page === 'home') {
+      m.innerHTML = viewLanding();
+    } else if (S.page === 'mypage') {
+      m.innerHTML = viewMyPage();
+    } else if (!DB) {
+      m.innerHTML = `<div class="emptywallet"><b>불러오는 중…</b></div>`;
+    } else if (S.page === 'benefits') {
+      m.innerHTML = viewBenefits();
+    } else {
+      m.innerHTML = viewMore();
+    }
+  } catch (err) {
+    console.error('render failed:', err);
+    m.innerHTML = `<div class="emptywallet"><b>화면을 불러오지 못했어요</b><p>${esc(err.message || '잠시 후 다시 시도해 주세요.')}</p></div>`;
   }
-  if (S.page === 'home') m.innerHTML = viewLanding();
-  else if (S.page === 'mypage') m.innerHTML = viewMyPage();
-  else if (S.page === 'benefits') m.innerHTML = viewBenefits();
-  else m.innerHTML = viewMore();
   updateDrawerProfile();
   bind();
-  if (!S.addPanel) window.scrollTo(0, 0);
+  if (!S.addPanel && !S.showProfileEdit) window.scrollTo(0, 0);
 }
 
 /* ==================== 랜딩 ==================== */
@@ -426,6 +444,10 @@ function viewLanding() {
 function viewMyPage() {
   if (S.showProfileEdit) return viewProfileEdit();
   if (S.showLoginForm && !S.user.loggedIn) return viewLoginGate();
+  if (!DB) {
+    return `<div class="page-head"><h2>마이페이지</h2><p>내 카드와 통신사를 관리해요</p></div>
+      <div class="emptywallet"><b>불러오는 중…</b></div>`;
+  }
   return viewMyCards();
 }
 

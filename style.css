@@ -44,6 +44,9 @@ input,select,textarea{font-family:inherit;font-size:15px}
 }
 .app.landing-mode{background:#0B1F4A}
 .app.landing-mode main{max-width:none;padding:0;margin:0}
+@media (max-width:760px){
+  .app.landing-mode main{padding-bottom:calc(72px + env(safe-area-inset-bottom))}
+}
 
 /* ---- 상단 헤더 (로고 + 우측 햄버거) ---- */
 .site-header{
@@ -810,8 +813,6 @@ details.more[open] summary::before{transform:rotate(90deg)}
   .chat-wrap{height:min(65dvh,520px)}
   .fab{width:54px;height:54px}
   .bottom-nav{display:grid}
-  .bottom-nav[hidden]{display:none!important}
   .fab-wrap{bottom:calc(72px + env(safe-area-inset-bottom));right:16px}
   .toast-host{bottom:calc(78px + env(safe-area-inset-bottom))}
-  .menu-btn{display:none}
 }
