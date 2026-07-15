@@ -21,6 +21,7 @@ const S = {
   user: { loggedIn: false, name: '', email: '' },
   carrier: null,
   grade: null,
+  addPanel: null, // null | 'menu' | 'carrier' | 'card'
   q: {
     brand: '', category: null, amount: 10000,
     channel: null, dayMode: 'today', day: null, time: ''
@@ -70,6 +71,7 @@ window.addEventListener('resize', () => {
 $$('.drawer-nav [data-page]').forEach(btn => {
   btn.addEventListener('click', () => {
     S.page = btn.dataset.page;
+    S.addPanel = null;
     if (isMobileNav()) closeDrawer();
     render();
   });
@@ -81,7 +83,7 @@ fetch('/api/benefits')
   .then(data => {
     DB = data;
     Engine.init(DB);
-    S.wallet = DB.products.map(p => p.product_id);
+    S.wallet = [];
     S.state.spend = Object.fromEntries(DB.products.map(p => [p.product_id, null]));
     render();
   })
@@ -128,141 +130,198 @@ function render() {
   else if (S.page === 'benefits') m.innerHTML = viewBenefits();
   else m.innerHTML = viewMore();
   bind();
-  window.scrollTo(0, 0);
+  if (!S.addPanel) window.scrollTo(0, 0);
 }
 
 /* ==================== 마이페이지 ==================== */
 function viewMyPage() {
+  if (!S.user.loggedIn) return viewLoginGate();
+  return viewMyCards();
+}
+
+function viewLoginGate() {
   return `
-  <div class="page-head">
-    <h2>마이페이지</h2>
-    <p>로그인 · 통신사 · 카드 추가/관리</p>
-  </div>
-  <div class="mypage-grid">
-    <div class="mypage-col">
-      ${sectionLogin()}
-      <div style="height:16px"></div>
-      ${sectionCarrier()}
-    </div>
-    <div class="mypage-col">
-      ${sectionCards()}
-      <div style="height:16px"></div>
-      ${sectionSpend()}
-    </div>
-    <div class="cta-row">
-      <button class="cta" id="goBenefits" type="button">저장하고 혜택 추천 보기</button>
-    </div>
+  <div class="login-gate">
+    <section class="sheet login-card">
+      <div class="login-hero">
+        <div class="login-mark">결제</div>
+        <h2>로그인</h2>
+        <p>마이페이지에서 카드를 관리하려면 로그인해 주세요.</p>
+      </div>
+      <div class="login-box">
+        <div class="field" style="margin:0">
+          <label class="fl" for="loginEmail">이메일</label>
+          <input type="email" id="loginEmail" placeholder="you@example.com" value="${esc(S.user.email)}">
+        </div>
+        <div class="field" style="margin:0">
+          <label class="fl" for="loginPw">비밀번호</label>
+          <input type="password" id="loginPw" placeholder="••••••••">
+        </div>
+        <button class="cta block" id="loginBtn" type="button">로그인</button>
+        <p class="login-hint">데모용이에요. 아무 이메일·비밀번호나 입력해도 됩니다.</p>
+      </div>
+    </section>
   </div>`;
 }
 
-function sectionLogin() {
-  if (S.user.loggedIn) {
-    const initial = (S.user.name || 'U').slice(0, 1);
-    return `<section class="sheet">
-      <h3 class="sec"><span class="sec-num">1</span>로그인</h3>
-      <div class="login-status">
-        <div class="avatar">${esc(initial)}</div>
-        <div>
-          <div class="nm">${esc(S.user.name || '회원')}</div>
-          <div class="em">${esc(S.user.email)}</div>
-        </div>
+function viewMyCards() {
+  const initial = (S.user.name || 'U').slice(0, 1);
+  const cards = DB.products.filter(p => S.wallet.includes(p.product_id));
+  const cardTiles = cards.map(ownedCardTile).join('');
+
+  const carrierTile = S.carrier ? `
+    <article class="owned-tile carrier-tile">
+      <div class="owned-top">
+        <span class="carrier-badge">${esc(S.carrier)}</span>
+        <button type="button" class="icon-x" data-remove-carrier aria-label="통신사 삭제">✕</button>
       </div>
-      <button class="cta ghost" id="logoutBtn" type="button">로그아웃</button>
-    </section>`;
+      <div class="owned-name">통신사</div>
+      <div class="owned-meta">${esc(S.grade || '등급 미설정')}</div>
+      <button type="button" class="linkish" data-open-add="carrier">등급 변경</button>
+    </article>` : '';
+
+  const empty = !cards.length && !S.carrier ? `
+    <div class="owned-empty">
+      <b>아직 등록된 항목이 없어요</b>
+      <p>오른쪽 아래 <strong>+</strong> 버튼으로 카드나 통신사를 추가해 주세요.</p>
+    </div>` : '';
+
+  return `
+  <div class="page-head mypage-head">
+    <div>
+      <h2>마이페이지</h2>
+      <p>내 카드와 통신사를 관리해요</p>
+    </div>
+    <div class="user-chip">
+      <span class="avatar">${esc(initial)}</span>
+      <div>
+        <div class="nm">${esc(S.user.name || '회원')}</div>
+        <div class="em">${esc(S.user.email)}</div>
+      </div>
+      <button type="button" class="cta ghost sm" id="logoutBtn">로그아웃</button>
+    </div>
+  </div>
+
+  <div class="owned-grid">
+    ${carrierTile}
+    ${cardTiles}
+    ${empty}
+  </div>
+
+  ${cards.length || S.carrier ? `
+  <div class="mypage-actions">
+    <button class="cta" id="goBenefits" type="button">혜택 추천 보기</button>
+  </div>` : ''}
+
+  ${fabAndPanel()}`;
+}
+
+function ownedCardTile(p) {
+  const st = p.product_type === '간편결제'
+    ? { cls: 'ok', label: '실적 조건 없음' }
+    : spendStatus(p.product_id);
+
+  let opts = '';
+  if (p.product_id === 'P_KB_MYWISH') {
+    opts = `<select data-opt="mywishPack" aria-label="My WE:SH 서비스팩">
+      <option value="">서비스팩 미선택</option>
+      ${['먹는데 진심', '노는데 진심', '관리에 진심'].map(v =>
+        `<option ${S.state.mywishPack === v ? 'selected' : ''}>${v}</option>`).join('')}
+    </select>`;
   }
-  return `<section class="sheet">
-    <h3 class="sec"><span class="sec-num">1</span>로그인</h3>
-    <p class="sub">데모용 로그인이에요. 아무 이메일·비밀번호나 입력해도 됩니다.</p>
-    <div class="login-box">
-      <div class="field" style="margin:0">
-        <label class="fl" for="loginEmail">이메일</label>
-        <input type="email" id="loginEmail" placeholder="you@example.com" value="${esc(S.user.email)}">
-      </div>
-      <div class="field" style="margin:0">
-        <label class="fl" for="loginPw">비밀번호</label>
-        <input type="password" id="loginPw" placeholder="••••••••">
-      </div>
-      <button class="cta" id="loginBtn" type="button">로그인</button>
-    </div>
-  </section>`;
-}
+  if (p.product_id === 'P_KB_NORI2') {
+    opts = `<select data-opt="nori2Variant" aria-label="노리2 발급 유형">
+      <option value="">발급 유형 미선택</option>
+      ${['KB Pay', 'Global'].map(v =>
+        `<option ${S.state.nori2Variant === v ? 'selected' : ''}>${v}형</option>`).join('')}
+    </select>`;
+  }
 
-function sectionCarrier() {
-  return `<section class="sheet">
-    <h3 class="sec"><span class="sec-num">2</span>통신사 선택 및 등급</h3>
-    <p class="sub">통신사 제휴 혜택 추천에 활용해요.</p>
-    <div class="carrier-grid">
-      ${CARRIERS.map(c => `<button type="button" data-carrier="${c}" class="${S.carrier === c ? 'on' : ''}">${c}</button>`).join('')}
-    </div>
-    <label class="fl">멤버십 등급</label>
-    <div class="grade-row">
-      ${GRADES.map(g => `<button type="button" data-grade="${g}" class="${S.grade === g ? 'on' : ''}">${g}</button>`).join('')}
-    </div>
-  </section>`;
-}
-
-function sectionCards() {
-  const rows = DB.products.map(p => {
-    const on = S.wallet.includes(p.product_id);
-    let opts = '';
-    if (p.product_id === 'P_KB_MYWISH' && on) {
-      opts = `<div class="opts"><select data-opt="mywishPack" aria-label="My WE:SH 서비스팩">
-        <option value="">서비스팩 미선택</option>
-        ${['먹는데 진심', '노는데 진심', '관리에 진심'].map(v =>
-          `<option ${S.state.mywishPack === v ? 'selected' : ''}>${v}</option>`).join('')}
-      </select></div>`;
-    }
-    if (p.product_id === 'P_KB_NORI2' && on) {
-      opts = `<div class="opts"><select data-opt="nori2Variant" aria-label="노리2 발급 유형">
-        <option value="">발급 유형 미선택</option>
-        ${['KB Pay', 'Global'].map(v =>
-          `<option ${S.state.nori2Variant === v ? 'selected' : ''}>${v}형</option>`).join('')}
-      </select></div>`;
-    }
-    return `<div class="pm">
-      <span class="plate" style="background:${PLATE_COLORS[p.product_id]}">${PLATE_LABEL[p.product_id]}</span>
-      <div class="info">
-        <div class="nm">${esc(p.product_name)}</div>
-        <div class="tp">${esc(p.product_type)} · ${esc(p.provider)}</div>
-        ${opts}
-      </div>
-      <label class="sw">
-        <input type="checkbox" data-pm="${p.product_id}" ${on ? 'checked' : ''} aria-label="${esc(p.product_name)} 보유">
-        <span class="tr"></span><span class="kn"></span>
-      </label>
+  const spend = p.product_type === '간편결제' ? '' : `
+    <div class="owned-spend">
+      <span class="spend-badge ${st.cls}">${st.label}</span>
+      <select data-spend="${p.product_id}" aria-label="${esc(p.product_name)} 전월실적">
+        ${SPEND_OPTS.map(([v, l]) =>
+          `<option value="${v === null ? '' : v}" ${S.state.spend[p.product_id] === v ? 'selected' : ''}>${l}</option>`
+        ).join('')}
+      </select>
     </div>`;
-  }).join('');
 
-  return `<section class="sheet">
-    <h3 class="sec"><span class="sec-num">3</span>카드 추가 및 삭제</h3>
-    <p class="sub">켜 둔 수단끼리만 비교해서 추천해요. 끄면 지갑에서 제외됩니다.</p>
-    <div>${rows}</div>
-  </section>`;
+  return `<article class="owned-tile">
+    <div class="owned-top">
+      <span class="plate" style="background:${PLATE_COLORS[p.product_id]}">${PLATE_LABEL[p.product_id]}</span>
+      <button type="button" class="icon-x" data-remove-card="${p.product_id}" aria-label="카드 삭제">✕</button>
+    </div>
+    <div class="owned-name">${esc(p.product_name)}</div>
+    <div class="owned-meta">${esc(p.product_type)} · ${esc(p.provider)}</div>
+    ${opts ? `<div class="owned-opts">${opts}</div>` : ''}
+    ${spend}
+  </article>`;
 }
 
-function sectionSpend() {
-  const spendRows = DB.products
-    .filter(p => p.product_type !== '간편결제' && S.wallet.includes(p.product_id))
-    .map(p => {
-      const st = spendStatus(p.product_id);
-      return `<div class="spendrow">
-        <div style="flex:1;min-width:0">
-          <span class="lb">${esc(p.product_name)}</span>
-          <div style="margin-top:4px"><span class="spend-badge ${st.cls}">${st.label}</span></div>
-        </div>
-        <select data-spend="${p.product_id}" aria-label="${esc(p.product_name)} 전월실적">
-          ${SPEND_OPTS.map(([v, l]) =>
-            `<option value="${v === null ? '' : v}" ${S.state.spend[p.product_id] === v ? 'selected' : ''}>${l}</option>`
-          ).join('')}
-        </select>
-      </div>`;
-    }).join('');
+function fabAndPanel() {
+  const open = S.addPanel;
+  const menuOpen = open === 'menu';
+  const panelOpen = open === 'carrier' || open === 'card';
 
-  return `<section class="sheet">
-    <h3 class="sec"><span class="sec-num">4</span>카드 관리 <span style="font-weight:500;font-size:12px;color:var(--mut)">(실적 충족)</span></h3>
-    <p class="sub">전월 실적을 입력하면 혜택 조건·한도 계산이 더 정확해져요.</p>
-    ${spendRows || '<p class="sub" style="padding:8px 0">실적이 필요한 카드가 지갑에 없어요.</p>'}
-  </section>`;
+  let panelBody = '';
+  if (open === 'carrier') {
+    panelBody = `
+      <div class="add-panel-head">
+        <button type="button" class="back-btn" data-open-add="menu">←</button>
+        <h3>통신사 추가</h3>
+        <button type="button" class="icon-x" data-close-add aria-label="닫기">✕</button>
+      </div>
+      <p class="sub">이용 중인 통신사와 멤버십 등급을 선택하세요.</p>
+      <div class="carrier-grid">
+        ${CARRIERS.map(c => `<button type="button" data-carrier="${c}" class="${S.carrier === c ? 'on' : ''}">${c}</button>`).join('')}
+      </div>
+      <label class="fl">멤버십 등급</label>
+      <div class="grade-row">
+        ${GRADES.map(g => `<button type="button" data-grade="${g}" class="${S.grade === g ? 'on' : ''}">${g}</button>`).join('')}
+      </div>
+      <button type="button" class="cta block" id="saveCarrierBtn" ${S.carrier ? '' : 'disabled'}>저장</button>`;
+  } else if (open === 'card') {
+    const available = DB.products.filter(p => !S.wallet.includes(p.product_id));
+    panelBody = `
+      <div class="add-panel-head">
+        <button type="button" class="back-btn" data-open-add="menu">←</button>
+        <h3>카드 추가</h3>
+        <button type="button" class="icon-x" data-close-add aria-label="닫기">✕</button>
+      </div>
+      <p class="sub">지갑에 넣을 결제수단을 선택하세요.</p>
+      ${available.length ? available.map(p => `
+        <button type="button" class="add-card-row" data-add-card="${p.product_id}">
+          <span class="plate" style="background:${PLATE_COLORS[p.product_id]}">${PLATE_LABEL[p.product_id]}</span>
+          <span class="info">
+            <span class="nm">${esc(p.product_name)}</span>
+            <span class="tp">${esc(p.product_type)} · ${esc(p.provider)}</span>
+          </span>
+          <span class="plus-mini">+</span>
+        </button>`).join('') : '<p class="sub">추가할 수 있는 카드가 모두 등록되어 있어요.</p>'}`;
+  }
+
+  return `
+  <div class="fab-wrap">
+    <div class="fab-menu ${menuOpen ? 'open' : ''}" ${menuOpen ? '' : 'hidden'}>
+      <button type="button" data-open-add="carrier">
+        <span class="fi">📱</span>
+        <span><b>통신사 추가</b><small>통신사 · 멤버십 등급</small></span>
+      </button>
+      <button type="button" data-open-add="card">
+        <span class="fi">💳</span>
+        <span><b>카드 추가</b><small>결제수단을 지갑에 등록</small></span>
+      </button>
+    </div>
+    <button type="button" class="fab ${open ? 'on' : ''}" id="fabAdd" aria-label="추가" aria-expanded="${open ? 'true' : 'false'}">
+      ${open ? '✕' : '+'}
+    </button>
+  </div>
+
+  <div class="add-backdrop ${panelOpen ? 'show' : ''}" data-close-add ${panelOpen ? '' : 'hidden'}></div>
+  <aside class="add-panel ${panelOpen ? 'open' : ''}" aria-hidden="${panelOpen ? 'false' : 'true'}">
+    ${panelBody}
+  </aside>`;
 }
 
 /* ==================== 혜택 추천 ==================== */
@@ -602,13 +661,33 @@ function bind() {
     const name = email.split('@')[0] || '회원';
     if (!email) { alert('이메일을 입력해 주세요.'); return; }
     S.user = { loggedIn: true, name, email };
+    S.addPanel = null;
     render();
+  });
+  const loginPw = $('#loginPw');
+  if (loginPw) loginPw.addEventListener('keydown', e => {
+    if (e.key === 'Enter') loginBtn?.click();
   });
   const logoutBtn = $('#logoutBtn');
   if (logoutBtn) logoutBtn.addEventListener('click', () => {
     S.user = { loggedIn: false, name: '', email: S.user.email };
+    S.addPanel = null;
     render();
   });
+
+  const fab = $('#fabAdd');
+  if (fab) fab.addEventListener('click', () => {
+    S.addPanel = S.addPanel ? null : 'menu';
+    render();
+  });
+  $$('[data-open-add]').forEach(el => el.addEventListener('click', () => {
+    S.addPanel = el.dataset.openAdd;
+    render();
+  }));
+  $$('[data-close-add]').forEach(el => el.addEventListener('click', () => {
+    S.addPanel = null;
+    render();
+  }));
 
   $$('[data-carrier]').forEach(el => el.addEventListener('click', () => {
     S.carrier = el.dataset.carrier;
@@ -618,14 +697,32 @@ function bind() {
     S.grade = el.dataset.grade;
     render();
   }));
+  const saveCarrier = $('#saveCarrierBtn');
+  if (saveCarrier) saveCarrier.addEventListener('click', () => {
+    if (!S.carrier) return;
+    if (!S.grade) S.grade = '일반';
+    S.addPanel = null;
+    render();
+  });
 
-  $$('[data-pm]').forEach(el => el.addEventListener('change', e => {
-    const id = e.target.dataset.pm;
-    S.wallet = e.target.checked
-      ? [...new Set([...S.wallet, id])]
-      : S.wallet.filter(x => x !== id);
+  $$('[data-add-card]').forEach(el => el.addEventListener('click', () => {
+    const id = el.dataset.addCard;
+    S.wallet = [...new Set([...S.wallet, id])];
+    S.addPanel = null;
     render();
   }));
+  $$('[data-remove-card]').forEach(el => el.addEventListener('click', () => {
+    const id = el.dataset.removeCard;
+    S.wallet = S.wallet.filter(x => x !== id);
+    render();
+  }));
+  const removeCarrier = document.querySelector('[data-remove-carrier]');
+  if (removeCarrier) removeCarrier.addEventListener('click', () => {
+    S.carrier = null;
+    S.grade = null;
+    render();
+  });
+
   $$('[data-spend]').forEach(el => el.addEventListener('change', e => {
     S.state.spend[e.target.dataset.spend] = e.target.value === '' ? null : Number(e.target.value);
     render();
