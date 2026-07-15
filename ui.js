@@ -31,8 +31,10 @@ const S = {
   benefitTab: 'map',
   wallet: [],
   state: { spend: {}, mywishPack: null, nori2Variant: null },
-  user: { loggedIn: false, name: '', email: '' },
+  user: { loggedIn: false, name: '', email: '', nickname: '', avatar: null, avatarColor: '#1A56DB' },
   showLoginForm: false,
+  showProfileEdit: false,
+  profileSnap: null,
   carrier: null,
   grade: null,
   cardSearch: '',
@@ -58,6 +60,91 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>'
 let calcTimer = null;
 let toastTimer = null;
 
+const AVATAR_COLORS = ['#1A56DB', '#0E7A5F', '#C9A227', '#5B4B8A', '#C2410C', '#0F766E', '#1D4ED8', '#B45309'];
+
+function displayName() {
+  if (S.user.nickname?.trim()) return S.user.nickname.trim();
+  if (S.user.loggedIn) return S.user.name || '회원';
+  return '게스트';
+}
+
+function displayInitial() {
+  return displayName().slice(0, 1).toUpperCase();
+}
+
+function avatarHtml(cls = 'avatar', opts = {}) {
+  const editable = opts.editable ? ' avatar-btn' : '';
+  const label = opts.editable ? ' aria-label="프로필 편집"' : '';
+  const tag = opts.editable ? 'button' : 'span';
+  const type = opts.editable ? ' type="button" id="openProfileEdit"' : '';
+  const color = S.user.avatarColor || '#1A56DB';
+  if (S.user.avatar) {
+    return `<${tag}${type} class="${cls}${editable} has-photo"${label}><img src="${esc(S.user.avatar)}" alt=""></${tag}>`;
+  }
+  return `<${tag}${type} class="${cls}${editable}"${label} style="background:${esc(color)}">${esc(displayInitial())}</${tag}>`;
+}
+
+function openProfileEditor() {
+  S.profileSnap = {
+    nickname: S.user.nickname || '',
+    avatar: S.user.avatar || null,
+    avatarColor: S.user.avatarColor || '#1A56DB',
+  };
+  S.showProfileEdit = true;
+  S.showLoginForm = false;
+  S.addPanel = null;
+  render();
+}
+
+function closeProfileEditor(restore) {
+  if (restore && S.profileSnap) {
+    S.user.nickname = S.profileSnap.nickname;
+    S.user.avatar = S.profileSnap.avatar;
+    S.user.avatarColor = S.profileSnap.avatarColor;
+  }
+  S.profileSnap = null;
+  S.showProfileEdit = false;
+  render();
+}
+
+function syncNicknameDraft() {
+  const el = $('#nicknameInput');
+  if (el) S.user.nickname = el.value.trim().slice(0, 20);
+}
+
+function compressAvatar(file) {
+  return new Promise((resolve, reject) => {
+    if (!file || !file.type.startsWith('image/')) {
+      reject(new Error('이미지 파일만 선택할 수 있어요'));
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      reject(new Error('이미지는 8MB 이하로 올려 주세요'));
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const size = 160;
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        const scale = Math.max(size / img.width, size / img.height);
+        const w = img.width * scale;
+        const h = img.height * scale;
+        ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.82));
+      };
+      img.onerror = () => reject(new Error('이미지를 불러오지 못했어요'));
+      img.src = reader.result;
+    };
+    reader.onerror = () => reject(new Error('파일을 읽지 못했어요'));
+    reader.readAsDataURL(file);
+  });
+}
+
 function loadPersisted() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -76,6 +163,9 @@ function loadPersisted() {
         loggedIn: !!d.user.loggedIn,
         name: d.user.name || '',
         email: d.user.email || '',
+        nickname: d.user.nickname || '',
+        avatar: d.user.avatar || null,
+        avatarColor: AVATAR_COLORS.includes(d.user.avatarColor) ? d.user.avatarColor : '#1A56DB',
       };
     }
     if (d.carrier != null) S.carrier = d.carrier;
@@ -135,6 +225,10 @@ function closeOverlays() {
     S.cardSearch = '';
     S.cardProvider = 'all';
     render();
+    return;
+  }
+  if (S.showProfileEdit) {
+    closeProfileEditor(true);
   }
 }
 
@@ -146,7 +240,7 @@ $('#drawerBackdrop').addEventListener('click', closeDrawer);
 
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
-  if ($('#drawer')?.classList.contains('open') || S.addPanel) {
+  if ($('#drawer')?.classList.contains('open') || S.addPanel || S.showProfileEdit) {
     e.preventDefault();
     closeOverlays();
   }
@@ -156,6 +250,8 @@ function goPage(page) {
   S.page = page;
   S.addPanel = null;
   S.showLoginForm = false;
+  S.showProfileEdit = false;
+  S.profileSnap = null;
   closeDrawer();
   savePersisted();
   render();
@@ -312,6 +408,7 @@ function viewLanding() {
 
 /* ==================== 마이페이지 ==================== */
 function viewMyPage() {
+  if (S.showProfileEdit) return viewProfileEdit();
   if (S.showLoginForm && !S.user.loggedIn) return viewLoginGate();
   return viewMyCards();
 }
@@ -342,8 +439,45 @@ function viewLoginGate() {
   </div>`;
 }
 
+function viewProfileEdit() {
+  const colors = AVATAR_COLORS.map(c =>
+    `<button type="button" class="color-swatch ${S.user.avatarColor === c && !S.user.avatar ? 'on' : ''}" data-avatar-color="${c}" style="background:${c}" aria-label="색상 ${c}"></button>`
+  ).join('');
+
+  return `
+  <div class="page-head profile-edit-head">
+    <button type="button" class="back-btn" id="closeProfileEdit" aria-label="뒤로">←</button>
+    <div>
+      <h2>프로필 편집</h2>
+      <p>닉네임과 프로필 사진을 설정해요</p>
+    </div>
+  </div>
+  <section class="sheet profile-edit-card">
+    <div class="profile-photo-block">
+      ${avatarHtml('avatar profile-avatar-lg')}
+      <div class="profile-photo-actions">
+        <label class="cta ghost sm profile-upload-label">
+          사진 선택
+          <input type="file" id="avatarFile" accept="image/*" hidden>
+        </label>
+        ${S.user.avatar ? `<button type="button" class="linkish" id="removeAvatar">사진 삭제</button>` : ''}
+      </div>
+      <p class="sub profile-photo-hint">사진을 올리면 원형으로 잘려 저장돼요.</p>
+    </div>
+    <div class="field">
+      <label class="fl">프로필 색상</label>
+      <div class="color-row">${colors}</div>
+    </div>
+    <div class="field">
+      <label class="fl" for="nicknameInput">닉네임</label>
+      <input type="text" id="nicknameInput" maxlength="20" placeholder="예: 결제고수" value="${esc(S.user.nickname || '')}" autocomplete="nickname">
+      <p class="sub" style="margin-top:6px">최대 20자 · 비우면 ${S.user.loggedIn ? '로그인 이름' : '게스트'}로 표시돼요</p>
+    </div>
+    <button type="button" class="cta block" id="saveProfileBtn">저장</button>
+  </section>`;
+}
+
 function viewMyCards() {
-  const initial = (S.user.loggedIn ? (S.user.name || 'U') : 'G').slice(0, 1);
   const cards = DB.products.filter(p => S.wallet.includes(p.product_id));
   const cardTiles = cards.map(ownedCardTile).join('');
 
@@ -376,22 +510,20 @@ function viewMyCards() {
       <button type="button" class="cta" data-open-add="card">카드 추가하기</button>
     </div>` : '';
 
-  const userBlock = S.user.loggedIn ? `
-    <div class="user-chip">
-      <span class="avatar">${esc(initial)}</span>
-      <div>
-        <div class="nm">${esc(S.user.name || '회원')}</div>
-        <div class="em">${esc(S.user.email)}</div>
+  const sub = S.user.loggedIn
+    ? (S.user.email || '프로필을 눌러 편집해요')
+    : '이 기기에만 저장돼요 · 프로필 편집 가능';
+
+  const userBlock = `
+    <div class="user-chip ${S.user.loggedIn ? '' : 'guest'}">
+      ${avatarHtml('avatar', { editable: true })}
+      <div class="user-chip-text">
+        <div class="nm">${esc(displayName())}</div>
+        <div class="em">${esc(sub)}</div>
       </div>
-      <button type="button" class="cta ghost sm" id="logoutBtn">로그아웃</button>
-    </div>` : `
-    <div class="user-chip guest">
-      <span class="avatar">${esc(initial)}</span>
-      <div>
-        <div class="nm">게스트</div>
-        <div class="em">이 기기에만 저장돼요</div>
-      </div>
-      <button type="button" class="cta ghost sm" id="showLoginBtn">로그인</button>
+      ${S.user.loggedIn
+        ? `<button type="button" class="cta ghost sm" id="logoutBtn">로그아웃</button>`
+        : `<button type="button" class="cta ghost sm" id="showLoginBtn">로그인</button>`}
     </div>`;
 
   return `
@@ -1018,6 +1150,7 @@ function bind() {
   const showLoginBtn = $('#showLoginBtn');
   if (showLoginBtn) showLoginBtn.addEventListener('click', () => {
     S.showLoginForm = true;
+    S.showProfileEdit = false;
     render();
   });
   const skipLoginBtn = $('#skipLoginBtn');
@@ -1026,12 +1159,61 @@ function bind() {
     render();
   });
 
+  const openProfileEdit = $('#openProfileEdit');
+  if (openProfileEdit) openProfileEdit.addEventListener('click', openProfileEditor);
+  const closeProfileEdit = $('#closeProfileEdit');
+  if (closeProfileEdit) closeProfileEdit.addEventListener('click', () => closeProfileEditor(true));
+  const saveProfileBtn = $('#saveProfileBtn');
+  if (saveProfileBtn) saveProfileBtn.addEventListener('click', () => {
+    syncNicknameDraft();
+    S.profileSnap = null;
+    S.showProfileEdit = false;
+    savePersisted();
+    showToast('프로필이 저장됐어요');
+    render();
+  });
+  const nicknameInput = $('#nicknameInput');
+  if (nicknameInput) nicknameInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') saveProfileBtn?.click();
+  });
+  $$('[data-avatar-color]').forEach(el => el.addEventListener('click', () => {
+    syncNicknameDraft();
+    S.user.avatarColor = el.dataset.avatarColor;
+    S.user.avatar = null;
+    render();
+  }));
+  const avatarFile = $('#avatarFile');
+  if (avatarFile) avatarFile.addEventListener('change', async e => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      syncNicknameDraft();
+      S.user.avatar = await compressAvatar(file);
+      render();
+    } catch (err) {
+      showToast(err.message || '사진 업로드에 실패했어요');
+      e.target.value = '';
+    }
+  });
+  const removeAvatar = $('#removeAvatar');
+  if (removeAvatar) removeAvatar.addEventListener('click', () => {
+    syncNicknameDraft();
+    S.user.avatar = null;
+    render();
+  });
+
   const loginBtn = $('#loginBtn');
   if (loginBtn) loginBtn.addEventListener('click', () => {
     const email = ($('#loginEmail')?.value || '').trim();
     const name = email.split('@')[0] || '회원';
     if (!email) { showToast('이메일을 입력해 주세요'); return; }
-    S.user = { loggedIn: true, name, email };
+    S.user = {
+      ...S.user,
+      loggedIn: true,
+      name,
+      email,
+      nickname: S.user.nickname || name,
+    };
     S.addPanel = null;
     S.showLoginForm = false;
     savePersisted();
@@ -1044,7 +1226,12 @@ function bind() {
   });
   const logoutBtn = $('#logoutBtn');
   if (logoutBtn) logoutBtn.addEventListener('click', () => {
-    S.user = { loggedIn: false, name: '', email: S.user.email };
+    S.user = {
+      ...S.user,
+      loggedIn: false,
+      name: '',
+      email: S.user.email,
+    };
     S.addPanel = null;
     savePersisted();
     showToast('로그아웃됐어요');
