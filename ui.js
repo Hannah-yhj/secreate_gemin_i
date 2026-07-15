@@ -1244,11 +1244,15 @@ function bind() {
   const logoutBtn = $('#logoutBtn');
   if (logoutBtn) logoutBtn.addEventListener('click', () => {
     S.user = {
-      ...S.user,
       loggedIn: false,
       name: '',
-      email: S.user.email,
+      email: '',
+      nickname: '',
+      avatar: null,
+      avatarColor: '#1A56DB',
     };
+    S.profileSnap = null;
+    S.showProfileEdit = false;
     S.addPanel = null;
     savePersisted();
     showToast('로그아웃됐어요');
