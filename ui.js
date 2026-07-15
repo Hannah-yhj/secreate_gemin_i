@@ -26,6 +26,7 @@ const S = {
   carrier: null,
   grade: null,
   cardSearch: '',
+  cardProvider: 'all', // 'all' | provider name
   addPanel: null, // null | 'menu' | 'carrier' | 'card'
   q: {
     brand: '', category: null, amount: 10000,
@@ -331,9 +332,10 @@ function fabAndPanel() {
         <h3>카드 추가</h3>
         <button type="button" class="icon-x" data-close-add aria-label="닫기">✕</button>
       </div>
-      <p class="sub">이름·카드사로 검색한 뒤 지갑에 넣을 결제수단을 선택하세요.</p>
+      <p class="sub">카드사를 고르거나 검색해서 결제수단을 추가하세요.</p>
+      <div class="provider-tabs" id="providerTabs">${renderProviderTabs()}</div>
       <div class="card-search">
-        <input type="search" id="cardSearchInput" placeholder="예: 국민, 나라사랑, 토스…" value="${esc(S.cardSearch)}" autocomplete="off">
+        <input type="search" id="cardSearchInput" placeholder="카드 이름 검색…" value="${esc(S.cardSearch)}" autocomplete="off">
       </div>
       <div id="addCardList">${renderAddCardList()}</div>`;
   }
@@ -361,10 +363,32 @@ function fabAndPanel() {
   </aside>`;
 }
 
+const PROVIDER_SHORT = {
+  'KB국민카드': '국민',
+  '신한카드': '신한',
+  '토스': '토스',
+  '네이버파이낸셜': '네이버',
+};
+
+function providerList() {
+  return [...new Set(DB.products.map(p => p.provider))];
+}
+
+function renderProviderTabs() {
+  const tabs = [
+    `<button type="button" data-provider="all" class="${S.cardProvider === 'all' ? 'on' : ''}">전체</button>`,
+    ...providerList().map(p =>
+      `<button type="button" data-provider="${esc(p)}" class="${S.cardProvider === p ? 'on' : ''}">${esc(PROVIDER_SHORT[p] || p)}</button>`
+    ),
+  ];
+  return tabs.join('');
+}
+
 function filteredAddableCards() {
   const q = S.cardSearch.trim().toLowerCase();
   return DB.products.filter(p => {
     if (S.wallet.includes(p.product_id)) return false;
+    if (S.cardProvider !== 'all' && p.provider !== S.cardProvider) return false;
     if (!q) return true;
     const hay = `${p.product_name} ${p.provider} ${p.product_type} ${PLATE_LABEL[p.product_id] || ''}`.toLowerCase();
     return hay.includes(q);
@@ -372,13 +396,21 @@ function filteredAddableCards() {
 }
 
 function renderAddCardList() {
-  const available = DB.products.filter(p => !S.wallet.includes(p.product_id));
-  if (!available.length) {
-    return '<p class="sub">추가할 수 있는 카드가 모두 등록되어 있어요.</p>';
+  const inWallet = new Set(S.wallet);
+  const pool = DB.products.filter(p => {
+    if (inWallet.has(p.product_id)) return false;
+    if (S.cardProvider !== 'all' && p.provider !== S.cardProvider) return false;
+    return true;
+  });
+  if (!pool.length) {
+    const label = S.cardProvider === 'all' ? '' : (PROVIDER_SHORT[S.cardProvider] || S.cardProvider);
+    return label
+      ? `<p class="sub">${esc(label)} 카드는 모두 등록되어 있어요.</p>`
+      : '<p class="sub">추가할 수 있는 카드가 모두 등록되어 있어요.</p>';
   }
   const list = filteredAddableCards();
   if (!list.length) {
-    return `<p class="sub">‘${esc(S.cardSearch)}’에 맞는 카드가 없어요.</p>`;
+    return `<p class="sub">검색 결과가 없어요.</p>`;
   }
   return list.map(p => `
     <button type="button" class="add-card-row" data-add-card="${p.product_id}">
@@ -391,6 +423,15 @@ function renderAddCardList() {
     </button>`).join('');
 }
 
+function refreshAddCardList() {
+  const box = $('#addCardList');
+  if (box) {
+    box.innerHTML = renderAddCardList();
+    bindAddCardList();
+  }
+  $$('[data-provider]').forEach(b => b.classList.toggle('on', b.dataset.provider === S.cardProvider));
+}
+
 function bindAddCardList() {
   $$('[data-add-card]').forEach(el => el.addEventListener('click', () => {
     const id = el.dataset.addCard;
@@ -398,6 +439,27 @@ function bindAddCardList() {
     S.addPanel = 'card'; // 패널 유지 → 여러 장 연속 추가
     render();
   }));
+}
+
+function bindProviderTabs() {
+  $$('[data-provider]').forEach(el => el.addEventListener('click', () => {
+    S.cardProvider = el.dataset.provider;
+    refreshAddCardList();
+  }));
+}
+
+function updateBrandDatalist() {
+  const brands = S.q.category
+    ? Engine.brandsByCategory(S.q.category)
+    : Engine.brandList();
+  const dl = $('#brandDl');
+  if (dl) dl.innerHTML = brands.map(b => `<option value="${esc(b)}">`).join('');
+  const bi = $('#brandInput');
+  if (bi) {
+    bi.placeholder = S.q.category
+      ? `${S.q.category} 브랜드만 검색됩니다…`
+      : '예: 스타벅스, CU, 넷플릭스…';
+  }
 }
 
 /* ==================== 혜택 추천 ==================== */
@@ -452,23 +514,29 @@ function viewHome() {
 }
 
 function viewCalc() {
-  const brands = Engine.brandList();
+  const brands = S.q.category
+    ? Engine.brandsByCategory(S.q.category)
+    : Engine.brandList();
   const catChips = Engine.HOME_CATS.map(c =>
     `<button type="button" data-chip="${c.key}" class="${S.q.category === c.key ? 'on' : ''}">${c.icon} ${c.key}</button>`
   ).join('');
   const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+  const brandPh = S.q.category
+    ? `${S.q.category} 브랜드만 검색됩니다…`
+    : '예: 스타벅스, CU, 넷플릭스…';
   return `
   <div class="calc-layout">
     <section class="sheet">
       <h3 class="sec">어디서, 얼마를 결제하나요?</h3>
       <div class="field">
-        <label class="fl" for="brandInput">브랜드/매장</label>
-        <input type="search" id="brandInput" list="brandDl" placeholder="예: 스타벅스, CU, 넷플릭스…" value="${esc(S.q.brand)}" autocomplete="off">
-        <datalist id="brandDl">${brands.map(b => `<option value="${esc(b)}">`).join('')}</datalist>
+        <label class="fl">카테고리로 찾기</label>
+        <div class="chips">${catChips}</div>
       </div>
       <div class="field">
-        <label class="fl">또는 카테고리로 찾기</label>
-        <div class="chips">${catChips}</div>
+        <label class="fl" for="brandInput">브랜드/매장 ${S.q.category ? `<span class="cat-filter-tag">${esc(S.q.category)}</span>` : ''}</label>
+        <input type="search" id="brandInput" list="brandDl" placeholder="${esc(brandPh)}" value="${esc(S.q.brand)}" autocomplete="off">
+        <datalist id="brandDl">${brands.map(b => `<option value="${esc(b)}">`).join('')}</datalist>
+        ${S.q.category && !brands.length ? '<p class="sub" style="margin-top:8px">이 카테고리에 등록된 브랜드가 없어요. 카테고리만으로도 계산할 수 있어요.</p>' : ''}
       </div>
       <div class="field">
         <label class="fl" for="amtInput">결제 예정 금액</label>
@@ -759,6 +827,7 @@ function bind() {
     if (S.addPanel) {
       S.addPanel = null;
       S.cardSearch = '';
+      S.cardProvider = 'all';
     } else {
       S.addPanel = 'menu';
     }
@@ -766,13 +835,17 @@ function bind() {
   });
   $$('[data-open-add]').forEach(el => el.addEventListener('click', () => {
     const next = el.dataset.openAdd;
-    if (next === 'card' && S.addPanel !== 'card') S.cardSearch = '';
+    if (next === 'card' && S.addPanel !== 'card') {
+      S.cardSearch = '';
+      S.cardProvider = 'all';
+    }
     S.addPanel = next;
     render();
   }));
   $$('[data-close-add]').forEach(el => el.addEventListener('click', () => {
     S.addPanel = null;
     S.cardSearch = '';
+    S.cardProvider = 'all';
     render();
   }));
 
@@ -800,13 +873,10 @@ function bind() {
   if (cardSearch) {
     cardSearch.addEventListener('input', e => {
       S.cardSearch = e.target.value;
-      const box = $('#addCardList');
-      if (box) {
-        box.innerHTML = renderAddCardList();
-        bindAddCardList();
-      }
+      refreshAddCardList();
     });
   }
+  bindProviderTabs();
   bindAddCardList();
   $$('[data-remove-card]').forEach(el => el.addEventListener('click', () => {
     const id = el.dataset.removeCard;
@@ -848,21 +918,25 @@ function bind() {
   if (brandInput) {
     brandInput.addEventListener('input', e => {
       S.q.brand = e.target.value.trim();
-      if (S.q.brand) {
-        S.q.category = null;
-        $$('[data-chip]').forEach(b => b.classList.remove('on'));
-      }
     });
     brandInput.addEventListener('keydown', e => {
       if (e.key === 'Enter') { updateAmt(); renderResults(); }
     });
   }
   $$('[data-chip]').forEach(el => el.addEventListener('click', () => {
-    S.q.category = el.dataset.chip;
+    const key = el.dataset.chip;
+    S.q.category = S.q.category === key ? null : key;
     S.q.brand = '';
     const bi = $('#brandInput');
     if (bi) bi.value = '';
-    $$('[data-chip]').forEach(b => b.classList.toggle('on', b === el));
+    $$('[data-chip]').forEach(b => b.classList.toggle('on', b.dataset.chip === S.q.category));
+    updateBrandDatalist();
+    const label = document.querySelector('label[for="brandInput"]');
+    if (label) {
+      label.innerHTML = S.q.category
+        ? `브랜드/매장 <span class="cat-filter-tag">${esc(S.q.category)}</span>`
+        : '브랜드/매장';
+    }
   }));
 
   const amt = $('#amtInput');

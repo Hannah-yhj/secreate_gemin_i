@@ -50,6 +50,17 @@ const Engine = (() => {
     return Object.keys(brandCategory).sort((a, b) => a.localeCompare(b, 'ko'));
   }
 
+  // 카테고리에 속한 브랜드만 (예: 카페 → 스타벅스, 커피빈 …)
+  function brandsByCategory(category) {
+    if (!category) return brandList();
+    return Object.keys(brandCategory)
+      .filter(b => {
+        const cs = brandCategory[b];
+        return cs.has(category) || [...cs].some(c => c === category || c.includes(category) || category.includes(c));
+      })
+      .sort((a, b) => a.localeCompare(b, 'ko'));
+  }
+
   function categoriesOfBrand(brand) {
     return brandCategory[brand] ? [...brandCategory[brand]] : [];
   }
@@ -392,6 +403,6 @@ const Engine = (() => {
 
   function sourceById(id) { return engineDB.sources.find(s => s.source_id === id); }
 
-  return { init, brandList, categoriesOfBrand, buildCombos, homeBoard, sourceById, won, HOME_CATS, productById: () => productById };
+  return { init, brandList, brandsByCategory, categoriesOfBrand, buildCombos, homeBoard, sourceById, won, HOME_CATS, productById: () => productById };
 })();
 
