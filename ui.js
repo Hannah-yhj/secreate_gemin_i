@@ -17,17 +17,36 @@ const CARRIER_GRADES = {
   'LGU+': ['우수', 'VIP', 'VVIP'],
 };
 
+const STORAGE_KEY = 'payment-directive-v1';
+
+const Ico = {
+  home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-9.5z"/></svg>',
+  user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 19.5c1.8-3.2 4.2-4.5 7-4.5s5.2 1.3 7 4.5"/></svg>',
+  spark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/><circle cx="12" cy="12" r="3"/></svg>',
+  chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6.5A2.5 2.5 0 0 1 7.5 4h9A2.5 2.5 0 0 1 19 6.5v7a2.5 2.5 0 0 1-2.5 2.5H11l-4 3.5V16H7.5A2.5 2.5 0 0 1 5 13.5v-7z"/></svg>',
+  card: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18M7 15h4"/></svg>',
+  phone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M11 17h2"/></svg>',
+  chart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5M4 19h16"/><path d="M8 16v-5M12 16V8M16 16v-3"/></svg>',
+  bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16h12l-1.2-1.2A6 6 0 0 1 15 10.5V9a3 3 0 1 0-6 0v1.5a6 6 0 0 1-1.8 4.3L6 16z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg>',
+  input: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h10M4 17h7"/><circle cx="18" cy="16" r="3"/></svg>',
+  compare: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16M17 4v16M4 8h6M14 16h6"/></svg>',
+  instruct: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h9a2 2 0 0 1 2 2v14l-3-2-3 2-3-2-3 2V6a2 2 0 0 1 2-2z"/><path d="M10 9h6M10 13h4"/></svg>',
+  wallet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6H18a2 2 0 0 1 2 2v9.5A2.5 2.5 0 0 1 17.5 20h-11A2.5 2.5 0 0 1 4 17.5v-9z"/><path d="M16 13.5h4V10h-4a1.5 1.5 0 0 0 0 3z"/></svg>',
+};
+
 const S = {
   page: 'home',
   benefitTab: 'map',
   wallet: [],
   state: { spend: {}, mywishPack: null, nori2Variant: null },
   user: { loggedIn: false, name: '', email: '' },
+  showLoginForm: false,
   carrier: null,
   grade: null,
   cardSearch: '',
-  cardProvider: 'all', // 'all' | provider name
-  addPanel: null, // null | 'menu' | 'carrier' | 'card'
+  cardProvider: 'all',
+  addPanel: null,
+  resultsExpanded: false,
   q: {
     brand: '', category: null, amount: 10000,
     channel: null, dayMode: 'today', day: null, time: ''
@@ -44,8 +63,74 @@ const $$ = s => document.querySelectorAll(s);
 const won = n => Math.round(n).toLocaleString('ko-KR');
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
+let calcTimer = null;
+let toastTimer = null;
+
+function loadPersisted() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    if (Array.isArray(d.wallet)) S.wallet = d.wallet;
+    if (d.state && typeof d.state === 'object') {
+      S.state = {
+        spend: d.state.spend && typeof d.state.spend === 'object' ? d.state.spend : {},
+        mywishPack: d.state.mywishPack || null,
+        nori2Variant: d.state.nori2Variant || null,
+      };
+    }
+    if (d.user && typeof d.user === 'object') {
+      S.user = {
+        loggedIn: !!d.user.loggedIn,
+        name: d.user.name || '',
+        email: d.user.email || '',
+      };
+    }
+    if (d.carrier != null) S.carrier = d.carrier;
+    if (d.grade != null) S.grade = d.grade;
+  } catch (_) { /* ignore corrupt storage */ }
+}
+
+function savePersisted() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      wallet: S.wallet,
+      state: S.state,
+      user: S.user,
+      carrier: S.carrier,
+      grade: S.grade,
+    }));
+  } catch (_) { /* quota / private mode */ }
+}
+
+function showToast(msg) {
+  const host = $('#toastHost');
+  if (!host) return;
+  host.innerHTML = `<div class="toast">${esc(msg)}</div>`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { host.innerHTML = ''; }, 2400);
+}
+
+function fillIcons(root = document) {
+  root.querySelectorAll('[data-ico]').forEach(el => {
+    const key = el.dataset.ico;
+    if (Ico[key] && !el.dataset.filled) {
+      el.innerHTML = Ico[key];
+      el.dataset.filled = '1';
+    }
+  });
+}
+
+function catMark(key) {
+  const ch = (key || '?').slice(0, 1);
+  return `<span class="cat-mark" aria-hidden="true">${esc(ch)}</span>`;
+}
+
 document.getElementById('todayLabel').textContent =
   new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' });
+
+loadPersisted();
+fillIcons(document);
 
 /* ---- 우측 메뉴 패널 ---- */
 function openDrawer() {
@@ -62,6 +147,15 @@ function closeDrawer() {
   b.hidden = true;
   btn.setAttribute('aria-expanded', 'false');
 }
+function closeOverlays() {
+  if ($('#drawer')?.classList.contains('open')) closeDrawer();
+  if (S.addPanel) {
+    S.addPanel = null;
+    S.cardSearch = '';
+    S.cardProvider = 'all';
+    render();
+  }
+}
 
 $('#menuBtn').addEventListener('click', () => {
   $('#drawer').classList.contains('open') ? closeDrawer() : openDrawer();
@@ -69,9 +163,18 @@ $('#menuBtn').addEventListener('click', () => {
 $('#drawerClose').addEventListener('click', closeDrawer);
 $('#drawerBackdrop').addEventListener('click', closeDrawer);
 
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if ($('#drawer')?.classList.contains('open') || S.addPanel) {
+    e.preventDefault();
+    closeOverlays();
+  }
+});
+
 function goPage(page) {
   S.page = page;
   S.addPanel = null;
+  S.showLoginForm = false;
   closeDrawer();
   render();
 }
@@ -79,17 +182,39 @@ function goPage(page) {
 $$('.drawer-nav [data-page]').forEach(btn => {
   btn.addEventListener('click', () => goPage(btn.dataset.page));
 });
+$$('#bottomNav [data-page]').forEach(btn => {
+  btn.addEventListener('click', () => goPage(btn.dataset.page));
+});
 document.querySelector('.logo-btn')?.addEventListener('click', () => goPage('home'));
 
+function startApp() {
+  if (!S.wallet.length) {
+    S.page = 'mypage';
+    S.addPanel = 'card';
+    S.showLoginForm = false;
+  } else {
+    S.page = 'benefits';
+    S.benefitTab = 'calc';
+    S.addPanel = null;
+  }
+  closeDrawer();
+  render();
+  if (S.page === 'benefits' && S.benefitTab === 'calc') {
+    requestAnimationFrame(() => renderResults());
+  }
+}
+
 /* ---- 데이터 로드 ---- */
-render(); // 랜딩은 DB 없이도 바로 표시
+render();
 fetch('/api/benefits')
   .then(res => res.json())
   .then(data => {
     DB = data;
     Engine.init(DB);
-    S.wallet = [];
-    S.state.spend = Object.fromEntries(DB.products.map(p => [p.product_id, null]));
+    const spend = { ...Object.fromEntries(DB.products.map(p => [p.product_id, null])), ...S.state.spend };
+    S.state.spend = spend;
+    S.wallet = S.wallet.filter(id => DB.products.some(p => p.product_id === id));
+    savePersisted();
     if (S.page !== 'home') render();
   })
   .catch(err => {
@@ -123,9 +248,32 @@ function spendStatus(pid) {
   return { cls: 'need', label: `${won(need)}원 미달` };
 }
 
+function scheduleCalc() {
+  clearTimeout(calcTimer);
+  calcTimer = setTimeout(() => {
+    updateAmt();
+    S.resultsExpanded = false;
+    renderResults();
+  }, 280);
+}
+
+function emptyWalletHtml(opts = {}) {
+  const { ctaId = 'goMyPage', ctaLabel = '카드 추가하기', hint = '마이페이지에서 결제수단을 먼저 등록해 주세요.' } = opts;
+  return `<div class="emptywallet">
+    <div class="empty-illu" aria-hidden="true">${Ico.wallet}</div>
+    <b>지갑이 비어 있어요</b>
+    <p>${esc(hint)}</p>
+    <button class="cta" id="${ctaId}" type="button">${esc(ctaLabel)}</button>
+  </div>`;
+}
+
 function render() {
   $$('.drawer-nav [data-page]').forEach(b => b.classList.toggle('on', b.dataset.page === S.page));
+  $$('#bottomNav [data-page]').forEach(b => b.classList.toggle('on', b.dataset.page === S.page));
   document.querySelector('.app')?.classList.toggle('landing-mode', S.page === 'home');
+  const bottom = $('#bottomNav');
+  if (bottom) bottom.hidden = S.page === 'home';
+
   const m = $('#main');
   if (!DB && S.page !== 'home') {
     m.innerHTML = `<div class="emptywallet"><b>불러오는 중…</b></div>`;
@@ -135,6 +283,7 @@ function render() {
   else if (S.page === 'mypage') m.innerHTML = viewMyPage();
   else if (S.page === 'benefits') m.innerHTML = viewBenefits();
   else m.innerHTML = viewMore();
+  fillIcons(m);
   bind();
   if (!S.addPanel) window.scrollTo(0, 0);
 }
@@ -152,12 +301,36 @@ function viewLanding() {
       <p class="hero-sub">보유 카드와 혜택을 비교해 지금 당장 가장 이득인 결제 수단을 알려주는 서비스입니다.</p>
       <button type="button" class="hero-cta" id="startHero">시작하기 <span>→</span></button>
     </div>
+  </section>
+  <section class="how-section" aria-label="이용 방법">
+    <h2 class="how-title">이렇게 쓰면 돼요</h2>
+    <p class="how-lead">세 단계면 결제 직전, 최적의 수단이 나옵니다.</p>
+    <div class="how-grid">
+      <article class="how-step">
+        <span class="how-ico">${Ico.input}</span>
+        <span class="how-num">01</span>
+        <h3>입력</h3>
+        <p>브랜드·금액·채널만 알려 주세요.</p>
+      </article>
+      <article class="how-step">
+        <span class="how-ico">${Ico.compare}</span>
+        <span class="how-num">02</span>
+        <h3>비교</h3>
+        <p>보유 카드 혜택을 한눈에 맞춰 봅니다.</p>
+      </article>
+      <article class="how-step">
+        <span class="how-ico">${Ico.instruct}</span>
+        <span class="how-num">03</span>
+        <h3>지시</h3>
+        <p>지금 꺼낼 카드와 결제 방법을 받습니다.</p>
+      </article>
+    </div>
   </section>`;
 }
 
 /* ==================== 마이페이지 ==================== */
 function viewMyPage() {
-  if (!S.user.loggedIn) return viewLoginGate();
+  if (S.showLoginForm && !S.user.loggedIn) return viewLoginGate();
   return viewMyCards();
 }
 
@@ -168,7 +341,7 @@ function viewLoginGate() {
       <div class="login-hero">
         <div class="login-mark">결제</div>
         <h2>로그인</h2>
-        <p>마이페이지에서 카드를 관리하려면 로그인해 주세요.</p>
+        <p>선택 사항이에요. 게스트로도 카드를 관리할 수 있습니다.</p>
       </div>
       <div class="login-box">
         <div class="field" style="margin:0">
@@ -180,6 +353,7 @@ function viewLoginGate() {
           <input type="password" id="loginPw" placeholder="••••••••">
         </div>
         <button class="cta block" id="loginBtn" type="button">로그인</button>
+        <button class="cta ghost block" id="skipLoginBtn" type="button">게스트로 계속</button>
         <p class="login-hint">데모용이에요. 아무 이메일·비밀번호나 입력해도 됩니다.</p>
       </div>
     </section>
@@ -187,7 +361,7 @@ function viewLoginGate() {
 }
 
 function viewMyCards() {
-  const initial = (S.user.name || 'U').slice(0, 1);
+  const initial = (S.user.loggedIn ? (S.user.name || 'U') : 'G').slice(0, 1);
   const cards = DB.products.filter(p => S.wallet.includes(p.product_id));
   const cardTiles = cards.map(ownedCardTile).join('');
 
@@ -214,16 +388,13 @@ function viewMyCards() {
 
   const cardsEmpty = !cards.length ? `
     <div class="owned-empty">
+      <div class="empty-illu sm" aria-hidden="true">${Ico.wallet}</div>
       <b>등록된 카드가 없어요</b>
       <p>오른쪽 아래 <strong>+</strong> 버튼에서 카드를 추가해 주세요.</p>
+      <button type="button" class="cta" data-open-add="card">카드 추가하기</button>
     </div>` : '';
 
-  return `
-  <div class="page-head mypage-head">
-    <div>
-      <h2>마이페이지</h2>
-      <p>내 카드와 통신사를 관리해요</p>
-    </div>
+  const userBlock = S.user.loggedIn ? `
     <div class="user-chip">
       <span class="avatar">${esc(initial)}</span>
       <div>
@@ -231,7 +402,23 @@ function viewMyCards() {
         <div class="em">${esc(S.user.email)}</div>
       </div>
       <button type="button" class="cta ghost sm" id="logoutBtn">로그아웃</button>
+    </div>` : `
+    <div class="user-chip guest">
+      <span class="avatar">${esc(initial)}</span>
+      <div>
+        <div class="nm">게스트</div>
+        <div class="em">이 기기에만 저장돼요</div>
+      </div>
+      <button type="button" class="cta ghost sm" id="showLoginBtn">로그인</button>
+    </div>`;
+
+  return `
+  <div class="page-head mypage-head">
+    <div>
+      <h2>마이페이지</h2>
+      <p>내 카드와 통신사를 관리해요</p>
     </div>
+    ${userBlock}
   </div>
 
   ${carrierBar}
@@ -344,11 +531,11 @@ function fabAndPanel() {
   <div class="fab-wrap">
     <div class="fab-menu ${menuOpen ? 'open' : ''}" ${menuOpen ? '' : 'hidden'}>
       <button type="button" data-open-add="carrier">
-        <span class="fi">📱</span>
+        <span class="fi" data-ico="phone"></span>
         <span><b>통신사 추가</b><small>통신사 · 멤버십 등급</small></span>
       </button>
       <button type="button" data-open-add="card">
-        <span class="fi">💳</span>
+        <span class="fi" data-ico="card"></span>
         <span><b>카드 추가</b><small>결제수단을 지갑에 등록</small></span>
       </button>
     </div>
@@ -435,8 +622,11 @@ function refreshAddCardList() {
 function bindAddCardList() {
   $$('[data-add-card]').forEach(el => el.addEventListener('click', () => {
     const id = el.dataset.addCard;
+    const p = DB.products.find(x => x.product_id === id);
     S.wallet = [...new Set([...S.wallet, id])];
-    S.addPanel = 'card'; // 패널 유지 → 여러 장 연속 추가
+    S.addPanel = 'card';
+    savePersisted();
+    showToast(p ? `${shortName(p)} 추가됐어요` : '카드가 추가됐어요');
     render();
   }));
 }
@@ -478,14 +668,17 @@ function viewBenefits() {
 
 function viewHome() {
   if (!S.wallet.length) {
-    return `<div class="emptywallet"><b>지갑이 비어 있어요</b>마이페이지에서 결제수단을 먼저 켜 주세요.
-      <button class="cta" id="goMyPage" style="margin-top:14px">마이페이지로</button></div>`;
+    return emptyWalletHtml({
+      ctaId: 'goMyPageAdd',
+      ctaLabel: '카드 추가하기',
+      hint: '카드를 등록하면 카테고리별 최적 수단이 보여요.',
+    });
   }
   const board = Engine.homeBoard(S.state, S.wallet, new Date());
   const cards = board.map(c => {
     if (!c.best) {
       return `<button type="button" class="cat" data-cat="${c.key}">
-        <span class="ic">${c.icon}</span><span class="ct">${c.key}</span>
+        ${catMark(c.key)}<span class="ct">${c.key}</span>
         <span class="none">등록된 혜택 없음</span></button>`;
     }
     const b = c.best, it = b.items[0], bf = it.benefit;
@@ -497,7 +690,7 @@ function viewHome() {
       : `${won(bf.benefit_value)}${bf.benefit_unit === '포인트' ? 'P' : '원'}`;
     return `<button type="button" class="cat" data-cat="${c.key}">
       ${dday ? `<span class="badge dday">${dday[0]}</span>` : isWknd ? `<span class="badge wknd">주말</span>` : ''}
-      <span class="ic">${c.icon}</span><span class="ct">${c.key}</span>
+      ${catMark(c.key)}<span class="ct">${c.key}</span>
       <span class="best"><b>${esc(shortName(b.product))}</b> · ${esc(bf.benefit_name)} <b>${rate}</b></span>
       <span class="val">~${won(b.grandTotal)}원 <small>${won(c.sample)}원 결제 시</small></span>
     </button>`;
@@ -518,7 +711,7 @@ function viewCalc() {
     ? Engine.brandsByCategory(S.q.category)
     : Engine.brandList();
   const catChips = Engine.HOME_CATS.map(c =>
-    `<button type="button" data-chip="${c.key}" class="${S.q.category === c.key ? 'on' : ''}">${c.icon} ${c.key}</button>`
+    `<button type="button" data-chip="${c.key}" class="${S.q.category === c.key ? 'on' : ''}">${c.key}</button>`
   ).join('');
   const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
   const brandPh = S.q.category
@@ -569,7 +762,7 @@ function viewCalc() {
           </div></div>
         <p class="hintlink">카드별 전월 실적은 <a id="goMyPageLink">마이페이지</a>에서 입력할 수 있어요.</p>
       </details>
-      <button class="cta block" id="calcBtn" type="button">지시서 발행</button>
+      <p class="auto-hint">입력하면 지시서가 자동으로 갱신돼요</p>
     </section>
     <div class="results" id="results"></div>
   </div>`;
@@ -579,7 +772,16 @@ function renderResults() {
   const box = $('#results');
   if (!box) return;
   if (!S.wallet.length) {
-    box.innerHTML = `<div class="emptywallet"><b>지갑이 비어 있어요</b>마이페이지에서 결제수단을 먼저 켜 주세요.</div>`;
+    box.innerHTML = emptyWalletHtml({
+      ctaId: 'goMyPageAdd',
+      ctaLabel: '카드 추가하기',
+      hint: '마이페이지에서 결제수단을 먼저 등록해 주세요.',
+    });
+    $('#goMyPageAdd')?.addEventListener('click', () => {
+      S.page = 'mypage';
+      S.addPanel = 'card';
+      render();
+    });
     return;
   }
   if (!S.q.brand && !S.q.category) {
@@ -604,12 +806,31 @@ function renderResults() {
     ${disclaimHtml()}`;
     return;
   }
+
+  const visible = S.resultsExpanded ? combos : combos.slice(0, 1);
+  const hiddenCount = combos.length - 1;
+  const moreBtn = !S.resultsExpanded && hiddenCount > 0
+    ? `<button type="button" class="more-results" id="expandResults">다른 수단 ${hiddenCount}개 더 보기</button>`
+    : (S.resultsExpanded && hiddenCount > 0
+      ? `<button type="button" class="more-results ghost" id="collapseResults">BEST만 보기</button>`
+      : '');
+
   box.innerHTML = `<div class="res-head"><span><span class="q">${esc(target)}</span> · ${won(S.q.amount)}원 결제</span>
     <span class="cnt">${combos.length}개 수단 비교</span></div>
     <div class="results-grid">
-      ${combos.map((c, i) => receiptHtml(c, i)).join('')}
+      ${visible.map((c, i) => receiptHtml(c, i)).join('')}
+      ${moreBtn}
       ${disclaimHtml()}
     </div>`;
+
+  $('#expandResults')?.addEventListener('click', () => {
+    S.resultsExpanded = true;
+    renderResults();
+  });
+  $('#collapseResults')?.addEventListener('click', () => {
+    S.resultsExpanded = false;
+    renderResults();
+  });
 }
 
 function receiptHtml(c, i) {
@@ -697,15 +918,15 @@ function viewMore() {
   <div class="more-layout">
     <div class="feature-list">
       <button type="button" class="feature-card on">
-        <span class="fi">💬</span>
+        <span class="fi" data-ico="chat"></span>
         <span><b>카드 추천 챗봇</b><small>소비 패턴에 맞는 카드를 대화로 찾아요</small></span>
       </button>
       <button type="button" class="feature-card coming">
-        <span class="fi">📊</span>
+        <span class="fi" data-ico="chart"></span>
         <span><b>월간 혜택 리포트</b><small>준비 중</small></span>
       </button>
       <button type="button" class="feature-card coming">
-        <span class="fi">🔔</span>
+        <span class="fi" data-ico="bell"></span>
         <span><b>한도 알림</b><small>준비 중</small></span>
       </button>
     </div>
@@ -792,23 +1013,45 @@ function sendChat(text) {
 /* ==================== 이벤트 ==================== */
 function bind() {
   const startHero = $('#startHero');
-  if (startHero) startHero.addEventListener('click', () => goPage('mypage'));
+  if (startHero) startHero.addEventListener('click', startApp);
 
   const goB = $('#goBenefits');
   if (goB) goB.addEventListener('click', () => { S.benefitTab = 'map'; goPage('benefits'); });
 
   const goM = $('#goMyPage');
   if (goM) goM.addEventListener('click', () => goPage('mypage'));
+  const goMyPageAdd = $('#goMyPageAdd');
+  if (goMyPageAdd) goMyPageAdd.addEventListener('click', () => {
+    S.page = 'mypage';
+    S.addPanel = 'card';
+    S.showLoginForm = false;
+    closeDrawer();
+    render();
+  });
   const goML = $('#goMyPageLink');
   if (goML) goML.addEventListener('click', () => goPage('mypage'));
+
+  const showLoginBtn = $('#showLoginBtn');
+  if (showLoginBtn) showLoginBtn.addEventListener('click', () => {
+    S.showLoginForm = true;
+    render();
+  });
+  const skipLoginBtn = $('#skipLoginBtn');
+  if (skipLoginBtn) skipLoginBtn.addEventListener('click', () => {
+    S.showLoginForm = false;
+    render();
+  });
 
   const loginBtn = $('#loginBtn');
   if (loginBtn) loginBtn.addEventListener('click', () => {
     const email = ($('#loginEmail')?.value || '').trim();
     const name = email.split('@')[0] || '회원';
-    if (!email) { alert('이메일을 입력해 주세요.'); return; }
+    if (!email) { showToast('이메일을 입력해 주세요'); return; }
     S.user = { loggedIn: true, name, email };
     S.addPanel = null;
+    S.showLoginForm = false;
+    savePersisted();
+    showToast('로그인됐어요');
     render();
   });
   const loginPw = $('#loginPw');
@@ -819,6 +1062,8 @@ function bind() {
   if (logoutBtn) logoutBtn.addEventListener('click', () => {
     S.user = { loggedIn: false, name: '', email: S.user.email };
     S.addPanel = null;
+    savePersisted();
+    showToast('로그아웃됐어요');
     render();
   });
 
@@ -866,6 +1111,9 @@ function bind() {
     const grades = CARRIER_GRADES[S.carrier] || [];
     if (!S.carrier || !S.grade || !grades.includes(S.grade)) return;
     S.addPanel = null;
+    savePersisted();
+    const label = S.carrier === 'LGU+' ? 'LG U+' : S.carrier;
+    showToast(`${label} ${S.grade} 저장됐어요`);
     render();
   });
 
@@ -880,27 +1128,35 @@ function bind() {
   bindAddCardList();
   $$('[data-remove-card]').forEach(el => el.addEventListener('click', () => {
     const id = el.dataset.removeCard;
+    const p = DB.products.find(x => x.product_id === id);
     S.wallet = S.wallet.filter(x => x !== id);
+    savePersisted();
+    showToast(p ? `${shortName(p)} 삭제됐어요` : '카드가 삭제됐어요');
     render();
   }));
   const removeCarrier = document.querySelector('[data-remove-carrier]');
   if (removeCarrier) removeCarrier.addEventListener('click', () => {
     S.carrier = null;
     S.grade = null;
+    savePersisted();
+    showToast('통신사가 삭제됐어요');
     render();
   });
 
   $$('[data-spend]').forEach(el => el.addEventListener('change', e => {
     S.state.spend[e.target.dataset.spend] = e.target.value === '' ? null : Number(e.target.value);
+    savePersisted();
     render();
   }));
   $$('[data-opt]').forEach(el => el.addEventListener('change', e => {
     S.state[e.target.dataset.opt] = e.target.value || null;
+    savePersisted();
   }));
 
   $$('[data-btab]').forEach(el => el.addEventListener('click', () => {
     S.benefitTab = el.dataset.btab;
     render();
+    if (S.benefitTab === 'calc') requestAnimationFrame(() => renderResults());
   }));
 
   $$('[data-cat]').forEach(el => el.addEventListener('click', () => {
@@ -910,6 +1166,7 @@ function bind() {
     S.q.amount = c.sample;
     S.page = 'benefits';
     S.benefitTab = 'calc';
+    S.resultsExpanded = false;
     render();
     renderResults();
   }));
@@ -918,9 +1175,10 @@ function bind() {
   if (brandInput) {
     brandInput.addEventListener('input', e => {
       S.q.brand = e.target.value.trim();
+      scheduleCalc();
     });
     brandInput.addEventListener('keydown', e => {
-      if (e.key === 'Enter') { updateAmt(); renderResults(); }
+      if (e.key === 'Enter') { updateAmt(); S.resultsExpanded = false; renderResults(); }
     });
   }
   $$('[data-chip]').forEach(el => el.addEventListener('click', () => {
@@ -937,6 +1195,7 @@ function bind() {
         ? `브랜드/매장 <span class="cat-filter-tag">${esc(S.q.category)}</span>`
         : '브랜드/매장';
     }
+    scheduleCalc();
   }));
 
   const amt = $('#amtInput');
@@ -944,31 +1203,35 @@ function bind() {
     amt.addEventListener('input', e => {
       const raw = e.target.value.replace(/[^\d]/g, '');
       e.target.value = raw ? Number(raw).toLocaleString('ko-KR') : '';
+      scheduleCalc();
     });
-    amt.addEventListener('change', updateAmt);
+    amt.addEventListener('change', () => { updateAmt(); scheduleCalc(); });
   }
   $$('[data-amt]').forEach(el => el.addEventListener('click', () => {
     S.q.amount = Number(el.dataset.amt);
     if (amt) amt.value = won(S.q.amount);
+    scheduleCalc();
   }));
 
   const seg = document.querySelector('[data-seg="channel"]');
   if (seg) seg.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
     S.q.channel = b.dataset.v || null;
     seg.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+    scheduleCalc();
   }));
   const daySel = $('#daySel');
   if (daySel) daySel.addEventListener('change', e => {
     if (e.target.value === 'today') { S.q.dayMode = 'today'; S.q.day = null; }
     else { S.q.dayMode = 'day'; S.q.day = Number(e.target.value); }
+    scheduleCalc();
   });
   const ti = $('#timeInput');
-  if (ti) ti.addEventListener('change', e => { S.q.time = e.target.value; });
+  if (ti) ti.addEventListener('change', e => { S.q.time = e.target.value; scheduleCalc(); });
 
-  const calcBtn = $('#calcBtn');
-  if (calcBtn) calcBtn.addEventListener('click', () => { updateAmt(); renderResults(); });
+  if (S.page === 'benefits' && S.benefitTab === 'calc') {
+    requestAnimationFrame(() => renderResults());
+  }
 
-  // chat
   const send = () => {
     const input = $('#chatInput');
     if (!input) return;
