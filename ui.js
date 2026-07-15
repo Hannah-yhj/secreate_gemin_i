@@ -80,6 +80,9 @@ function loadPersisted() {
     }
     if (d.carrier != null) S.carrier = d.carrier;
     if (d.grade != null) S.grade = d.grade;
+    const pages = ['home', 'mypage', 'benefits', 'more'];
+    if (pages.includes(d.page)) S.page = d.page;
+    if (d.benefitTab === 'map' || d.benefitTab === 'calc') S.benefitTab = d.benefitTab;
   } catch (_) { /* ignore corrupt storage */ }
 }
 
@@ -91,6 +94,8 @@ function savePersisted() {
       user: S.user,
       carrier: S.carrier,
       grade: S.grade,
+      page: S.page,
+      benefitTab: S.benefitTab,
     }));
   } catch (_) { /* quota / private mode */ }
 }
@@ -152,6 +157,7 @@ function goPage(page) {
   S.addPanel = null;
   S.showLoginForm = false;
   closeDrawer();
+  savePersisted();
   render();
 }
 
@@ -174,6 +180,7 @@ function startApp() {
     S.addPanel = null;
   }
   closeDrawer();
+  savePersisted();
   render();
   if (S.page === 'benefits' && S.benefitTab === 'calc') {
     requestAnimationFrame(() => renderResults());
@@ -755,6 +762,7 @@ function renderResults() {
     $('#goMyPageAdd')?.addEventListener('click', () => {
       S.page = 'mypage';
       S.addPanel = 'card';
+      savePersisted();
       render();
     });
     return;
@@ -1001,6 +1009,7 @@ function bind() {
     S.addPanel = 'card';
     S.showLoginForm = false;
     closeDrawer();
+    savePersisted();
     render();
   });
   const goML = $('#goMyPageLink');
@@ -1130,6 +1139,7 @@ function bind() {
 
   $$('[data-btab]').forEach(el => el.addEventListener('click', () => {
     S.benefitTab = el.dataset.btab;
+    savePersisted();
     render();
     if (S.benefitTab === 'calc') requestAnimationFrame(() => renderResults());
   }));
@@ -1142,6 +1152,7 @@ function bind() {
     S.page = 'benefits';
     S.benefitTab = 'calc';
     S.resultsExpanded = false;
+    savePersisted();
     render();
     renderResults();
   }));
