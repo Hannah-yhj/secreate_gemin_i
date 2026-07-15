@@ -9,16 +9,16 @@ export default async function handler(req, res) {
   try {
 
     const { data: products, error: pErr } =
-      await supabase.from("product").select("*");
+      await supabase.from("products").select("*");
 
     const { data: benefits, error: bErr } =
-      await supabase.from("benefit").select("*");
+      await supabase.from("benefits").select("*");
 
     const { data: rules, error: rErr } =
-      await supabase.from("rule").select("*");
+      await supabase.from("rules").select("*");
 
     const { data: sources, error: sErr } =
-      await supabase.from("source").select("*");
+      await supabase.from("sources").select("*");
 
     if (pErr || bErr || rErr || sErr) {
       throw pErr || bErr || rErr || sErr;
