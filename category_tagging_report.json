@@ -1,0 +1,572 @@
+[
+ {
+  "benefit_id": "B_SKT_001",
+  "brand": "CU",
+  "assigned": "편의점"
+ },
+ {
+  "benefit_id": "B_SKT_002",
+  "brand": "CU",
+  "assigned": "편의점"
+ },
+ {
+  "benefit_id": "B_SKT_003",
+  "brand": "아웃백 스테이크하우스",
+  "assigned": "외식"
+ },
+ {
+  "benefit_id": "B_SKT_004",
+  "brand": "아웃백 스테이크하우스",
+  "assigned": "외식"
+ },
+ {
+  "benefit_id": "B_SKT_005",
+  "brand": "뚜레쥬르",
+  "assigned": "외식"
+ },
+ {
+  "benefit_id": "B_SKT_006",
+  "brand": "뚜레쥬르",
+  "assigned": "외식"
+ },
+ {
+  "benefit_id": "B_SKT_007",
+  "brand": "공차",
+  "assigned": "카페"
+ },
+ {
+  "benefit_id": "B_SKT_008",
+  "brand": "도미노피자",
+  "assigned": "외식"
+ },
+ {
+  "benefit_id": "B_SKT_009",
+  "brand": "도미노피자",
+  "assigned": "외식"
+ },
+ {
+  "benefit_id": "B_SKT_010",
+  "brand": "롯데리아",
+  "assigned": "외식"
+ },
+ {
+  "benefit_id": "B_SKT_011",
+  "brand": "세븐일레븐",
+  "assigned": "편의점"
+ },
+ {
+  "benefit_id": "B_SKT_012",
+  "brand": "세븐일레븐",
+  "assigned": "편의점"
+ },
+ {
+  "benefit_id": "B_SKT_013",
+  "brand": "던킨",
+  "assigned": "카페"
+ },
+ {
+  "benefit_id": "B_SKT_014",
+  "brand": "던킨",
+  "assigned": "카페"
+ },
+ {
+  "benefit_id": "B_SKT_015",
+  "brand": "메가MGC커피",
+  "assigned": "카페"
+ },
+ {
+  "benefit_id": "B_SKT_016",
+  "brand": "메가MGC커피",
+  "assigned": "카페"
+ },
+ {
+  "benefit_id": "B_SKT_017",
+  "brand": "VIPS",
+  "assigned": "외식"
+ },
+ {
+  "benefit_id": "B_SKT_018",
+  "brand": "VIPS",
+  "assigned": "외식"
+ },
+ {
+  "benefit_id": "B_SKT_019",
+  "brand": "피자헛",
+  "assigned": "외식"
+ },
+ {
+  "benefit_id": "B_SKT_020",
+  "brand": "피자헛",
+  "assigned": "외식"
+ },
+ {
+  "benefit_id": "B_SKT_021",
+  "brand": "파파존스피자",
+  "assigned": "외식"
+ },
+ {
+  "benefit_id": "B_SKT_022",
+  "brand": "파파존스피자",
+  "assigned": "외식"
+ },
+ {
+  "benefit_id": "B_SKT_023",
+  "brand": "엔제리너스",
+  "assigned": null
+ },
+ {
+  "benefit_id": "B_SKT_024",
+  "brand": "엔제리너스",
+  "assigned": null
+ },
+ {
+  "benefit_id": "B_SKT_025",
+  "brand": "기프티콘",
+  "assigned": "온라인쇼핑"
+ },
+ {
+  "benefit_id": "B_SKT_026",
+  "brand": "멕시카나",
+  "assigned": null
+ },
+ {
+  "benefit_id": "B_SKT_027",
+  "brand": "마티나 라운지",
+  "assigned": null
+ },
+ {
+  "benefit_id": "B_SKT_028",
+  "brand": "마티나 라운지",
+  "assigned": null
+ },
+ {
+  "benefit_id": "B_SKT_029",
+  "brand": "유가네닭갈비",
+  "assigned": "외식"
+ },
+ {
+  "benefit_id": "B_SKT_030",
+  "brand": "유가네닭갈비",
+  "assigned": "외식"
+ },
+ {
+  "benefit_id": "B_SKT_031",
+  "brand": "드롭탑",
+  "assigned": "카페"
+ },
+ {
+  "benefit_id": "B_SKT_032",
+  "brand": "매드포갈릭",
+  "assigned": "외식"
+ },
+ {
+  "benefit_id": "B_SKT_033",
+  "brand": "매드포갈릭",
+  "assigned": "외식"
+ },
+ {
+  "benefit_id": "B_SKT_034",
+  "brand": "아티제",
+  "assigned": "카페"
+ },
+ {
+  "benefit_id": "B_SKT_035",
+  "brand": "빌리엔젤",
+  "assigned": null
+ },
+ {
+  "benefit_id": "B_SKT_036",
+  "brand": "반올림피자",
+  "assigned": "외식"
+ },
+ {
+  "benefit_id": "B_SKT_037",
+  "brand": "온더보더",
+  "assigned": "외식"
+ },
+ {
+  "benefit_id": "B_SKT_038",
+  "brand": "온더보더",
+  "assigned": "외식"
+ },
+ {
+  "benefit_id": "B_SKT_039",
+  "brand": "파스쿠찌",
+  "assigned": "카페"
+ },
+ {
+  "benefit_id": "B_SKT_040",
+  "brand": "풀무원",
+  "assigned": "온라인쇼핑"
+ },
+ {
+  "benefit_id": "B_SKT_041",
+  "brand": "더벤티",
+  "assigned": "카페"
+ },
+ {
+  "benefit_id": "B_SKT_042",
+  "brand": "미스터힐링",
+  "assigned": "의료"
+ },
+ {
+  "benefit_id": "B_SKT_043",
+  "brand": "라그릴리아",
+  "assigned": null
+ },
+ {
+  "benefit_id": "B_SKT_044",
+  "brand": "라그릴리아",
+  "assigned": null
+ },
+ {
+  "benefit_id": "B_SKT_045",
+  "brand": "원스토리",
+  "assigned": "온라인쇼핑"
+ },
+ {
+  "benefit_id": "B_SKT_046",
+  "brand": "제오헤어",
+  "assigned": "뷰티"
+ },
+ {
+  "benefit_id": "B_SKT_047",
+  "brand": "사보텐",
+  "assigned": "외식"
+ },
+ {
+  "benefit_id": "B_SKT_048",
+  "brand": "사보텐",
+  "assigned": "외식"
+ },
+ {
+  "benefit_id": "B_SKT_049",
+  "brand": "안경매니저",
+  "assigned": null
+ },
+ {
+  "benefit_id": "B_SKT_050",
+  "brand": "미니창고 다락",
+  "assigned": "테마파크"
+ },
+ {
+  "benefit_id": "B_SKT_051",
+  "brand": "크래버대게나라",
+  "assigned": "외식"
+ },
+ {
+  "benefit_id": "B_SKT_052",
+  "brand": "크래버대게나라",
+  "assigned": "외식"
+ },
+ {
+  "benefit_id": "B_SKT_053",
+  "brand": "타코벨",
+  "assigned": "외식"
+ },
+ {
+  "benefit_id": "B_SKT_054",
+  "brand": "타코벨",
+  "assigned": "외식"
+ },
+ {
+  "benefit_id": "B_SKT_055",
+  "brand": "동원몰",
+  "assigned": "온라인쇼핑"
+ },
+ {
+  "benefit_id": "B_SKT_056",
+  "brand": "브레댄코",
+  "assigned": "카페"
+ },
+ {
+  "benefit_id": "B_SKT_057",
+  "brand": "네이처스케이프 플러스",
+  "assigned": null
+ },
+ {
+  "benefit_id": "B_SKT_058",
+  "brand": "광동상회",
+  "assigned": "온라인쇼핑"
+ },
+ {
+  "benefit_id": "B_SKT_059",
+  "brand": "대구아쿠아리움",
+  "assigned": "테마파크"
+ },
+ {
+  "benefit_id": "B_SKT_060",
+  "brand": "사람인 멘토링매치",
+  "assigned": null
+ },
+ {
+  "benefit_id": "B_SKT_061",
+  "brand": "쿤달",
+  "assigned": "뷰티"
+ },
+ {
+  "benefit_id": "B_SKT_062",
+  "brand": "에필로우",
+  "assigned": null
+ },
+ {
+  "benefit_id": "B_SKT_063",
+  "brand": "스코피",
+  "assigned": null
+ },
+ {
+  "benefit_id": "B_SKT_064",
+  "brand": "리바이북",
+  "assigned": null
+ },
+ {
+  "benefit_id": "B_SKT_065",
+  "brand": "히바린",
+  "assigned": "외식"
+ },
+ {
+  "benefit_id": "B_SKT_066",
+  "brand": "히바린",
+  "assigned": "외식"
+ },
+ {
+  "benefit_id": "B_SKT_067",
+  "brand": "런드리고",
+  "assigned": null
+ },
+ {
+  "benefit_id": "B_SKT_068",
+  "brand": "아이피아",
+  "assigned": null
+ },
+ {
+  "benefit_id": "B_SKT_069",
+  "brand": "아이러브탠",
+  "assigned": null
+ },
+ {
+  "benefit_id": "B_LGU_001",
+  "brand": "볼트업",
+  "assigned": null
+ },
+ {
+  "benefit_id": "B_LGU_002",
+  "brand": "유독",
+  "assigned": null
+ },
+ {
+  "benefit_id": "B_LGU_003",
+  "brand": "LG생활건강샵 U+패밀리샵",
+  "assigned": null
+ },
+ {
+  "benefit_id": "B_LGU_004",
+  "brand": "쉐이크쉑",
+  "assigned": null
+ },
+ {
+  "benefit_id": "B_KTLIST_001",
+  "brand": "라그릴리아",
+  "assigned": null
+ },
+ {
+  "benefit_id": "B_KTLIST_002",
+  "brand": "라그릴리아",
+  "assigned": null
+ },
+ {
+  "benefit_id": "B_KTLIST_003",
+  "brand": "어니스트플라워",
+  "assigned": null
+ },
+ {
+  "benefit_id": "B_KTLIST_004",
+  "brand": "GS25",
+  "assigned": "편의점"
+ },
+ {
+  "benefit_id": "B_KTLIST_005",
+  "brand": "GS25",
+  "assigned": "편의점"
+ },
+ {
+  "benefit_id": "B_KTLIST_006",
+  "brand": "파리바게뜨",
+  "assigned": "외식"
+ },
+ {
+  "benefit_id": "B_KTLIST_007",
+  "brand": "파리바게뜨",
+  "assigned": "외식"
+ },
+ {
+  "benefit_id": "B_KTLIST_008",
+  "brand": "뚜레쥬르",
+  "assigned": "외식"
+ },
+ {
+  "benefit_id": "B_KTLIST_009",
+  "brand": "뚜레쥬르",
+  "assigned": "외식"
+ },
+ {
+  "benefit_id": "B_KTLIST_010",
+  "brand": "이마트24",
+  "assigned": "편의점"
+ },
+ {
+  "benefit_id": "B_KTLIST_011",
+  "brand": "이마트24",
+  "assigned": "편의점"
+ },
+ {
+  "benefit_id": "B_KTLIST_012",
+  "brand": "꾸까",
+  "assigned": null
+ },
+ {
+  "benefit_id": "B_KTLIST_013",
+  "brand": "아웃백",
+  "assigned": "외식"
+ },
+ {
+  "benefit_id": "B_KTLIST_014",
+  "brand": "아웃백",
+  "assigned": "외식"
+ },
+ {
+  "benefit_id": "B_KTLIST_015",
+  "brand": "파파존스피자",
+  "assigned": "외식"
+ },
+ {
+  "benefit_id": "B_KTLIST_016",
+  "brand": "파파존스피자",
+  "assigned": "외식"
+ },
+ {
+  "benefit_id": "B_KTLIST_017",
+  "brand": "파리크라상",
+  "assigned": "외식"
+ },
+ {
+  "benefit_id": "B_KTLIST_018",
+  "brand": "파리크라상",
+  "assigned": "외식"
+ },
+ {
+  "benefit_id": "B_KTLIST_019",
+  "brand": "그리팅",
+  "assigned": "온라인쇼핑"
+ },
+ {
+  "benefit_id": "B_KTLIST_020",
+  "brand": "브레댄코",
+  "assigned": "카페"
+ },
+ {
+  "benefit_id": "B_KTLIST_021",
+  "brand": "퀴즈노스",
+  "assigned": null
+ },
+ {
+  "benefit_id": "B_KTLIST_022",
+  "brand": "노트미",
+  "assigned": null
+ },
+ {
+  "benefit_id": "B_KTLIST_023",
+  "brand": "피자헛",
+  "assigned": "외식"
+ },
+ {
+  "benefit_id": "B_KTLIST_024",
+  "brand": "카페베네",
+  "assigned": "카페"
+ },
+ {
+  "benefit_id": "B_KTLIST_025",
+  "brand": "초심스터디카페",
+  "assigned": null
+ },
+ {
+  "benefit_id": "B_KTLIST_026",
+  "brand": "초심스터디카페",
+  "assigned": null
+ },
+ {
+  "benefit_id": "B_KTLIST_027",
+  "brand": "미스터피자",
+  "assigned": "외식"
+ },
+ {
+  "benefit_id": "B_KTLIST_028",
+  "brand": "미스터피자",
+  "assigned": "외식"
+ },
+ {
+  "benefit_id": "B_KTLIST_029",
+  "brand": "풀무원",
+  "assigned": "온라인쇼핑"
+ },
+ {
+  "benefit_id": "B_KTLIST_030",
+  "brand": "허닭",
+  "assigned": "온라인쇼핑"
+ },
+ {
+  "benefit_id": "B_KTLIST_031",
+  "brand": "다락",
+  "assigned": null
+ },
+ {
+  "benefit_id": "B_KTLIST_032",
+  "brand": "볼록북",
+  "assigned": "온라인쇼핑"
+ },
+ {
+  "benefit_id": "B_KTLIST_033",
+  "brand": "V컬러링",
+  "assigned": "통신"
+ },
+ {
+  "benefit_id": "B_KTLIST_034",
+  "brand": "kt wiz 프로야구",
+  "assigned": null
+ },
+ {
+  "benefit_id": "B_KTLIST_035",
+  "brand": "kt wiz 프로야구",
+  "assigned": null
+ },
+ {
+  "benefit_id": "B_KTLIST_036",
+  "brand": "지니팩",
+  "assigned": "구독"
+ },
+ {
+  "benefit_id": "B_KTLIST_037",
+  "brand": "공항 스카이허브 라운지",
+  "assigned": "여행"
+ },
+ {
+  "benefit_id": "B_KTLIST_038",
+  "brand": "런드리고",
+  "assigned": null
+ },
+ {
+  "benefit_id": "B_KTLIST_039",
+  "brand": "런드리고",
+  "assigned": null
+ },
+ {
+  "benefit_id": "B_KTLIST_040",
+  "brand": "미스터힐링",
+  "assigned": "의료"
+ },
+ {
+  "benefit_id": "B_KTLIST_041",
+  "brand": "반올림피자",
+  "assigned": "외식"
+ }
+]
