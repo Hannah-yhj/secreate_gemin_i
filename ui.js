@@ -37,6 +37,8 @@ const S = {
   profileSnap: null,
   carrier: null,
   grade: null,
+  carrierDraft: null,
+  gradeDraft: null,
   cardSearch: '',
   cardProvider: 'all',
   addPanel: null,
@@ -187,6 +189,11 @@ function loadPersisted() {
     }
     if (d.carrier != null) S.carrier = d.carrier;
     if (d.grade != null) S.grade = d.grade;
+    // 저장 완료된 통신사만 유지 (통신사만 고르고 등급 미저장인 값 제거)
+    if (!S.carrier || !S.grade || !(CARRIER_GRADES[S.carrier] || []).includes(S.grade)) {
+      S.carrier = null;
+      S.grade = null;
+    }
     const pages = ['home', 'mypage', 'benefits', 'more'];
     if (pages.includes(d.page)) S.page = d.page;
     if (d.benefitTab === 'map' || d.benefitTab === 'calc') S.benefitTab = d.benefitTab;
@@ -216,6 +223,8 @@ function showToast(msg) {
 }
 
 loadPersisted();
+// 불완전하게 저장된 통신사 값이 있으면 스토리지도 정리
+savePersisted();
 updateDrawerProfile();
 
 /* ---- 우측 메뉴 패널 ---- */
@@ -239,6 +248,8 @@ function closeOverlays() {
     S.addPanel = null;
     S.cardSearch = '';
     S.cardProvider = 'all';
+    S.carrierDraft = null;
+    S.gradeDraft = null;
     render();
     return;
   }
@@ -297,35 +308,53 @@ function startApp() {
   }
 }
 
+function isCardProduct(p) {
+  return p && p.service_type !== '통신사';
+}
+
+function cardProducts() {
+  return (DB?.products || []).filter(isCardProduct);
+}
+
 /* ---- 데이터 로드 ---- */
 render();
 function applyDB(data) {
+  if (!data || !Array.isArray(data.products) || !data.products.length) {
+    throw new Error('empty products');
+  }
+  const cards = data.products.filter(isCardProduct);
+  if (!cards.length) throw new Error('no card products');
+
   DB = data;
   Engine.init(DB);
   const spend = { ...Object.fromEntries(DB.products.map(p => [p.product_id, null])), ...S.state.spend };
   S.state.spend = spend;
-  S.wallet = S.wallet.filter(id => DB.products.some(p => p.product_id === id));
+  // 통신사 멤버십은 지갑이 아니라 통신사 설정으로만 관리
+  S.wallet = S.wallet.filter(id => {
+    const p = DB.products.find(x => x.product_id === id);
+    return isCardProduct(p);
+  });
   savePersisted();
   render();
 }
-fetch('/api/benefits')
-  .then(res => {
-    if (!res.ok) throw new Error('api');
-    return res.json();
-  })
-  .then(applyDB)
-  .catch(() => {
-    fetch('db.json')
+function loadDB() {
+  return fetch('/api/benefits')
+    .then(res => {
+      if (!res.ok) throw new Error('api');
+      return res.json();
+    })
+    .then(applyDB)
+    .catch(() => fetch('db.json')
       .then(res => {
         if (!res.ok) throw new Error('db.json');
         return res.json();
       })
-      .then(applyDB)
-      .catch(err => {
-        console.error('DB 로딩 실패:', err);
-        if (S.page !== 'home') render();
-      });
-  });
+      .then(applyDB));
+}
+loadDB().catch(err => {
+  console.error('DB 로딩 실패:', err);
+  if (S.page !== 'home') render();
+});
 
 function paymentDate() {
   const now = new Date();
@@ -531,7 +560,7 @@ function viewProfileEdit() {
 }
 
 function viewMyCards() {
-  const cards = DB.products.filter(p => S.wallet.includes(p.product_id));
+  const cards = cardProducts().filter(p => S.wallet.includes(p.product_id));
   const cardTiles = cards.map(ownedCardTile).join('');
 
   const carrierLabel = S.carrier === 'LGU+' ? 'LG U+' : S.carrier;
@@ -659,23 +688,25 @@ function fabAndPanel() {
 
   let panelBody = '';
   if (open === 'carrier') {
-    const grades = S.carrier ? (CARRIER_GRADES[S.carrier] || []) : [];
-    const canSave = S.carrier && S.grade && grades.includes(S.grade);
+    const draftCarrier = S.carrierDraft;
+    const draftGrade = S.gradeDraft;
+    const grades = draftCarrier ? (CARRIER_GRADES[draftCarrier] || []) : [];
+    const canSave = draftCarrier && draftGrade && grades.includes(draftGrade);
     panelBody = `
       <div class="add-panel-head">
         <button type="button" class="back-btn" data-open-add="menu">←</button>
-        <h3>통신사 추가</h3>
+        <h3>${S.carrier ? '통신사 변경' : '통신사 추가'}</h3>
         <button type="button" class="icon-x" data-close-add aria-label="닫기">✕</button>
       </div>
       <p class="sub">이용 중인 통신사를 고른 뒤, 해당 통신사 멤버십 등급을 선택하세요.</p>
       <label class="fl">통신사</label>
       <div class="carrier-grid">
-        ${CARRIERS.map(c => `<button type="button" data-carrier="${c}" class="${S.carrier === c ? 'on' : ''}">${c === 'LGU+' ? 'LG U+' : c}</button>`).join('')}
+        ${CARRIERS.map(c => `<button type="button" data-carrier="${c}" class="${draftCarrier === c ? 'on' : ''}">${c === 'LGU+' ? 'LG U+' : c}</button>`).join('')}
       </div>
-      ${S.carrier ? `
-        <label class="fl">${S.carrier === 'LGU+' ? 'LG U+' : S.carrier} 멤버십 등급</label>
+      ${draftCarrier ? `
+        <label class="fl">${draftCarrier === 'LGU+' ? 'LG U+' : draftCarrier} 멤버십 등급</label>
         <div class="grade-row">
-          ${grades.map(g => `<button type="button" data-grade="${esc(g)}" class="${S.grade === g ? 'on' : ''}">${esc(g)}</button>`).join('')}
+          ${grades.map(g => `<button type="button" data-grade="${esc(g)}" class="${draftGrade === g ? 'on' : ''}">${esc(g)}</button>`).join('')}
         </div>` : `
         <p class="sub grade-hint">통신사를 먼저 선택하면 등급 목록이 나타납니다.</p>`}
       <button type="button" class="cta block" id="saveCarrierBtn" ${canSave ? '' : 'disabled'}>저장</button>`;
@@ -725,7 +756,7 @@ const PROVIDER_SHORT = {
 };
 
 function providerList() {
-  return [...new Set(DB.products.filter(p => p.service_type !== '통신사').map(p => p.provider))];
+  return [...new Set(cardProducts().map(p => p.provider))];
 }
 
 function renderProviderTabs() {
@@ -740,8 +771,7 @@ function renderProviderTabs() {
 
 function filteredAddableCards() {
   const q = S.cardSearch.trim().toLowerCase();
-  return DB.products.filter(p => {
-    if (p.service_type === '통신사') return false;
+  return cardProducts().filter(p => {
     if (S.wallet.includes(p.product_id)) return false;
     if (S.cardProvider !== 'all' && p.provider !== S.cardProvider) return false;
     if (!q) return true;
@@ -752,8 +782,7 @@ function filteredAddableCards() {
 
 function renderAddCardList() {
   const inWallet = new Set(S.wallet);
-  const pool = DB.products.filter(p => {
-    if (p.service_type === '통신사') return false;
+  const pool = cardProducts().filter(p => {
     if (inWallet.has(p.product_id)) return false;
     if (S.cardProvider !== 'all' && p.provider !== S.cardProvider) return false;
     return true;
@@ -770,7 +799,7 @@ function renderAddCardList() {
   }
   return list.map(p => `
     <button type="button" class="add-card-row" data-add-card="${p.product_id}">
-      <span class="plate" style="background:${PLATE_COLORS[p.product_id]}">${PLATE_LABEL[p.product_id]}</span>
+      <span class="plate" style="background:${PLATE_COLORS[p.product_id] || '#64748B'}">${PLATE_LABEL[p.product_id] || esc((p.product_name || '?').slice(0, 4))}</span>
       <span class="info">
         <span class="nm">${esc(p.product_name)}</span>
         <span class="tp">${esc(p.product_type)} · ${esc(p.provider)}</span>
@@ -1306,6 +1335,8 @@ function bind() {
       S.addPanel = null;
       S.cardSearch = '';
       S.cardProvider = 'all';
+      S.carrierDraft = null;
+      S.gradeDraft = null;
     } else {
       S.addPanel = 'menu';
     }
@@ -1317,6 +1348,15 @@ function bind() {
       S.cardSearch = '';
       S.cardProvider = 'all';
     }
+    if (next === 'carrier') {
+      // 추가: 빈 초안 / 변경: 현재 값으로 초안 시작 (저장 전엔 S.carrier 건드리지 않음)
+      S.carrierDraft = S.carrier ? S.carrier : null;
+      S.gradeDraft = S.carrier && S.grade ? S.grade : null;
+    }
+    if (next === 'menu') {
+      S.carrierDraft = null;
+      S.gradeDraft = null;
+    }
     S.addPanel = next;
     render();
   }));
@@ -1324,25 +1364,31 @@ function bind() {
     S.addPanel = null;
     S.cardSearch = '';
     S.cardProvider = 'all';
+    S.carrierDraft = null;
+    S.gradeDraft = null;
     render();
   }));
 
   $$('[data-carrier]').forEach(el => el.addEventListener('click', () => {
     const next = el.dataset.carrier;
-    if (S.carrier !== next) {
-      S.carrier = next;
-      S.grade = null;
+    if (S.carrierDraft !== next) {
+      S.carrierDraft = next;
+      S.gradeDraft = null;
     }
     render();
   }));
   $$('[data-grade]').forEach(el => el.addEventListener('click', () => {
-    S.grade = el.dataset.grade;
+    S.gradeDraft = el.dataset.grade;
     render();
   }));
   const saveCarrier = $('#saveCarrierBtn');
   if (saveCarrier) saveCarrier.addEventListener('click', () => {
-    const grades = CARRIER_GRADES[S.carrier] || [];
-    if (!S.carrier || !S.grade || !grades.includes(S.grade)) return;
+    const grades = CARRIER_GRADES[S.carrierDraft] || [];
+    if (!S.carrierDraft || !S.gradeDraft || !grades.includes(S.gradeDraft)) return;
+    S.carrier = S.carrierDraft;
+    S.grade = S.gradeDraft;
+    S.carrierDraft = null;
+    S.gradeDraft = null;
     S.addPanel = null;
     savePersisted();
     const label = S.carrier === 'LGU+' ? 'LG U+' : S.carrier;
