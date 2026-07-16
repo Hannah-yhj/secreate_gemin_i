@@ -305,8 +305,9 @@ const Engine = (() => {
     const out = [];
     Object.values(groups).forEach(g => {
       if (g.length === 1) { out.push(g[0]); return; }
-      const spendKnown = state.spend[g[0].benefit.product_id] != null;
-      // 실적 확인됨 → evalBenefit에서 이미 구간 필터됨 → 가치 최대 1행
+      const isSpendTier = g.some(r => r.benefit.spend_min);
+      const spendKnown = !isSpendTier || state.spend[g[0].benefit.product_id] != null;
+      // 실적 확인됨(또는 애초에 실적 구간이 아니라 등급 구간 등) → evalBenefit에서 이미 구간 필터됨 → 가치 최대 1행
       // 실적 미확인 → 최소 실적 구간(보수적) 행 선택 + 상위 구간 가능성 표기
       g.sort((a, b) => (a.benefit.spend_min || 0) - (b.benefit.spend_min || 0) || b.value - a.value);
       let pick;

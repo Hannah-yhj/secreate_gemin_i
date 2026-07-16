@@ -1,0 +1,1728 @@
+{
+ "skt": [
+  {
+   "brand": "배스킨라빈스",
+   "desc": "싱글레귤러 50% 할인(2,000원)",
+   "why": "no-match"
+  },
+  {
+   "brand": "배스킨라빈스",
+   "desc": "싱글레귤러 30% 할인(1,200원)",
+   "why": "no-match"
+  },
+  {
+   "brand": "파리바게뜨",
+   "desc": "천원당 100원 할인(모바일카드) / 천원당 50원 할인(플라스틱카드)",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "파리바게뜨",
+   "desc": "천원당 50원 할인 (모바일카드/플라스틱카드)",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "이마트",
+   "desc": "짝수월 7%, 홀수월 3% 할인 (구매한도 및 횟수 제한은 유의 사항 참고)",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "이마트",
+   "desc": "3% 할인 (구매한도 및 횟수 제한은 유의 사항 참고)",
+   "why": "no-match"
+  },
+  {
+   "brand": "폴 바셋",
+   "desc": "시그니처 커피 4종(사이즈 무관) 구매 시 10% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "CGV",
+   "desc": "무료 관람 연 3회, 평일/주말 관람 1+1 연 9회, 특별관 할인 혜택 연 12회, 영화 관람권(11,000원 이상) 예매 시 최대 4,000원 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "CGV",
+   "desc": "영화 관람권(11,000원 이상) 예매 시 최대 4,000원 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "롯데월드 어드벤처",
+   "desc": "종합이용권 본인 40% + 동반 3인 30% 현장 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "롯데월드 어드벤처",
+   "desc": "종합이용권 본인 40% + 동반 3인 20% 현장 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "11번가",
+   "desc": "상시 최대 11% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "SK렌터카",
+   "desc": "제주: 주중/주말 최대 85% 할인, 내륙: 주중/주말 최대 60% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "FLO",
+   "desc": "월정액 30% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "메가박스",
+   "desc": "영화 관람권(11,000원 이상) 예매 시 최대 4,000원 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "스피드메이트",
+   "desc": "국산차 엔진오일 2만 원 할인 / 공임, 부가상품 10% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "bhc",
+   "desc": "4,000원 할인(월 2회)",
+   "why": "no-match"
+  },
+  {
+   "brand": "제주항공",
+   "desc": "국내선 최대 4,000원 할인/국제선 최대 5% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "티웨이항공",
+   "desc": "국내선 4,000원(편도,왕복), 국제선 15,000원(왕복) 할인 쿠폰 제공",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "원스토어",
+   "desc": "게임, 앱, 쇼핑 5~10% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "파리크라상",
+   "desc": "천원당 100원 할인(모바일카드) / 천원당 50원 할인(플라스틱카드)",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "파리크라상",
+   "desc": "천원당 50원 할인 (모바일카드/플라스틱카드)",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "SK브로드밴드 B tv",
+   "desc": "월정액 4종(연 6회까지) 20% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "SK브로드밴드 B tv",
+   "desc": "월정액 4종(연 6회까지) 10% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "G car",
+   "desc": "모든 지역 주중 20%, 주말/공휴일 10% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "신라면세점",
+   "desc": "구매 금액 별 데일리쿠폰 총 300만원 증정, 중복 사용가능 한 제휴 적립금 5,000원 증정",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "GS25",
+   "desc": "매주 화요일, 프레시 푸드 1천 원당 200원 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "롯데월드 아쿠아리움",
+   "desc": "종합이용권 본인 30% + 동반 3인 30% 현장 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "에버랜드",
+   "desc": "본인 40% 및 동반 3인 30% 할인",
+   "why": "companion-rate"
+  },
+  {
+   "brand": "신세계면세점",
+   "desc": "특정일 최대 12% 할인, 상시 1% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "이월드",
+   "desc": "본인 40% 할인 + 동반 3인 20% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "백미당",
+   "desc": "모든 상품 10% 할인(최대 2만 원 할인)",
+   "why": "no-match"
+  },
+  {
+   "brand": "롯데월드 서울스카이",
+   "desc": "전망대 입장권 본인 20% + 동반 3인 10% 현장 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "서울랜드",
+   "desc": "파크이용권 40% 할인(동반 1인 30% 할인)",
+   "why": "companion-rate"
+  },
+  {
+   "brand": "이랜드몰",
+   "desc": "10% 할인(5만 원 이상 구매 시 최대 5천 원 할인)",
+   "why": "no-match"
+  },
+  {
+   "brand": "롯데면세점",
+   "desc": "제휴쿠폰 최대 $56 증정(온라인) 최대 3만원 할인쿠폰 및 LDFPAY 1만 원 증정(오프라인)",
+   "why": "gift-or-freeform"
+  },
+  {
+   "brand": "이니스프리",
+   "desc": "리스테이 10% 추가 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "텐바이텐",
+   "desc": "모든 상품 3,000원 쿠폰, 디자인 문구 카테고리 15% 쿠폰",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "키자니아",
+   "desc": "반일권 30% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "뽀로로파크",
+   "desc": "본인 40% 할인+동반 1인 30% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "아쿠아플라넷",
+   "desc": "일산점, 광교점 20%, 제주점, 여수점 15% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "컬쳐랜드",
+   "desc": "3% 할인 (5만 원권/3만 원권/1만 원권)",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "미스터피자",
+   "desc": "온라인: 25% 할인 / 오프라인: 25% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "미스터피자",
+   "desc": "온라인: 15% 할인 / 오프라인: 15% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "워커힐호텔앤리조트",
+   "desc": "식음료 10% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "워커힐호텔앤리조트",
+   "desc": "식음료 5% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "퍼블로그",
+   "desc": "사진 인화 5% 할인, 포토북 10% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "티맵모빌리티",
+   "desc": "에버온) 전기차 충전 10% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "SK스토아",
+   "desc": "멤버십 적용 상품 대상 5% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "아쿠아필드",
+   "desc": "평일 입장권(찜질스파/워터파크) 본인 포함 최대 2명 30% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "롯데렌터카",
+   "desc": "제주: 주중/주말 최대 85% 할인, 내륙: 주중/주말 최대 60% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "제주신화월드",
+   "desc": "최대 46% 할인 (본인 및 동반 3인)",
+   "why": "companion-rate"
+  },
+  {
+   "brand": "핏펫",
+   "desc": "40,000원 이상 구매 시 5,000원 할인, 40,000원 이상 구매 시 10,000원 할인(첫 결제 시)",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "설악워터피아",
+   "desc": "35% 할인 (본인 및 동반 2인까지)",
+   "why": "companion-rate"
+  },
+  {
+   "brand": "에버온",
+   "desc": "전기차 충전 10% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "빌리카",
+   "desc": "제주: 주중/주말 최대 85% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "그리팅",
+   "desc": "5만 원 이상 구매 시 1만 원 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "청소연구소",
+   "desc": "통합 4종 할인 혜택(1회 청소 5,000원+정기 서비스 2,000원+이사/입주 청소 20,000원+세탁기 청소 10,000원+에어컨 청소 7%)",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "파라다이스스파도고",
+   "desc": "20% 할인 (본인 및 동반 3인까지)",
+   "why": "companion-rate"
+  },
+  {
+   "brand": "톤28",
+   "desc": "모든 제품 15% 할인 쿠폰",
+   "why": "no-match"
+  },
+  {
+   "brand": "캐리비안 베이",
+   "desc": "본인 40% 및 동반 3인 30% 할인",
+   "why": "companion-rate"
+  },
+  {
+   "brand": "SEA LIFE 부산아쿠아리움",
+   "desc": "주중 25% 할인 (본인 및 동반 1인)",
+   "why": "companion-rate"
+  },
+  {
+   "brand": "신라아이파크면세점",
+   "desc": "적립금 20만원 / 제휴사적립금 최대 10만원 지급",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "여행자 보험",
+   "desc": "어시스트 카드 결제 금액의 최대 10% 할인(최대 30만P)",
+   "why": "no-match"
+  },
+  {
+   "brand": "동구밭",
+   "desc": "모든 상품 10% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "제주삼다수",
+   "desc": "무라벨 상품 10% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "피자알볼로",
+   "desc": "배달 주문 시 15% 할인, 포장 주문 시 20% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "아시아나 인터넷 면세점",
+   "desc": "인터넷 면세점 10% 할인 쿠폰 제공(월 1회, 최대 10만 원 할인)",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "노랑풍선 시티버스",
+   "desc": "전통문화코스 25% 할인 쿠폰 제공",
+   "why": "no-match"
+  },
+  {
+   "brand": "주렁주렁",
+   "desc": "입장권 25% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "타요키즈카페",
+   "desc": "본인 40% 할인+동반 1인 30% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "씨네Q",
+   "desc": "일반관/리클라이너관 9,000원 관람권 월 8장, 리저브관 12,000원 관람권 월 2장",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "B tv cable",
+   "desc": "월정액 5종(연 6회까지) 20% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "B tv cable",
+   "desc": "월정액 5종(연 6회까지) 10% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "미니창고 다락",
+   "desc": "최초 1개월 무료+이후부터 35% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "파고다",
+   "desc": "파고다어학원 20% 할인, 파고다토쿨 10,000원 할인, 파고다인강 10% 할인, 파고다원 5% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "T 우주 신한카드",
+   "desc": "우주패스 구독 시 9900원 캐시백, 최대 10% 포인트 적립",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "뉴퍼마켓",
+   "desc": "7만 원 이상 구매 시 13,000원 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "경주뽀로로아쿠아빌리지",
+   "desc": "본인 35% 할인 (동반 2인까지 적용)",
+   "why": "companion-rate"
+  },
+  {
+   "brand": "티니핑월드 인 판교",
+   "desc": "티니핑월드 이용권(평일/주말) 아동 1명+성인 1명 입장권 20% 현장 할인(동반 5명 포함 최대 7명 할인 가능)",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "롯데월드 어드벤처 부산",
+   "desc": "종합이용권 본인 35%+동반 3인 10% 현장 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "현대면세점",
+   "desc": "현대면세점 GOLD 등급 업그레이드, 온/오프라인 통합 H.oney 선불카드 최대 99,000원",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "파라다이스시티 씨메르",
+   "desc": "아쿠아스파권(통합권) 20% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "제주관광공사 인터넷면세점",
+   "desc": "10만 원 이상 구매 시 1만 원 할인 쿠폰 1장, 20만 원 이상 구매 시 2만 원 할인 쿠폰 1장",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "T 멤버십 더블 체크카드(하나)",
+   "desc": "멤버십 혜택 이용금액만큼 추가 캐시백",
+   "why": "no-match"
+  },
+  {
+   "brand": "뮤지엄 원",
+   "desc": "최대 33% 현장 할인(본인 포함 총 4명)",
+   "why": "companion-rate"
+  },
+  {
+   "brand": "열린베이커리",
+   "desc": "10% 할인(오프라인)",
+   "why": "no-match"
+  },
+  {
+   "brand": "클럽디 오아시스",
+   "desc": "이용권(통합/워터파크/스파) 15% 할인 (본인 및 동반 1인)",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "클럽디 오아시스",
+   "desc": "이용권(통합/워터파크/스파) 10% 할인 (본인 및 동반 1인)",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "해피오더",
+   "desc": "10% 할인 및 무료 배달",
+   "why": "gift-or-freeform"
+  },
+  {
+   "brand": "허닭",
+   "desc": "30,000원 이상 구매 시 10% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "하프클럽",
+   "desc": "10% 할인(3만 원 이상 구매 시 최대 5천 원 할인)",
+   "why": "no-match"
+  },
+  {
+   "brand": "보리보리",
+   "desc": "20,000원 이상 구매 시 10% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "투어비스",
+   "desc": "해외 호텔 7% 상시 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "로렌츠",
+   "desc": "모든 상품 20% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "YBM 전화화상",
+   "desc": "필리핀 전화영어 30% 할인 쿠폰(회당 10분/3개월 수강권 기준), 주니어 필리핀 전화영어 30% 할인 쿠폰(회당 10분/3개월 수강권 기준)",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "어바웃펫",
+   "desc": "1만 원 이상 구매 시 10% 할인, 3만 원 이상 구매 시 1만 원 할인(첫 구매 시)",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "헉슬리",
+   "desc": "모든 제품 20% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "여행가자고",
+   "desc": "호텔 7%, 투어 10%, 렌터카 10% 상시 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "아로마티카",
+   "desc": "모든 제품 10% 할인(3만 원 이상 구매 시 최대 5만 원 할인), 리필 제품 15% 할인(1만 원 이상 구매 시 최대 1만 원 할인)",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "아떼",
+   "desc": "모든 제품 15% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "슈퍼키친",
+   "desc": "모든 상품 10% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "반려생활",
+   "desc": "숙소 예약/결제 시 5% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "후디스몰",
+   "desc": "일반 상품 3만 원 이상 구매 시 25% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "디자인밀",
+   "desc": "가맹점 배송 식단 7,000원 할인(3만 원 이상 구매 시), 택배 상품 무료 배송 쿠폰",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "부산엑스더스카이",
+   "desc": "전망대 입장권 20% 할인(본인 외 동반 2인)",
+   "why": "companion-rate"
+  },
+  {
+   "brand": "셀퓨전씨",
+   "desc": "모든 상품 15% 장바구니 할인(최대 30,000원 할인)",
+   "why": "no-match"
+  },
+  {
+   "brand": "여수 유월드",
+   "desc": "여수 유월드 자유 이용권 40% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "VOG Hair",
+   "desc": "헤어 시술 20% 할인, 프리미엄 헤어 클리닉 무료(지정 날짜에 헤어 시술 시)",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "로봇랜드",
+   "desc": "종일권 본인 40% 할인+동반 3인 30% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "SK매직",
+   "desc": "매직 자사 제품 일시불 구매 시 10% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "파라다이스시티 원더박스",
+   "desc": "원더박스 자유이용권 20% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "스피쿠스",
+   "desc": "전화/화상 전 과정 40% 할인(12/24/48주 기간, 4주 수업 제외)",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "인터뷰박스",
+   "desc": "인터뷰박스 상품 예약 후 이용하면 3,000원 페이백",
+   "why": "no-match"
+  },
+  {
+   "brand": "르 스페이스",
+   "desc": "본인 및 동반 1인 25% 할인",
+   "why": "companion-rate"
+  },
+  {
+   "brand": "T 멤버십 라이프 신한카드",
+   "desc": "멤버십 결제 최대 5,000p, T 우주패스 최대 3,000p, 외식 가맹점 최대 30% 추가 적립",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "Touch1카드(하나)",
+   "desc": "5대 주요 소비처에서 추가 할인 제공",
+   "why": "no-match"
+  },
+  {
+   "brand": "허그맘허그인",
+   "desc": "전 서비스 10% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "컨티뉴",
+   "desc": "모든 제품 40% 할인(최대 5만 원 할인), 1+1 알루미늄 카드홀더 구매(색상 교차 가능)",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "위미트",
+   "desc": "모든 상품 25% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "T 멤버십 더블 롯데 카드",
+   "desc": "멤버십 혜택 이용금액만큼 OK캐쉬백 더블 적립",
+   "why": "points"
+  },
+  {
+   "brand": "월스트리트 잉글리시",
+   "desc": "5% 추가 할인 쿠폰 1장 제공 (강의 등록 시 사용/동반 1인 포함)",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "SK국제전화 00700",
+   "desc": "매월 사용금액의 10% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "멍타냥택시",
+   "desc": "마일리지 3,000점(원) 제공",
+   "why": "no-match"
+  },
+  {
+   "brand": "국개대표",
+   "desc": "20,000원 이상 구매 시 4,000원 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "원더파크/원더빌리지",
+   "desc": "주중/주말 입장권 25% 할인(본인 포함 최대 4명)",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "도원스타일",
+   "desc": "30,000원 이상 구매 시 10% 할인(최대 30,000원)",
+   "why": "no-match"
+  },
+  {
+   "brand": "오토카지",
+   "desc": "디테일링 세차 10% 할인, 유리막 코팅 20% 할인, Core Plus 광택+유리막 코팅 패키지 15% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "더라운지",
+   "desc": "국내 공항 라운지 2,000원 할인, 마티나 골드 라운지 2,000원 할인, 다이닝 500원 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "21그램",
+   "desc": "장례 서비스 사전 예약 시 이별 준비 키트 제공, 장례 서비스 이용 시 10% 할인, 봉안당 10% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "어떠케어",
+   "desc": "최대 49% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "T 멤버십 더블 롯데 체크카드",
+   "desc": "멤버십 혜택 이용금액만큼 OK캐쉬백 더블 적립",
+   "why": "points"
+  },
+  {
+   "brand": "웅진플레이도시",
+   "desc": "워터파크&온천 스파 종일권 30% 할인(본인 포함 최대 2인)",
+   "why": "companion-rate"
+  },
+  {
+   "brand": "스몹",
+   "desc": "2시간 패스 평일 20% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "자란다",
+   "desc": "아이 기질 분석 50% 할인, 신규가입 시 돌봄 서비스 5,000원 할인 포인트 제공",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "엘리하이/엠베스트",
+   "desc": "무료 체험+신세계상품권 1만 원+교재 쿠폰 증정",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "키디키디 몰",
+   "desc": "10% 할인(50,000원이상 구매 시 최대 5,000원 할인)",
+   "why": "no-match"
+  },
+  {
+   "brand": "루덴시아",
+   "desc": "입장권 최대 50% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "캐리마켓",
+   "desc": "모든 상품 10% 할인(최대 3만 원 할인)",
+   "why": "no-match"
+  },
+  {
+   "brand": "노트미",
+   "desc": "노트미 이용권 20% 중복 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "T 다이렉트 샵",
+   "desc": "12% 할인(5만 원권/10만 원권/20만 원권)",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "후지필름몰",
+   "desc": "포토북 40% 할인, 사진 인화 20% 할인, 액세서리 10% 할인, 20,000원 이상 결제 시 무료 배송 쿠폰",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "코드모스",
+   "desc": "12개월 프리미엄 이용권 약 35% 할인, 6개월 프리미엄 이용권 약 24% 할인, 키즈 6개월 프리미엄 이용권 약 22% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "해커스",
+   "desc": "해커스어학원 수강료 최대 30% 할인, 해커스인강 모든 토익 강의(단과/종합/패스 상품) 20% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "오붓",
+   "desc": "오붓 웰니스 패스 추가 15% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "플래시백 계림",
+   "desc": "미디어아트 전시 본인+동반 1인 30% 할인",
+   "why": "multi-clause"
+  }
+ ],
+ "lgu": [
+  {
+   "brand": "스타벅스",
+   "desc": "아메리카노(T) 1잔 무료",
+   "why": "gift-or-freeform"
+  },
+  {
+   "brand": "스타벅스",
+   "desc": "더블 사이즈업 무료",
+   "why": "gift-or-freeform"
+  },
+  {
+   "brand": "네이버플러스 멤버십",
+   "desc": "네이버플러스 멤버십 1개월 무료 이용권 제공",
+   "why": "gift-or-freeform"
+  },
+  {
+   "brand": "CGV",
+   "desc": "예매 무료 연 3회, 1+1 연 9회 (1+1: 1매 유료 구매 시 1매 무료 제공)",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "배스킨라빈스",
+   "desc": "블록팩 1개 무료 교환",
+   "why": "gift-or-freeform"
+  },
+  {
+   "brand": "교보문고 sam",
+   "desc": "sam 무제한 1개월 이용권",
+   "why": "no-match"
+  },
+  {
+   "brand": "롯데월드 어드벤처",
+   "desc": "종합이용권(1 Day/AFTER 4) 본인 42% 할인, 동반 1인 30% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "롯데월드 아쿠아리움",
+   "desc": "입장권 본인 40% 할인, 동반 3인 30% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "서울스카이",
+   "desc": "입장권 본인 30% 할인, 동반 3인 10% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "롯데월드 어드벤처 부산",
+   "desc": "종합이용권(1 Day/AFTER 4) 본인 35% 할인, 동반 3인 10% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "캐리비안베이",
+   "desc": "입장권 40% 할인, 동반 1인 30% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "에버랜드",
+   "desc": "종일권 40% 할인(대인/소인)",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "할리스",
+   "desc": "아메리카노(R사이즈) 1잔 무료 (ICE/HOT 선택 가능)",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "요기요",
+   "desc": "10% 할인 쿠폰 2장(최대 2천원 할인), 5% 할인 쿠폰(최대 1천5백원 할인)",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "롯데렌터카 G car",
+   "desc": "35% 할인권 2장 (차량 대여 시 최대 1만원 할인)",
+   "why": "no-match"
+  },
+  {
+   "brand": "카모아",
+   "desc": "해외 렌터카 10% 할인(최대 1만8천원 할인)",
+   "why": "no-match"
+  },
+  {
+   "brand": "일리커피",
+   "desc": "캡슐 배송비 무료 (일리커피 구독팩 가입자 전용)",
+   "why": "gift-or-freeform"
+  },
+  {
+   "brand": "리디셀렉트",
+   "desc": "1개월 무료 이용권",
+   "why": "gift-or-freeform"
+  },
+  {
+   "brand": "데이터 1GB 선물하기",
+   "desc": "무료 데이터 1GB 선물하기",
+   "why": "gift-or-freeform"
+  },
+  {
+   "brand": "딸기콩",
+   "desc": "어린이 오디오북 딸기콩 1개월 무료 이용권 제공",
+   "why": "gift-or-freeform"
+  }
+ ],
+ "kt": [
+  {
+   "brand": "쇼핑라운지(고객 보답)",
+   "desc": "[고객 보답] 쇼핑라운지 5천원 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "파리바게뜨(고객 보답)",
+   "desc": "[고객 보답] 최대 50% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "더 키친 일뽀르노",
+   "desc": "[달.달.혜택] 1만원 할인 (5만원 이상 주문 시)",
+   "why": "no-match"
+  },
+  {
+   "brand": "크리스탈 제이드",
+   "desc": "[달.달.혜택] 딴딴면 1개 무료 (2만원 이상 주문 시)",
+   "why": "gift-or-freeform"
+  },
+  {
+   "brand": "폴바셋",
+   "desc": "[달.달.혜택] 룽고(S) 또는 라떼(S) 50% 할인 (2장)",
+   "why": "no-match"
+  },
+  {
+   "brand": "하프클럽",
+   "desc": "10% 장바구니 할인 쿠폰",
+   "why": "no-match"
+  },
+  {
+   "brand": "보리보리",
+   "desc": "10% 장바구니 할인 쿠폰",
+   "why": "no-match"
+  },
+  {
+   "brand": "샐러디",
+   "desc": "10% 할인 쿠폰 제공 (최대 2만원)",
+   "why": "no-match"
+  },
+  {
+   "brand": "핑크퐁플러스",
+   "desc": "핑크퐁플러스 12개월 구독권 53%할인 및 할인 구독권 구매 시 베베핀 3종 세트 증정",
+   "why": "gift-or-freeform"
+  },
+  {
+   "brand": "롯데면세점 동경긴자점",
+   "desc": "무료 짐보관 서비스 제공, VIP 멤버십 등급 부여,  인기 상품 할인 쿠폰 제공, 리무진 버스 티켓 증정",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "어플레이즈",
+   "desc": "어플레이즈 1개월 20% 할인 쿠폰",
+   "why": "no-match"
+  },
+  {
+   "brand": "와플랫 체크",
+   "desc": "[오픈 프로모션] 와플랫 체크 가족케어 1개월 무료 체험",
+   "why": "gift-or-freeform"
+  },
+  {
+   "brand": "핸들대리",
+   "desc": "핸들대리 12% 할인쿠폰 5매",
+   "why": "no-match"
+  },
+  {
+   "brand": "스몹",
+   "desc": "스몹 평일 입장권 20% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "온누리시장(몰)",
+   "desc": "10%할인쿠폰(최대 할인금액 제한 없음, ID당 무제한 이용 가능)",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "메가MGC커피",
+   "desc": "[달.달.혜택] 메가MGC커피 1천원 할인 쿠폰(2매) [상시] ICE 아메리카노 구매 시 500원 할인(3장) [OTTX메가MGC커피] 500원 할인쿠폰 2장",
+   "why": "multi-bracket"
+  },
+  {
+   "brand": "메가MGC커피",
+   "desc": "[V/VIP 초이스] 아메리카노(HOT/ICE) 2잔 무료",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "메가MGC커피",
+   "desc": "[V/VIP 초이스] 아메리카노(HOT/ICE) 2잔 무료",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "지니 TV",
+   "desc": "VOD 20% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "롯데시네마",
+   "desc": "[상시]최대 5,000원 할인 [현장혜택] 매점 콤보 3,000원",
+   "why": "multi-bracket"
+  },
+  {
+   "brand": "롯데시네마",
+   "desc": "[VVIP초이스]영화예매 무료 [VVIP 생일혜택]영화쿠폰 2매 or 영화쿠폰 1매 싱글콤보 1매",
+   "why": "multi-bracket"
+  },
+  {
+   "brand": "롯데시네마",
+   "desc": "[VIP초이스]영화예매 무료 [VIP 생일혜택]영화 1＋1 관람권",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "배스킨라빈스",
+   "desc": "[생일혜택] 아이스크림 케이크 4천원 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "배스킨라빈스",
+   "desc": "[VVIP 초이스] 레디팩 1개(10,800원) FREE",
+   "why": "gift-or-freeform"
+  },
+  {
+   "brand": "배스킨라빈스",
+   "desc": "[VIP 초이스] 아이스크림군 6종 50% OFF(최대 4,900원 할인)",
+   "why": "gift-or-freeform"
+  },
+  {
+   "brand": "CGV",
+   "desc": "[상시] 최대 5천원 할인(동반 4인 추가할인) [현장할인]매점콤보 3천원 할인",
+   "why": "multi-bracket"
+  },
+  {
+   "brand": "할리스",
+   "desc": "[VVIP 초이스] 커피 2잔＋휘낭시에 2개 세트 무료",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "할리스",
+   "desc": "[생일] 바닐라 딜라이트(R) 1잔(생일 당월 한정)",
+   "why": "no-match"
+  },
+  {
+   "brand": "원스토어",
+   "desc": "[상시] 최대 10% 할인 (최대 1만원 할인) [생일혜택] 5천원 할인(1만원 이상 결제 시)",
+   "why": "multi-bracket"
+  },
+  {
+   "brand": "꾸까",
+   "desc": "[VVIP생일] 생일 무료 꽃다발 or 슈가캔들 더블패키지 무료 (택1) [VVIP 초이스] 꽃다발(M) 또는 꾸까 센트 슈가캔들 에코 패키지 무료(택1) [상시] 10% 할인 쿠폰",
+   "why": "multi-bracket"
+  },
+  {
+   "brand": "공차",
+   "desc": "제조음료 구매 시 10% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "메가박스",
+   "desc": "[상시] 최대 6천원 할인(본인 동반 4인) [현장할인] 매점콤보 2천원 할인",
+   "why": "multi-bracket"
+  },
+  {
+   "brand": "도미노피자",
+   "desc": "[달.달.혜택] 온라인 방문포장 50% 할인 [생일혜택] 생일파티세트 25% 할인",
+   "why": "multi-bracket"
+  },
+  {
+   "brand": "도미노피자",
+   "desc": "[VVIP 초이스] 3만원 할인 [상시] 20% 할인",
+   "why": "multi-bracket"
+  },
+  {
+   "brand": "도미노피자",
+   "desc": "[상시] 20% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "도미노피자",
+   "desc": "[상시] 15% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "도미노피자",
+   "desc": "[상시] 15% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "던킨",
+   "desc": "[V/VIP 초이스] 아메리카노(S)＋글레이즈드 무료",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "던킨",
+   "desc": "[V/VIP 초이스] 아메리카노(S)＋글레이즈드 무료",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "스타벅스",
+   "desc": "[상시]사이즈업",
+   "why": "no-match"
+  },
+  {
+   "brand": "스타벅스",
+   "desc": "[VVIP생일] 생일 조각케이크＋아메리카노 2잔 무료 [V/VIP 초이스] 아메리카노 Short 무료 또는 4,000원 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "스타벅스",
+   "desc": "[V/VIP 초이스] 아메리카노 Short 무료 또는 4,000원 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "GS THE FRESH",
+   "desc": "[상시혜택]3천원 할인(5만원 이상 구매 시) [생일혜택] 5천원 할인",
+   "why": "multi-bracket"
+  },
+  {
+   "brand": "CU",
+   "desc": "아침 간편식류 1,000원당 200원 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "VIPS",
+   "desc": "[달.달.혜택] 채끝 스테이크(210g) 무료 증정(성인 샐러드 바 2인 주문 시)",
+   "why": "gift-or-freeform"
+  },
+  {
+   "brand": "VIPS",
+   "desc": "[VVIP 초이스] 스테이크 무료 [상시] 15% 할인",
+   "why": "multi-bracket"
+  },
+  {
+   "brand": "VIPS",
+   "desc": "[상시]15% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "VIPS",
+   "desc": "[상시]5% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "VIPS",
+   "desc": "[상시]5% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "KT알파 쇼핑(구. K쇼핑)",
+   "desc": "[상시] 최대 1만 2천원 할인 쿠폰 [생일혜택] 1만원 할인",
+   "why": "multi-bracket"
+  },
+  {
+   "brand": "서울형 키즈카페",
+   "desc": "서울형 키즈카페 입장료 20% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "스노우",
+   "desc": "[V/VIP 초이스] 스노우 VIP 구독권 1개월 무료",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "스노우",
+   "desc": "[V/VIP 초이스] 스노우 VIP 구독권 1개월 무료",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "매드포갈릭",
+   "desc": "15% 할인(주문금액 10만원 한도)",
+   "why": "no-match"
+  },
+  {
+   "brand": "매드포갈릭",
+   "desc": "15% 할인(주문금액 10만원 한도)",
+   "why": "no-match"
+  },
+  {
+   "brand": "매드포갈릭",
+   "desc": "15% 할인(주문금액 10만원 한도)",
+   "why": "no-match"
+  },
+  {
+   "brand": "매드포갈릭",
+   "desc": "5% 할인 (주문금액 10만원 한도)",
+   "why": "no-match"
+  },
+  {
+   "brand": "5G 데이터충전",
+   "desc": "5G 데이터충전 금액 80% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "쇼핑라운지",
+   "desc": "멤버십 전용 특가 혜택 제공",
+   "why": "no-match"
+  },
+  {
+   "brand": "이니스프리",
+   "desc": "레티놀 PDRN 마스크 4매 OR 블랙티 마스크 4매 무료",
+   "why": "gift-or-freeform"
+  },
+  {
+   "brand": "롯데렌터카 G car",
+   "desc": "최대 20% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "LTE데이터 룰렛",
+   "desc": "LTE데이터룰렛 100% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "에버랜드",
+   "desc": "[상시혜택] 본인 40% 및 동반 3인 20% 할인 [생일혜택] 이용권 50% 할인",
+   "why": "multi-bracket"
+  },
+  {
+   "brand": "신세계면세점",
+   "desc": "(온) 추가할인, 적립금 (오프) 선불카드, 등급 UP",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "KT멤버십 공연예매",
+   "desc": "뮤지컬/전시 최대 50% 할인 및 공연무료초대",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "KT멤버십 공연예매",
+   "desc": "뮤지컬/전시 최대 50% 할인 및 공연무료초대",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "KT멤버십 공연예매",
+   "desc": "뮤지컬/전시 최대 50% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "KT멤버십 공연예매",
+   "desc": "뮤지컬/전시 최대 50% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "모두의충전",
+   "desc": "1,000원 포인트 적립 쿠폰 발급",
+   "why": "points"
+  },
+  {
+   "brand": "플레이타임(키즈카페)",
+   "desc": "[상시] 어린이 이용권 3천원 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "플레이타임(키즈카페)",
+   "desc": "[VVIP초이스] 어린이 평일 이용권 무료(1인)",
+   "why": "gift-or-freeform"
+  },
+  {
+   "brand": "플레이타임(키즈카페)",
+   "desc": "[VIP초이스] 어린이 평일 7천원 할인(1인)",
+   "why": "no-match"
+  },
+  {
+   "brand": "청연(구.청소연구소)",
+   "desc": "5천원 할인(1회) / 2천원 할인(정기) / 이사, 입주청소 10% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "청연(구.청소연구소)",
+   "desc": "5천원 할인(1회) / 2천원 할인(정기) / 이사, 입주청소 10% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "청연(구.청소연구소)",
+   "desc": "3천원 할인(1회)/ 이사, 입주청소 10% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "청연(구.청소연구소)",
+   "desc": "3천원 할인(1회)/ 이사, 입주청소 10% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "피자알볼로",
+   "desc": "15% 할인(온라인 주문 시)",
+   "why": "no-match"
+  },
+  {
+   "brand": "LTE 데이터충전",
+   "desc": "LTE 데이터충전 금액 80% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "트립닷컴",
+   "desc": "호텔 7%, 투어&티켓 4% 항공 3% (쿠폰 3종)",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "현대면세점",
+   "desc": "[상시] (온) 적립금, 등급 UP (오프) 선불카드, 등급 UP",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "아고다",
+   "desc": "국내 숙소 예약 시 8% 할인 / 해외 숙소 예약 시 7% 할인 (할인 한도 최대 $40)",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "CJ더마켓",
+   "desc": "[상시] 35% 할인 쿠폰",
+   "why": "no-match"
+  },
+  {
+   "brand": "CJ더마켓",
+   "desc": "[V/VIP 초이스] 45% 할인 쿠폰   적립금 5천원",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "CJ더마켓",
+   "desc": "[V/VIP 초이스] 45% 할인 쿠폰   적립금 5천원",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "필수팩",
+   "desc": "가입월~익월말까지 필수팩 월정액 멤버십 할인 적용",
+   "why": "no-match"
+  },
+  {
+   "brand": "신라면세점",
+   "desc": "(온) 등급 UP (오프) 선불카드, 등급 UP",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "genie",
+   "desc": "최대 30%할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "달콤",
+   "desc": "[V/VIP 초이스] 아메리카노 무료(R사이즈), [상시] 음료 사이즈 업",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "달콤",
+   "desc": "[V/VIP 초이스] 아메리카노 무료(R사이즈), [상시] 음료 사이즈 업",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "달콤",
+   "desc": "음료 사이즈 업",
+   "why": "no-match"
+  },
+  {
+   "brand": "달콤",
+   "desc": "음료 사이즈 업",
+   "why": "no-match"
+  },
+  {
+   "brand": "핫딜",
+   "desc": "최대 5% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "아쿠아필드",
+   "desc": "찜질스파 또는 워터파크 주중 30%할인(최대 2인)",
+   "why": "no-match"
+  },
+  {
+   "brand": "KT 다이렉트샵",
+   "desc": "기본 5% 할인, 일부 품목만 10% 할인 (최대 5만원 한도)",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "주렁주렁",
+   "desc": "주렁주렁 전 지점 입장권 25% 할인(본인 포함 최대 4인까지)",
+   "why": "companion-rate"
+  },
+  {
+   "brand": "GS25편의점택배",
+   "desc": "GS25편의점 국내택배 10% 할인   신규가입 3천원 쿠폰",
+   "why": "no-match"
+  },
+  {
+   "brand": "정원e샵",
+   "desc": "정원e샵 상품 30%할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "텐바이텐",
+   "desc": "디자인문구 15% 할인 쿠폰(1만원 이상 구매 시), 전 상품 3천원 할인 쿠폰(3만원 이상 구매 시)",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "어바웃펫",
+   "desc": "전 고객 10% 할인쿠폰＋첫 구매 고객 1만원 할인쿠폰",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "비트커피",
+   "desc": "아메리카노 50% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "차방정",
+   "desc": "[V/VIP초이스] 차방정 플러스 멤버십 2개월 무료(주유/세차/주차 1만원 할인)",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "차방정",
+   "desc": "[V/VIP초이스] 차방정 플러스 멤버십 2개월 무료(주유/세차/주차 1만원 할인) [VIP 생일혜택] 차방정 플러스 멤버십 2개월 무료(주유/세차/주차 2만원 할인)",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "핏펫",
+   "desc": "7천원 할인 쿠폰(4만원 이상 구매 시) , 신규회원 1만원 할인 쿠폰(4만원 이상 구매 시)",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "아쿠아플라넷",
+   "desc": "본인 및 동반 3인 최대 20% 할인",
+   "why": "companion-rate"
+  },
+  {
+   "brand": "아르떼뮤지엄",
+   "desc": "티켓 20% 할인 (동반 4인까지)",
+   "why": "companion-rate"
+  },
+  {
+   "brand": "기프티쇼",
+   "desc": "구매실적 상관없이 VIP등급업(~5% 기프티쇼 차감 할인, 알파쇼핑 할인쿠폰 등 제공)",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "블루보틀",
+   "desc": "블루 보틀 인기 굿즈 추첨 제공",
+   "why": "no-match"
+  },
+  {
+   "brand": "이랜드몰",
+   "desc": "10% 할인쿠폰 제공(APP전용)",
+   "why": "no-match"
+  },
+  {
+   "brand": "여기어때",
+   "desc": "해외 숙소 8% 할인(최대 5만원)",
+   "why": "no-match"
+  },
+  {
+   "brand": "스파랜드",
+   "desc": "주중 입장권 30%할인(최대 2인)",
+   "why": "no-match"
+  },
+  {
+   "brand": "AICE",
+   "desc": "AICE 시험 응시료 20% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "서울랜드",
+   "desc": "[상시] 본인 40% 할인(동반 2인 30%)",
+   "why": "companion-rate"
+  },
+  {
+   "brand": "신라아이파크면세점",
+   "desc": "(온) 적립금, 등급 UP (오프) 선불카드, 등급 UP",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "카모아",
+   "desc": "VVIP/VIP 1만원 할인 쿠폰, GOLD이하 5천원 할인 쿠폰",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "카모아",
+   "desc": "VVIP/VIP 1만원 할인 쿠폰, GOLD이하 5천원 할인 쿠폰",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "카모아",
+   "desc": "GOLD이하 5천원 할인 쿠폰",
+   "why": "no-match"
+  },
+  {
+   "brand": "카모아",
+   "desc": "GOLD이하 5천원 할인 쿠폰",
+   "why": "no-match"
+  },
+  {
+   "brand": "키자니아",
+   "desc": "본인 및 동반1인 20% 할인",
+   "why": "companion-rate"
+  },
+  {
+   "brand": "VOG Hair(보그헤어)",
+   "desc": "헤어 시술 20% 할인 (단 커트, 드라이, 부분시술/중복할인 제외)   시술시 클리닉 무료 시술 (매월 1일/11일/21일, 3일 한정)",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "파고다토쿨",
+   "desc": "전화영어 1만원 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "파고다원",
+   "desc": "1:1 회화 전과목 5% 할인 (대면 수업에 한함)＋1:1 화상 전과목 1만원 할인 (화상 수업에 한함)",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "파고다인강",
+   "desc": "전 강좌 15% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "파고다어학원",
+   "desc": "20% 할인＋신규 5% 추가 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "후디스몰",
+   "desc": "25% 할인(3만원 이상 결제 시 최대 5만원 할인)",
+   "why": "no-match"
+  },
+  {
+   "brand": "광동상회",
+   "desc": "10% 할인(최대 3,500원 까지 할인 가능, 삼다수 제외)",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "아르떼 키즈파크 제주",
+   "desc": "20% 할인 (동반 4인까지)",
+   "why": "companion-rate"
+  },
+  {
+   "brand": "원더파크",
+   "desc": "입장권 25%할인(최대 4인)",
+   "why": "no-match"
+  },
+  {
+   "brand": "제주인터넷면세점",
+   "desc": "1만원 할인쿠폰(10만원 이상 구매시), 2만원 할인쿠폰(20만원 이상 구매시)",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "에어클래스",
+   "desc": "에어클래스 전 강의 15% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "다락",
+   "desc": "1개월 무료 ＋ 35% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "다락",
+   "desc": "1개월 무료 ＋ 35% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "히트조명",
+   "desc": "5% 할인 쿠폰(3만원 이상 구매 시)",
+   "why": "no-match"
+  },
+  {
+   "brand": "원더빌리지",
+   "desc": "입장권 25%할인(최대 4인)",
+   "why": "no-match"
+  },
+  {
+   "brand": "에듀윌",
+   "desc": "[상시]온라인 전강좌 5% 할인 [AICE 자격증] 온라인 과정 15% 할인",
+   "why": "multi-bracket"
+  },
+  {
+   "brand": "리프레쉬 골프",
+   "desc": "최대 1만원 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "A/S수리비 할인",
+   "desc": "A/S 비용의 최대 20% 할인 결제 (최대 5만원)",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "차일디",
+   "desc": "10% 할인 쿠폰, 15% 할인 쿠폰",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "씨라이프 코엑스 아쿠아리움",
+   "desc": "본인 및 동반 3인 15% 할인",
+   "why": "companion-rate"
+  },
+  {
+   "brand": "추억의 국민학교 떡볶이",
+   "desc": "전 메뉴 25% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "노보텔 앰배서더 동대문",
+   "desc": "식음료업장 10% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "노보텔 앰배서더 동대문",
+   "desc": "조식 2인 무료",
+   "why": "gift-or-freeform"
+  },
+  {
+   "brand": "노보텔 앰배서더 동대문",
+   "desc": "조식 2인 무료",
+   "why": "gift-or-freeform"
+  },
+  {
+   "brand": "스피드메이트",
+   "desc": "엔진오일 2만원 할인＋에어컨필터/에어컨가스완충/부동액 10% 할인＋공임 10% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "밀크T",
+   "desc": "밀크T 10일 무료체험＋첫 체험자 전원 신세계상품권 3만원＋정학습생 결제자 전원 신세계상품권 5만원 증정",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "KKday",
+   "desc": "전 상품 10%할인＋투어상품 1만원 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "김캐디",
+   "desc": "김캐디 5,000원 할인 (3만원 결제조건)",
+   "why": "no-match"
+  },
+  {
+   "brand": "김캐디",
+   "desc": "김캐디 5,000원 할인 (3만원 결제조건)",
+   "why": "no-match"
+  },
+  {
+   "brand": "오붓",
+   "desc": "웰니스패스 V/VIP 15%, 그 외 등급 10% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "서울스카이",
+   "desc": "본인 20% 할인 및 동반 3인 10% 할인",
+   "why": "companion-rate"
+  },
+  {
+   "brand": "서울스카이",
+   "desc": "[VVIP초이스]입장권 1＋1",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "착한의사",
+   "desc": "종합건강검진 최대 49% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "리뷰노트",
+   "desc": "광고 상품 30% 할인(100만원 한도 이내)",
+   "why": "no-match"
+  },
+  {
+   "brand": "빌리카",
+   "desc": "제주 최대 85% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "밀리의 서재",
+   "desc": "[VVIP 초이스]밀리의 서재 3개월 무료",
+   "why": "gift-or-freeform"
+  },
+  {
+   "brand": "밀리의 서재",
+   "desc": "[VIP 초이스]밀리의 서재 1개월 무료",
+   "why": "gift-or-freeform"
+  },
+  {
+   "brand": "롯데렌터카",
+   "desc": "최대 제주 85%, 내륙 60% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "롯데월드",
+   "desc": "본인 40% 및 동반 3인 30% 할인",
+   "why": "companion-rate"
+  },
+  {
+   "brand": "오토오아시스",
+   "desc": "[VVIP초이스] 엔진오일 3만원 할인＋부가 정비 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "롯데월드 아쿠아리움",
+   "desc": "본인 30% 및 동반3인 30% 할인",
+   "why": "companion-rate"
+  },
+  {
+   "brand": "이월드",
+   "desc": "본인 40% 및 동반3인 20% 할인",
+   "why": "companion-rate"
+  },
+  {
+   "brand": "설악워터피아",
+   "desc": "본인＋동반2인 35% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "SK렌터카",
+   "desc": "내륙 최대 60% 할인, 제주 최대 85% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "MOVV",
+   "desc": "KTX결합상품 최대 18%할인(15%할인＋KT멤버십 3% 추가 할인＋무브 마일리지 3% 추가 적립) / 인천공항 프라이빗밴 서울 전지역 99,000원 특가",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "클룩(KLOOK)",
+   "desc": "전체 액티비티 5% 할인, 국내외 렌트카 7% 할인, 국내외 유심 7% 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "롯데면세점",
+   "desc": "(온) 제휴적립금, 등급 UP (오프) 선불카드, 등급 UP",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "롯데면세점",
+   "desc": "(온) 제휴적립금, 등급 UP (오프) 선불카드, 등급 UP",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "롯데면세점",
+   "desc": "(온) 제휴적립금, 등급 UP (오프) 선불카드, 등급 UP",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "롯데면세점",
+   "desc": "(온) 제휴적립금 (오프) 선불카드, 등급 UP",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "한화리조트",
+   "desc": "객실 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "한화리조트",
+   "desc": "객실 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "더라운지",
+   "desc": "이용권 30% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "현대Hmall",
+   "desc": "최대 7% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "데이팩",
+   "desc": "7,500원 할인 쿠폰＋15,000원 할인 쿠폰",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "집업페이",
+   "desc": "월세 카드 결제 수수료 1% 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "QED",
+   "desc": "[VVIP/VIP] 백야드 숏게임 1시간 무료이용권 [ALL] QED 직영아카데미 3만원 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "QED",
+   "desc": "[VVIP/VIP] 백야드 숏게임 1시간 무료이용권 [ALL] QED 직영아카데미 3만원 할인",
+   "why": "multi-clause"
+  },
+  {
+   "brand": "QED",
+   "desc": "QED 직영아카데미 3만원 할인",
+   "why": "no-match"
+  },
+  {
+   "brand": "QED",
+   "desc": "QED 직영아카데미 3만원 할인",
+   "why": "no-match"
+  }
+ ]
+}
