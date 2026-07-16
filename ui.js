@@ -1,3 +1,8 @@
+const supabase = window.supabase.createClient(
+  window.APP_CONFIG.SUPABASE_URL,
+  window.APP_CONFIG.SUPABASE_ANON_KEY
+);
+
 /* ===================== UI ===================== */
 const PLATE_COLORS = {
   P_KB_MYWISH:'#5B4B8A', P_SH_MRLIFE:'#1D4ED8', P_SH_NARASARANG:'#0E7A5F',
@@ -58,6 +63,10 @@ const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 const won = n => Math.round(n).toLocaleString('ko-KR');
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const supabase = window.supabase.createClient(
+  window.APP_CONFIG.SUPABASE_URL,
+  window.APP_CONFIG.SUPABASE_ANON_KEY
+);
 
 let calcTimer = null;
 let toastTimer = null;
@@ -314,6 +323,37 @@ function isCardProduct(p) {
 
 function cardProducts() {
   return (DB?.products || []).filter(isCardProduct);
+}
+
+
+//회원가입 함수
+async function signUp(email, password) {
+  const { error } = await supabase.auth.signUp({
+    email,
+    password
+  });
+
+  if (error) {
+    showToast(error.message);
+    return false;
+  }
+
+  showToast("회원가입 완료! 이메일을 확인해주세요.");
+  return true;
+}
+
+async function signIn(email, password) {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (error) {
+    showToast(error.message);
+    return null;
+  }
+
+  return data.user;
 }
 
 /* ---- 데이터 로드 ---- */
@@ -1290,23 +1330,33 @@ function bind() {
   });
 
   const loginBtn = $('#loginBtn');
-  if (loginBtn) loginBtn.addEventListener('click', () => {
+  if (loginBtn) loginBtn.addEventListener('click', async () => {
     const email = ($('#loginEmail')?.value || '').trim();
-    const name = email.split('@')[0] || '회원';
-    if (!email) { showToast('이메일을 입력해 주세요'); return; }
+    const password=$("#loginPw").value;
+
+    const {data,error}=await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if(error){
+      showToast(error.message);
+      return;
+    }
+
     S.user = {
       ...S.user,
       loggedIn: true,
-      name,
-      email,
-      nickname: S.user.nickname || name,
+      email:data.user.email,
+      name:data.user.email.split("@")[0],
+      nickname:data.user.email.split("@")[0]
     };
-    S.addPanel = null;
-    S.showLoginForm = false;
+
     savePersisted();
-    showToast('로그인됐어요');
+
     render();
   });
+
   const loginPw = $('#loginPw');
   if (loginPw) loginPw.addEventListener('keydown', e => {
     if (e.key === 'Enter') loginBtn?.click();
