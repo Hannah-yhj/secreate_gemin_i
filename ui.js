@@ -64,6 +64,7 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>'
 
 let calcTimer = null;
 let toastTimer = null;
+let cloudSyncTimer = null;
 
 const AVATAR_COLORS = ['#1A56DB', '#0E7A5F', '#C9A227', '#5B4B8A', '#C2410C', '#0F766E', '#1D4ED8', '#B45309'];
 
@@ -215,6 +216,78 @@ function savePersisted() {
       benefitTab: S.benefitTab,
     }));
   } catch (_) { /* quota / private mode */ }
+  // 로그인 상태면 클라우드(Supabase)에도 반영 예약
+  if (S.user.loggedIn) scheduleCloudSync();
+}
+
+/* ---- Supabase 계정별 데이터 동기화 ---- */
+function scheduleCloudSync() {
+  clearTimeout(cloudSyncTimer);
+  cloudSyncTimer = setTimeout(() => syncProfileToCloud(), 600);
+}
+
+async function syncProfileToCloud() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user) return;
+
+  const { error } = await supabase.from('profiles').upsert({
+    user_id: session.user.id,
+    nickname: S.user.nickname || null,
+    avatar: S.user.avatar || null,
+    avatar_color: S.user.avatarColor || null,
+    wallet: S.wallet,
+    spend: S.state.spend,
+    mywish_pack: S.state.mywishPack,
+    nori2_variant: S.state.nori2Variant,
+    carrier: S.carrier,
+    grade: S.grade,
+    updated_at: new Date().toISOString(),
+  });
+
+  if (error) console.error('클라우드 저장 실패', error);
+}
+
+async function fetchProfileFromCloud() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user) return;
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('user_id', session.user.id)
+    .maybeSingle();
+
+  if (error) {
+    console.error('프로필 불러오기 실패', error);
+    return;
+  }
+
+  if (data) {
+    // 계정에 저장된 데이터로 화면 상태를 덮어씀
+    S.wallet = Array.isArray(data.wallet) ? data.wallet : [];
+    S.state = {
+      spend: data.spend && typeof data.spend === 'object' ? data.spend : {},
+      mywishPack: data.mywish_pack || null,
+      nori2Variant: data.nori2_variant || null,
+    };
+    S.carrier = data.carrier || null;
+    S.grade = data.grade || null;
+    if (data.nickname) S.user.nickname = data.nickname;
+    if (data.avatar) S.user.avatar = data.avatar;
+    if (data.avatar_color) S.user.avatarColor = data.avatar_color;
+  } else {
+    // 이 계정으로 처음 로그인 → 지금 화면(게스트)에 있던 데이터를 계정에 그대로 이관
+    await syncProfileToCloud();
+  }
+
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      wallet: S.wallet, state: S.state, user: S.user,
+      carrier: S.carrier, grade: S.grade, page: S.page, benefitTab: S.benefitTab,
+    }));
+  } catch (_) {}
+  updateDrawerProfile();
+  render();
 }
 
 function showToast(msg) {
@@ -239,9 +312,7 @@ updateDrawerProfile();
     S.user.name = S.user.name || session.user.email.split('@')[0];
     S.user.nickname = S.user.nickname || session.user.email.split('@')[0];
     S.showLoginForm = false;
-    savePersisted();
-    updateDrawerProfile();
-    render();
+    await fetchProfileFromCloud();
   }
 })();
 
@@ -1369,10 +1440,9 @@ function bind() {
       name:data.user.email.split("@")[0],
       nickname:data.user.email.split("@")[0]
     };
+    S.showLoginForm = false;
 
-    savePersisted();
-
-    render();
+    await fetchProfileFromCloud();
   });
 
   const signupBtn = $('#signupBtn');
@@ -1405,9 +1475,8 @@ function bind() {
         nickname: data.user.email.split('@')[0],
       };
       S.showLoginForm = false;
-      savePersisted();
+      await fetchProfileFromCloud();
       showToast('가입 완료! 바로 로그인됐어요');
-      render();
     } else {
       showToast('가입 완료! 인증 메일을 확인해주세요');
     }
@@ -1428,10 +1497,19 @@ function bind() {
       avatar: null,
       avatarColor: '#1A56DB',
     };
+    // 보유 카드 / 전월실적 / 통신사 정보도 로그아웃과 함께 초기화
+    S.wallet = [];
+    S.state = { spend: {}, mywishPack: null, nori2Variant: null };
+    S.carrier = null;
+    S.grade = null;
+    S.carrierDraft = null;
+    S.gradeDraft = null;
+    S.addPanel = null;
     S.profileSnap = null;
     S.showProfileEdit = false;
-    S.addPanel = null;
+    S.page = 'home';
     savePersisted();
+    updateDrawerProfile();
     showToast('로그아웃됐어요');
     render();
   });
