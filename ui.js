@@ -1,7 +1,5 @@
-const supabase = window.supabase.createClient(
-  window.APP_CONFIG.SUPABASE_URL,
-  window.APP_CONFIG.SUPABASE_ANON_KEY
-);
+// supabase.js가 window.supabase에 이미 만들어둔 클라이언트를 그대로 참조
+const supabase = window.supabase;
 
 /* ===================== UI ===================== */
 const PLATE_COLORS = {
@@ -63,10 +61,6 @@ const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 const won = n => Math.round(n).toLocaleString('ko-KR');
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const supabase = window.supabase.createClient(
-  window.APP_CONFIG.SUPABASE_URL,
-  window.APP_CONFIG.SUPABASE_ANON_KEY
-);
 
 let calcTimer = null;
 let toastTimer = null;
@@ -235,6 +229,29 @@ loadPersisted();
 // 불완전하게 저장된 통신사 값이 있으면 스토리지도 정리
 savePersisted();
 updateDrawerProfile();
+
+/* ---- Supabase 세션 복원 (새로고침해도 로그인 유지) ---- */
+(async () => {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session?.user) {
+    S.user.loggedIn = true;
+    S.user.email = session.user.email;
+    S.user.name = S.user.name || session.user.email.split('@')[0];
+    S.user.nickname = S.user.nickname || session.user.email.split('@')[0];
+    S.showLoginForm = false;
+    savePersisted();
+    updateDrawerProfile();
+    render();
+  }
+})();
+
+// 로그아웃이 다른 탭/창에서 일어나도 이 화면에 반영되게
+supabase.auth.onAuthStateChange((event) => {
+  if (event === 'SIGNED_OUT' && S.user.loggedIn) {
+    S.user.loggedIn = false;
+    render();
+  }
+});
 
 /* ---- 우측 메뉴 패널 ---- */
 function openDrawer() {
@@ -554,8 +571,9 @@ function viewLoginGate() {
           <input type="password" id="loginPw" placeholder="••••••••">
         </div>
         <button class="cta block" id="loginBtn" type="button">로그인</button>
+        <button class="cta ghost block" id="signupBtn" type="button">회원가입</button>
         <button class="cta ghost block" id="skipLoginBtn" type="button">게스트로 계속</button>
-        <p class="login-hint">데모용이에요. 아무 이메일·비밀번호나 입력해도 됩니다.</p>
+        <p class="login-hint">계정이 없으면 회원가입을 먼저 눌러주세요.</p>
       </div>
     </section>
   </div>`;
@@ -1357,12 +1375,51 @@ function bind() {
     render();
   });
 
+  const signupBtn = $('#signupBtn');
+  if (signupBtn) signupBtn.addEventListener('click', async () => {
+    const email = ($('#loginEmail')?.value || '').trim();
+    const password = $('#loginPw').value;
+
+    if (!email || !password) {
+      showToast('이메일과 비밀번호를 입력해주세요');
+      return;
+    }
+    if (password.length < 6) {
+      showToast('비밀번호는 6자 이상이어야 해요');
+      return;
+    }
+
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) {
+      showToast(error.message);
+      return;
+    }
+
+    // "Confirm email"이 꺼져있으면 가입과 동시에 세션이 바로 생김
+    if (data.session) {
+      S.user = {
+        ...S.user,
+        loggedIn: true,
+        email: data.user.email,
+        name: data.user.email.split('@')[0],
+        nickname: data.user.email.split('@')[0],
+      };
+      S.showLoginForm = false;
+      savePersisted();
+      showToast('가입 완료! 바로 로그인됐어요');
+      render();
+    } else {
+      showToast('가입 완료! 인증 메일을 확인해주세요');
+    }
+  });
+
   const loginPw = $('#loginPw');
   if (loginPw) loginPw.addEventListener('keydown', e => {
     if (e.key === 'Enter') loginBtn?.click();
   });
   const logoutBtn = $('#logoutBtn');
-  if (logoutBtn) logoutBtn.addEventListener('click', () => {
+  if (logoutBtn) logoutBtn.addEventListener('click', async () => {
+    await supabase.auth.signOut();
     S.user = {
       loggedIn: false,
       name: '',
