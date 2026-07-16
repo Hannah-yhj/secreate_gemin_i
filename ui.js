@@ -36,6 +36,8 @@ const S = {
   state: { spend: {}, mywishPack: null, nori2Variant: null },
   user: { loggedIn: false, name: '', email: '', nickname: '', avatar: null, avatarColor: '#1A56DB' },
   showLoginForm: false,
+  showResetForm: false,
+  passwordRecovery: false,
   showProfileEdit: false,
   profileSnap: null,
   carrier: null,
@@ -320,6 +322,11 @@ updateDrawerProfile();
 supabase.auth.onAuthStateChange((event) => {
   if (event === 'SIGNED_OUT' && S.user.loggedIn) {
     S.user.loggedIn = false;
+    render();
+  }
+  if (event === 'PASSWORD_RECOVERY') {
+    // 이메일의 재설정 링크를 눌러 앱으로 돌아온 상태
+    S.passwordRecovery = true;
     render();
   }
 });
@@ -615,6 +622,7 @@ function viewLanding() {
 /* ==================== 마이페이지 ==================== */
 function viewMyPage() {
   if (S.showProfileEdit) return viewProfileEdit();
+  if (S.passwordRecovery) return viewNewPassword();
   if (S.showLoginForm && !S.user.loggedIn) return viewLoginGate();
   if (!DB) {
     return `<div class="page-head"><h2>마이페이지</h2><p>내 카드와 통신사를 관리해요</p></div>
@@ -624,6 +632,7 @@ function viewMyPage() {
 }
 
 function viewLoginGate() {
+  if (S.showResetForm) return viewResetRequest();
   return `
   <div class="login-gate">
     <section class="sheet login-card">
@@ -641,10 +650,56 @@ function viewLoginGate() {
           <label class="fl" for="loginPw">비밀번호</label>
           <input type="password" id="loginPw" placeholder="••••••••">
         </div>
+        <button type="button" class="link-btn" id="forgotPwBtn" style="align-self:flex-end;background:none;border:none;color:var(--muted,#6b7280);font-size:13px;text-decoration:underline;cursor:pointer;padding:0;margin:-4px 0 4px;">비밀번호를 잊으셨나요?</button>
         <button class="cta block" id="loginBtn" type="button">로그인</button>
         <button class="cta ghost block" id="signupBtn" type="button">회원가입</button>
         <button class="cta ghost block" id="skipLoginBtn" type="button">게스트로 계속</button>
         <p class="login-hint">계정이 없으면 회원가입을 먼저 눌러주세요.</p>
+      </div>
+    </section>
+  </div>`;
+}
+
+function viewResetRequest() {
+  return `
+  <div class="login-gate">
+    <section class="sheet login-card">
+      <div class="login-hero">
+        <div class="login-mark">결제</div>
+        <h2>비밀번호 재설정</h2>
+        <p>가입하신 이메일로 재설정 링크를 보내드려요.</p>
+      </div>
+      <div class="login-box">
+        <div class="field" style="margin:0">
+          <label class="fl" for="resetEmail">이메일</label>
+          <input type="email" id="resetEmail" placeholder="you@example.com" value="${esc(S.user.email)}">
+        </div>
+        <button class="cta block" id="sendResetBtn" type="button">재설정 링크 보내기</button>
+        <button class="cta ghost block" id="backToLoginBtn" type="button">로그인으로 돌아가기</button>
+      </div>
+    </section>
+  </div>`;
+}
+
+function viewNewPassword() {
+  return `
+  <div class="login-gate">
+    <section class="sheet login-card">
+      <div class="login-hero">
+        <div class="login-mark">결제</div>
+        <h2>새 비밀번호 설정</h2>
+        <p>새로 사용할 비밀번호를 입력해주세요.</p>
+      </div>
+      <div class="login-box">
+        <div class="field" style="margin:0">
+          <label class="fl" for="newPw1">새 비밀번호</label>
+          <input type="password" id="newPw1" placeholder="6자 이상">
+        </div>
+        <div class="field" style="margin:0">
+          <label class="fl" for="newPw2">새 비밀번호 확인</label>
+          <input type="password" id="newPw2" placeholder="다시 입력">
+        </div>
+        <button class="cta block" id="confirmNewPwBtn" type="button">비밀번호 변경</button>
       </div>
     </section>
   </div>`;
@@ -1479,6 +1534,70 @@ function bind() {
       showToast('가입 완료! 바로 로그인됐어요');
     } else {
       showToast('가입 완료! 인증 메일을 확인해주세요');
+    }
+  });
+
+  const forgotPwBtn = $('#forgotPwBtn');
+  if (forgotPwBtn) forgotPwBtn.addEventListener('click', () => {
+    S.showResetForm = true;
+    render();
+  });
+
+  const backToLoginBtn = $('#backToLoginBtn');
+  if (backToLoginBtn) backToLoginBtn.addEventListener('click', () => {
+    S.showResetForm = false;
+    render();
+  });
+
+  const sendResetBtn = $('#sendResetBtn');
+  if (sendResetBtn) sendResetBtn.addEventListener('click', async () => {
+    const email = ($('#resetEmail')?.value || '').trim();
+    if (!email) {
+      showToast('이메일을 입력해주세요');
+      return;
+    }
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + window.location.pathname,
+    });
+    if (error) {
+      showToast(error.message);
+      return;
+    }
+    showToast('재설정 링크를 이메일로 보냈어요');
+    S.showResetForm = false;
+    render();
+  });
+
+  const confirmNewPwBtn = $('#confirmNewPwBtn');
+  if (confirmNewPwBtn) confirmNewPwBtn.addEventListener('click', async () => {
+    const pw1 = $('#newPw1')?.value || '';
+    const pw2 = $('#newPw2')?.value || '';
+    if (pw1.length < 6) {
+      showToast('비밀번호는 6자 이상이어야 해요');
+      return;
+    }
+    if (pw1 !== pw2) {
+      showToast('비밀번호가 서로 달라요');
+      return;
+    }
+    const { error } = await supabase.auth.updateUser({ password: pw1 });
+    if (error) {
+      showToast(error.message);
+      return;
+    }
+    S.passwordRecovery = false;
+    S.showLoginForm = false;
+    showToast('비밀번호가 변경됐어요');
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      S.user.loggedIn = true;
+      S.user.email = session.user.email;
+      S.user.name = S.user.name || session.user.email.split('@')[0];
+      S.user.nickname = S.user.nickname || session.user.email.split('@')[0];
+      await fetchProfileFromCloud();
+    } else {
+      render();
     }
   });
 
