@@ -1,0 +1,33 @@
+{
+  "_meta": {
+    "source_url": "https://www.lguplus.com/benefit-membership (전체 제휴사 탭)",
+    "collected_at": "2026-07-16",
+    "count": 23,
+    "note": "'전체 제휴사'(=기본 혜택, Tier 1) 탭 기준 23개 전부. VIP콕/LG패밀리혜택/우리동네멤버십 탭은 별도(VIP콕은 등급전용이라 Tier 3로 보류하기로 한 것과 동일 성격, 안 봄)."
+  },
+  "results": [
+    {"name":"스타벅스","tiers":[{"grade":"VVIP","desc":"아메리카노(T) 1잔 무료"},{"grade":"VIP","desc":"더블 사이즈업 무료"}],"parseable":false},
+    {"name":"네이버플러스 멤버십","tiers":[{"grade":"전등급","desc":"네이버플러스 멤버십 1개월 무료 이용권 제공"}],"parseable":false},
+    {"name":"CGV","tiers":[{"grade":"전등급","desc":"예매 무료 연 3회, 1+1 연 9회 (1+1: 1매 유료 구매 시 1매 무료 제공)"}],"parseable":false},
+    {"name":"볼트업","tiers":[{"grade":"전등급","desc":"5천원 할인(5천원 이상 구매 시)"}],"parseable":true,"note":"업종 불명 - 확인 필요"},
+    {"name":"유독","tiers":[{"grade":"전등급","desc":"유독 4천원 할인 제공 (최소 구매 금액 없음)"}],"parseable":true,"note":"업종 불명 - 확인 필요"},
+    {"name":"배스킨라빈스","tiers":[{"grade":"전등급","desc":"블록팩 1개 무료 교환"}],"parseable":false},
+    {"name":"교보문고 sam","tiers":[{"grade":"전등급","desc":"sam 무제한 1개월 이용권"}],"parseable":false},
+    {"name":"롯데월드 어드벤처","tiers":[{"grade":"전등급","desc":"종합이용권(1 Day/AFTER 4) 본인 42% 할인, 동반 1인 30% 할인"}],"parseable":false,"note":"본인/동반 % 다름"},
+    {"name":"롯데월드 아쿠아리움","tiers":[{"grade":"전등급","desc":"입장권 본인 40% 할인, 동반 3인 30% 할인"}],"parseable":false,"note":"본인/동반 % 다름"},
+    {"name":"서울스카이","tiers":[{"grade":"전등급","desc":"입장권 본인 30% 할인, 동반 3인 10% 할인"}],"parseable":false,"note":"본인/동반 % 다름"},
+    {"name":"롯데월드 어드벤처 부산","tiers":[{"grade":"전등급","desc":"종합이용권(1 Day/AFTER 4) 본인 35% 할인, 동반 3인 10% 할인"}],"parseable":false,"note":"본인/동반 % 다름"},
+    {"name":"캐리비안베이","tiers":[{"grade":"전등급","desc":"입장권 40% 할인, 동반 1인 30% 할인"}],"parseable":false,"note":"본인/동반 % 다름"},
+    {"name":"에버랜드","tiers":[{"grade":"전등급","desc":"종일권 40% 할인(대인/소인)"}],"parseable":true},
+    {"name":"할리스","tiers":[{"grade":"전등급","desc":"아메리카노(R사이즈) 1잔 무료 (ICE/HOT 선택 가능)"}],"parseable":false},
+    {"name":"요기요","tiers":[{"grade":"전등급","desc":"10% 할인 쿠폰 2장(최대 2천원 할인), 5% 할인 쿠폰(최대 1천5백원 할인)"}],"parseable":true},
+    {"name":"롯데렌터카 G car","tiers":[{"grade":"전등급","desc":"35% 할인권 2장 (차량 대여 시 최대 1만원 할인)"}],"parseable":true},
+    {"name":"카모아","tiers":[{"grade":"전등급","desc":"해외 렌터카 10% 할인(최대 1만8천원 할인)"}],"parseable":true},
+    {"name":"LG생활건강샵 U+패밀리샵","tiers":[{"grade":"전등급","desc":"5천원 할인"}],"parseable":true,"note":"최소구매금액 조건 명시 안 됨"},
+    {"name":"일리커피","tiers":[{"grade":"전등급","desc":"캡슐 배송비 무료 (일리커피 구독팩 가입자 전용)"}],"parseable":false},
+    {"name":"리디셀렉트","tiers":[{"grade":"전등급","desc":"1개월 무료 이용권"}],"parseable":false},
+    {"name":"데이터 1GB 선물하기","tiers":[{"grade":"전등급","desc":"무료 데이터 1GB 선물하기"}],"parseable":false,"note":"제휴 브랜드가 아니라 통신 자체 부가서비스 - 성격이 다름, 제외 검토"},
+    {"name":"쉐이크쉑","tiers":[{"grade":"전등급","desc":"5천원 할인(2만원 이상 구매 시)"}],"parseable":true},
+    {"name":"딸기콩","tiers":[{"grade":"전등급","desc":"어린이 오디오북 딸기콩 1개월 무료 이용권 제공"}],"parseable":false}
+  ]
+}

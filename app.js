@@ -225,9 +225,12 @@ const Engine = (() => {
     }
 
     // ---------- 할인액 계산 ----------
-    let value = 0, isPoint = false, estimate = false;
+    let value = 0, isPoint = false, estimate = false, isGift = false;
     const unit = b.benefit_unit;
-    if (unit === '%') {
+    if (unit === '증정') {
+      value = 0;
+      isGift = true;
+    } else if (unit === '%') {
       value = amount * b.benefit_value / 100;
       if (b.per_tx_discount_limit) value = Math.min(value, b.per_tx_discount_limit);
     } else if (unit === '원') {
@@ -283,9 +286,12 @@ const Engine = (() => {
     // 제외 조건
     if (b.exclusions_summary) { checks.push(`제외: ${b.exclusions_summary}`); }
 
+    // 원문 조건 (동반할인 등 스키마로 못 담는 세부조항을 참고용으로 노출)
+    if (b.raw_condition_note) { notes.push(b.raw_condition_note); }
+
     value = Math.floor(value);
-    if (value <= 0) return { excluded: true, reason: '할인액 0원' };
-    return { benefit: b, value, isPoint, estimate, status, checks, notes };
+    if (value <= 0 && !isGift) return { excluded: true, reason: '할인액 0원' };
+    return { benefit: b, value, isPoint, isGift, estimate, status, checks, notes };
   }
 
   // ---------- 티어 중복 제거 ----------
@@ -340,9 +346,11 @@ const Engine = (() => {
     Object.entries(byProduct).forEach(([pid, rs]) => {
       const p = productById[pid];
       // application_order 1(기본) 중 최대 1개 + order 2(추가 적립형) 스택
-      const primaries = rs.filter(r => (r.benefit.application_order || 1) === 1);
-      const stackers = rs.filter(r => (r.benefit.application_order || 1) > 1 && r.benefit.stackable);
-      if (!primaries.length && !stackers.length) return;
+      // 증정형(무료 제공)은 금액이 없어 순위 계산에서 제외하고, 있으면 항상 별도로 덧붙여 보여준다
+      const gifts = rs.filter(r => r.isGift);
+      const primaries = rs.filter(r => (r.benefit.application_order || 1) === 1 && !r.isGift);
+      const stackers = rs.filter(r => (r.benefit.application_order || 1) > 1 && r.benefit.stackable && !r.isGift);
+      if (!primaries.length && !stackers.length && !gifts.length) return;
 
       let items = [];
       if (primaries.length) {
@@ -368,6 +376,9 @@ const Engine = (() => {
           bestStack.notes.push('기본 혜택과 중복 적용(추가 환급)');
           items.push(bestStack);
         }
+      }
+      if (gifts.length) {
+        items.push(gifts[0]);
       }
 
       if (!items.length) return;

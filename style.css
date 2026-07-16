@@ -646,6 +646,9 @@ details.more[open] summary::before{transform:rotate(90deg)}
 .r-it .n{color:var(--ink);font-weight:600}
 .r-it .v{font-family:var(--mono);font-weight:600;white-space:nowrap}
 .r-it .v.pt{color:var(--blue)}
+.r-it.gift{background:#FFF7EB;margin:2px -8px;padding:5px 8px;border-radius:8px}
+.r-it.gift .n{color:var(--amber)}
+.r-it.gift .v.gift{font-family:var(--body);color:var(--amber)}
 .r-how{margin-top:12px;background:var(--blue-soft);border-radius:9px;padding:10px 12px;font-size:13px;line-height:1.6}
 .r-how b{font-weight:800}
 .r-how .arrow{color:var(--blue);font-weight:800}

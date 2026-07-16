@@ -883,15 +883,17 @@ function viewHome() {
     const b = c.best, it = b.items[0], bf = it.benefit;
     const isWknd = b.items.some(x => x.checks.some(k => k.includes('토·일')));
     const dday = b.items.map(x => (x.notes.find(n => n.includes('D-')) || '').match(/D-\d+/)).find(Boolean);
-    const rate = bf.benefit_unit === '%' ? `${bf.benefit_value}%`
+    const rate = bf.benefit_unit === '증정' ? '무료 증정'
+      : bf.benefit_unit === '%' ? `${bf.benefit_value}%`
       : bf.benefit_unit === '원/L' ? `L당 ${bf.benefit_value}원`
       : bf.benefit_unit === '원_결제가' ? `${won(bf.benefit_value)}원 정액`
       : `${won(bf.benefit_value)}${bf.benefit_unit === '포인트' ? 'P' : '원'}`;
+    const valLabel = it.isGift ? '🎁 무료 증정' : `~${won(b.grandTotal)}원`;
     return `<button type="button" class="cat" data-cat="${c.key}">
       ${dday ? `<span class="badge dday">${dday[0]}</span>` : isWknd ? `<span class="badge wknd">주말</span>` : ''}
       <span class="ic">${c.icon}</span><span class="ct">${c.key}</span>
       <span class="best"><b>${esc(shortName(b.product))}</b> · ${esc(bf.benefit_name)} <b>${rate}</b></span>
-      <span class="val">~${won(b.grandTotal)}원 <small>${won(c.sample)}원 결제 시</small></span>
+      <span class="val">${valLabel} <small>${won(c.sample)}원 결제 시</small></span>
     </button>`;
   }).join('');
 
@@ -1038,8 +1040,10 @@ function receiptHtml(c, i) {
   const p = c.product;
   const allChecks = [...new Set(c.items.flatMap(x => x.checks))];
   const allNotes = [...new Set(c.items.flatMap(x => x.notes))];
-  const items = c.items.map(x =>
-    `<div class="r-it"><span class="n">${esc(x.benefit.benefit_name)}${x.estimate ? ' <small style="color:var(--mut)">(추정)</small>' : ''}</span>
+  const items = c.items.map(x => x.isGift
+    ? `<div class="r-it gift"><span class="n">🎁 ${esc(x.benefit.benefit_name)}</span>
+    <span class="v gift">무료 증정</span></div>`
+    : `<div class="r-it"><span class="n">${esc(x.benefit.benefit_name)}${x.estimate ? ' <small style="color:var(--mut)">(추정)</small>' : ''}</span>
     <span class="v ${x.isPoint ? 'pt' : ''}">${x.isPoint ? '+' : '-'}${won(x.value)}${x.isPoint ? 'P' : '원'}</span></div>`
   ).join('');
   const how = buildInstruction(c);
