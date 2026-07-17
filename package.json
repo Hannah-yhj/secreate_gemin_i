@@ -12,6 +12,8 @@
   "license": "ISC",
   "dependencies": {
     "@supabase/supabase-js": "^2.110.6",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
     "dotenv": "^17.2.2"
   }
 }

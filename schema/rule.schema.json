@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "rule",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "rule_id",
+    "product_id",
+    "rule_type",
+    "rule_expression",
+    "source_id"
+  ],
+  "properties": {
+    "rule_id": { "type": "string", "minLength": 1 },
+    "product_id": { "type": "string", "minLength": 1 },
+    "rule_type": { "type": "string", "minLength": 1 },
+    "scope_id": { "type": ["string", "null"] },
+    "rule_expression": { "type": "string", "minLength": 1 },
+    "ui_message": { "type": ["string", "null"] },
+    "source_id": { "type": "string", "minLength": 1 },
+    "priority": { "enum": ["optional", "important", null] }
+  }
+}

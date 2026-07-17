@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "source",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source_id",
+    "source_type",
+    "title",
+    "file_name",
+    "document_hash",
+    "product_id"
+  ],
+  "properties": {
+    "source_id": { "type": "string", "minLength": 1 },
+    "source_type": { "type": "string", "minLength": 1 },
+    "title": { "type": "string", "minLength": 1 },
+    "file_name": { "type": "string", "minLength": 1 },
+    "source_url": { "type": ["string", "null"] },
+    "published_or_reviewed_date": { "type": ["string", "null"], "format": "date" },
+    "note": { "type": ["string", "null"] },
+    "document_hash": { "type": "string", "minLength": 1 },
+    "product_id": { "type": "string", "minLength": 1 }
+  }
+}
