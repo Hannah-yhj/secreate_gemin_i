@@ -53,8 +53,9 @@ const S = {
     channel: null, dayMode: 'today', day: null, time: ''
   },
   chat: {
+    busy: false,
     messages: [
-      { role: 'bot', text: '안녕하세요! 카드 추천 챗봇이에요.\n소비 패턴이나 원하는 혜택을 말씀해 주세요. 예: "카페 많이 가요", "교통비 아끼고 싶어요"' }
+      { role: 'bot', text: '안녕하세요! 카드 추천 챗봇이에요.\n소비 패턴이나 원하는 혜택을 말씀해 주세요. 예: "카페 많이 가요", "교통비 아끼고 싶어요"', html: null }
     ]
   }
 };
@@ -1335,68 +1336,61 @@ function viewMore() {
   </div>`;
 }
 
-function chatbotReply(text) {
-  const t = text.toLowerCase();
-  const tips = [];
-  const products = Engine.productById();
-
-  const pick = (pid, reason) => {
-    const p = products[pid];
-    if (p) tips.push(`• <b>${esc(p.product_name)}</b> — ${reason}`);
-  };
-
-  if (/카페|커피|스타벅스|이디야/.test(t)) {
-    pick('P_KB_NORI2', '커피 할인 강점 (실적 무관 구간도 있음)');
-    pick('P_KB_MYWISH', '먹는데 진심 팩 + 카페/외식');
-  }
-  if (/편의점|cu|gs|이마트24|배달|배민|요기요/.test(t)) {
-    pick('P_SH_NARASARANG', 'CU 즉시할인 + 편의점 캐시백 스택');
-    pick('P_TOSSPAY', '배달·간편결제 프로모션이 자주 열려요');
-  }
-  if (/교통|버스|지하철|택시|대중교통/.test(t)) {
-    pick('P_SH_MRLIFE', '교통·생활 영역 할인');
-    pick('P_KB_NORI2', '대중교통·택시 체크카드 혜택');
-  }
-  if (/통신|skt|kt|lgu|휴대폰|요금/.test(t) || (/통신/.test(t) && S.carrier)) {
-    const c = S.carrier ? `${S.carrier}${S.grade ? ' ' + S.grade : ''}` : '통신';
-    pick('P_SH_MRLIFE', `${c} 자동납부·통신 영역과 궁합이 좋아요`);
-  }
-  if (/영화|구독|넷플릭스|ott/.test(t)) {
-    pick('P_KB_MYWISH', '노는데 진심 팩으로 여가·구독 혜택');
-    pick('P_NPAY', '온라인·쇼핑·프로모션 연계');
-  }
-  if (/주유|마트|쇼핑|온라인/.test(t)) {
-    pick('P_SH_MRLIFE', '생활비·마트·공과금 영역');
-    pick('P_KB_MYWISH', '전월실적 충족 시 KB Pay·업종 할인');
-  }
-
-  if (!tips.length) {
-    return {
-      text: '소비 패턴을 조금만 더 알려 주세요!\n예: "카페·배달 위주예요", "교통비랑 통신비 줄이고 싶어요"\n\n마이페이지에서 보유 카드와 통신사를 설정해 두면 추천이 더 정확해져요.',
-      html: null
-    };
-  }
-
-  const walletNote = S.wallet.length
-    ? `\n\n현재 지갑에 ${S.wallet.length}개 수단이 켜져 있어요. 혜택 추천 페이지에서 바로 비교해 보세요.`
-    : '\n\n먼저 마이페이지에서 보유 카드를 켜 주세요.';
-
-  const html = `이런 카드를 먼저 살펴보시면 좋아요:<br><br>${tips.join('<br>')}${walletNote.replace(/\n/g, '<br>')}`;
-  return {
-    text: html.replace(/<br>/g, '\n').replace(/<\/?b>/g, ''),
-    html
-  };
+function formatBotHtml(text) {
+  return esc(text)
+    .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+    .replace(/\n/g, '<br>');
 }
 
-function sendChat(text) {
+function chatHistoryForApi() {
+  return S.chat.messages
+    .filter(m => m.role === 'user' || m.role === 'bot')
+    .slice(-8)
+    .map(m => ({
+      role: m.role === 'bot' ? 'assistant' : 'user',
+      content: m.text || '',
+    }));
+}
+
+async function sendChat(text) {
   const msg = text.trim();
-  if (!msg) return;
+  if (!msg || S.chat.busy) return;
+  S.chat.busy = true;
+  const history = chatHistoryForApi();
   S.chat.messages.push({ role: 'user', text: msg });
-  const reply = chatbotReply(msg);
-  S.chat.messages.push({ role: 'bot', text: reply.text, html: reply.html });
+  S.chat.messages.push({ role: 'bot', text: '카드를 찾아보는 중이에요…', html: '카드를 찾아보는 중이에요…' });
   render();
   const box = $('#chatMsgs');
   if (box) box.scrollTop = box.scrollHeight;
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: msg, history }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || `요청 실패 (${res.status})`);
+    const reply = String(data.reply || '').trim();
+    if (!reply) throw new Error('응답이 비어 있어요');
+    S.chat.messages[S.chat.messages.length - 1] = {
+      role: 'bot',
+      text: reply,
+      html: formatBotHtml(reply),
+    };
+  } catch (err) {
+    const tip = err.message || '잠시 후 다시 시도해 주세요.';
+    S.chat.messages[S.chat.messages.length - 1] = {
+      role: 'bot',
+      text: `죄송해요. 추천을 불러오지 못했어요.\n${tip}`,
+      html: formatBotHtml(`죄송해요. 추천을 불러오지 못했어요.\n${tip}`),
+    };
+  } finally {
+    S.chat.busy = false;
+    render();
+    const msgs = $('#chatMsgs');
+    if (msgs) msgs.scrollTop = msgs.scrollHeight;
+  }
 }
 
 /* ==================== 이벤트 ==================== */
