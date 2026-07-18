@@ -1,14 +1,20 @@
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 import { createClient } from "@supabase/supabase-js";
-import { loadEnv } from "../lib/load-env.js";
+import { getUpstageApiKey, getUpstageModel, loadEnv } from "../lib/load-env.js";
 
 loadEnv();
 
+/** Upstage Chat Completions */
 const UPSTAGE_URL = "https://api.upstage.ai/v1/chat/completions";
 
+function projectRoot() {
+  return path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+}
+
 function loadLocalDB() {
-  const filePath = path.join(process.cwd(), "db.json");
+  const filePath = path.join(projectRoot(), "db.json");
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
 }
 
@@ -18,15 +24,18 @@ function hasCardProducts(data) {
 }
 
 async function loadCatalog() {
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+  loadEnv();
+  const url = (process.env.SUPABASE_URL || "").trim();
+  const key = (process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
 
   if (url && key) {
     try {
       const supabase = createClient(url, key, { auth: { persistSession: false } });
       const { data: products, error: pErr } = await supabase.from("products").select("*");
       const { data: benefits, error: bErr } = await supabase.from("benefits").select("*");
-      const { data: sources, error: sErr } = await supabase.from("sources").select("source_id, title, published_or_reviewed_date");
+      const { data: sources } = await supabase
+        .from("sources")
+        .select("source_id, title, published_or_reviewed_date");
 
       if (!pErr && !bErr) {
         const payload = {
@@ -37,7 +46,7 @@ async function loadCatalog() {
         if (hasCardProducts(payload)) return { data: payload, source: "supabase" };
       }
     } catch (_) {
-      /* fall through to local */
+      /* fall through */
     }
   }
 
@@ -56,7 +65,6 @@ async function loadCatalog() {
   };
 }
 
-/** Solar 컨텍스트용으로 혜택을 짧게 요약 (토큰 절약) */
 function buildCatalogContext(catalog) {
   const products = (catalog.products || []).filter(p => p.service_type !== "통신사" || p.carrier_code);
   const byProduct = new Map(products.map(p => [p.product_id, { ...p, benefits: [] }]));
@@ -68,11 +76,9 @@ function buildCatalogContext(catalog) {
       name: b.benefit_name,
       category: b.category,
       merchants: b.merchants_or_scope,
-      type: b.benefit_type,
       value: b.benefit_value,
       unit: b.benefit_unit,
       spend_min: b.spend_min,
-      channel: b.payment_channel,
       end_date: b.end_date,
       required_grade: b.required_grade || null,
     });
@@ -81,8 +87,7 @@ function buildCatalogContext(catalog) {
   const lines = [];
   for (const p of byProduct.values()) {
     if (!p.benefits.length && p.service_type === "통신사") continue;
-    const head = `- ${p.product_name} (${p.provider}, ${p.product_type}${p.carrier_code ? `, ${p.carrier_code}` : ""})`;
-    lines.push(head);
+    lines.push(`- ${p.product_name} (${p.provider}, ${p.product_type}${p.carrier_code ? `, ${p.carrier_code}` : ""})`);
     const top = p.benefits.slice(0, 12);
     for (const b of top) {
       const rate = b.unit === "%"
@@ -130,9 +135,13 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const apiKey = process.env.UPSTAGE_API_KEY;
+  // 요청마다 env 재확인 (키는 코드에 없음 — process.env / .env.local 만 사용)
+  loadEnv();
+  const apiKey = getUpstageApiKey();
   if (!apiKey) {
-    return res.status(500).json({ error: "UPSTAGE_API_KEY가 서버에 설정되어 있지 않습니다." });
+    return res.status(500).json({
+      error: "UPSTAGE_API_KEY가 서버에 없습니다. 로컬은 .env.local, Vercel은 Environment Variables에 UPSTAGE_API_KEY를 넣어 주세요.",
+    });
   }
 
   try {
@@ -143,7 +152,7 @@ export default async function handler(req, res) {
     const history = Array.isArray(body.history) ? body.history.slice(-8) : [];
     const { data: catalog, source } = await loadCatalog();
     const catalogText = buildCatalogContext(catalog);
-    const model = process.env.UPSTAGE_MODEL || "solar-pro3";
+    const model = getUpstageModel();
 
     const messages = [
       { role: "system", content: systemPrompt(catalogText, source) },
@@ -156,14 +165,12 @@ export default async function handler(req, res) {
     const upstream = await fetch(UPSTAGE_URL, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${apiKey}`,
+        Authorization: "Bearer " + apiKey,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         model,
         messages,
-        temperature: 0.4,
-        max_tokens: 1200,
       }),
     });
 
