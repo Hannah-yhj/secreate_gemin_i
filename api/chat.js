@@ -1,6 +1,9 @@
 import fs from "fs";
 import path from "path";
 import { createClient } from "@supabase/supabase-js";
+import { loadEnv } from "../lib/load-env.js";
+
+loadEnv();
 
 const UPSTAGE_URL = "https://api.upstage.ai/v1/chat/completions";
 

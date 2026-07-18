@@ -1,6 +1,9 @@
 import fs from "fs";
 import path from "path";
 import { createClient } from "@supabase/supabase-js";
+import { loadEnv } from "../lib/load-env.js";
+
+loadEnv();
 
 function loadLocalDB() {
   const filePath = path.join(process.cwd(), "db.json");
