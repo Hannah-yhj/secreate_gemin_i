@@ -3,7 +3,13 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { createClient } from "@supabase/supabase-js";
 import { getUpstageApiKey, getUpstageModel, loadEnv } from "../lib/load-env.js";
-import { detectCategory, detectAmount, findBestCards, buildCandidateText } from "../lib/engine.js";
+import {
+  detectCategory,
+  detectAmount,
+  findBestCards,
+  buildCandidateText,
+  wantsMembership,
+} from "../lib/engine.js";
 
 loadEnv();
 
@@ -51,13 +57,18 @@ async function loadCatalog() {
 }
 
 /** Solar는 이제 "선택"이 아니라 "설명"만 담당한다 */
-function systemPrompt(candidateText) {
+function systemPrompt(candidateText, { includeMembership = false } = {}) {
+  const scope = includeMembership
+    ? "이번 답변은 사용자가 멤버십을 요청했으므로 통신사 멤버십 후보를 설명할 수 있습니다."
+    : "기본은 카드(신용/체크)만 추천합니다. 통신사 멤버십은 후보에 없으면 언급하지 마세요. 사용자가 멤버십을 원할 때만 멤버십을 다룹니다.";
+
   return `당신은 "결제 지시서" 서비스의 카드 추천 챗봇입니다.
 아래 [추천 후보]는 이미 시스템이 규칙 기반으로 계산해서 선정한 결과입니다.
 당신의 역할은 이 후보를 사용자에게 자연스럽게 설명하는 것뿐입니다.
+${scope}
 
 절대 하지 말아야 할 것:
-- [추천 후보]에 없는 카드를 언급하지 않는다.
+- [추천 후보]에 없는 상품을 언급하지 않는다.
 - 후보의 순서를 임의로 바꾸지 않는다.
 - 후보 데이터에 없는 수치·조건을 새로 만들어내지 않는다.
 - 생각 과정(reasoning), "Let me check", "Hmm", "Wait" 같은 문장을 출력하지 않는다.
@@ -68,10 +79,10 @@ function systemPrompt(candidateText) {
 
 답변은 반드시 아래 형식을 따른다 (한국어, 친근하고 간결하게):
 
-추천 카드
+추천 ${includeMembership ? "멤버십/혜택" : "카드"}
 
-각 카드마다
-1. 카드명
+각 항목마다
+1. 상품명
 2. 추천 이유 (후보의 매칭 혜택을 근거로 자연스럽게 설명)
 3. 주요 혜택 (불릿 형식)
 4. 이용 조건 (전월실적, 등급 등)
@@ -107,12 +118,13 @@ export default async function handler(req, res) {
     /* ---- ① 질문 분석 (AI 호출 없음, Node에서 키워드로 판단) ---- */
     const category = detectCategory(message);
     const amount = detectAmount(message);
+    const includeMembership = wantsMembership(message);
 
     /* ---- ② 카탈로그 로드 ---- */
     const { data: catalog, source } = await loadCatalog();
 
-    /* ---- ③ Engine.findBestCards() — TOP3를 Node가 결정 ---- */
-    const candidates = findBestCards(catalog, { category, amount }, 3);
+    /* ---- ③ Engine.findBestCards() — TOP3를 Node가 결정 (기본: 카드만) ---- */
+    const candidates = findBestCards(catalog, { category, amount, includeMembership }, 3);
 
     /* ---- ④ candidateText 생성 (후보 3개만, 카탈로그 전체 아님) ---- */
     const candidateText = buildCandidateText(candidates, { category, amount });
@@ -120,7 +132,7 @@ export default async function handler(req, res) {
     /* ---- ⑤ Solar-Pro: 설명만 작성 ---- */
     const model = getUpstageModel();
     const messages = [
-      { role: "system", content: systemPrompt(candidateText) },
+      { role: "system", content: systemPrompt(candidateText, { includeMembership }) },
       ...history
         .filter((m) => m && (m.role === "user" || m.role === "assistant") && m.content)
         .map((m) => ({ role: m.role, content: String(m.content).slice(0, 2000) })),
@@ -152,6 +164,7 @@ export default async function handler(req, res) {
         dataSource: source,
         category,
         amount,
+        includeMembership,
         candidateCount: candidates.length,
         candidateProducts: candidates.map((c) => c.product_id),
       },
