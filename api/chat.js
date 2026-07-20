@@ -3,6 +3,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { createClient } from "@supabase/supabase-js";
 import { getUpstageApiKey, getUpstageModel, loadEnv } from "../lib/load-env.js";
+import { detectCategory, detectAmount, findBestCards, buildCandidateText } from "../lib/engine.js";
 
 loadEnv();
 
@@ -19,8 +20,7 @@ function loadLocalDB() {
 }
 
 function hasCardProducts(data) {
-  return Array.isArray(data?.products)
-    && data.products.some(p => p && p.service_type !== "통신사");
+  return Array.isArray(data?.products) && data.products.some((p) => p && p.service_type !== "통신사");
 }
 
 async function loadCatalog() {
@@ -33,16 +33,9 @@ async function loadCatalog() {
       const supabase = createClient(url, key, { auth: { persistSession: false } });
       const { data: products, error: pErr } = await supabase.from("products").select("*");
       const { data: benefits, error: bErr } = await supabase.from("benefits").select("*");
-      const { data: sources } = await supabase
-        .from("sources")
-        .select("source_id, title, published_or_reviewed_date");
 
       if (!pErr && !bErr) {
-        const payload = {
-          products: products || [],
-          benefits: benefits || [],
-          sources: sources || [],
-        };
+        const payload = { products: products || [], benefits: benefits || [] };
         if (hasCardProducts(payload)) return { data: payload, source: "supabase" };
       }
     } catch (_) {
@@ -52,101 +45,42 @@ async function loadCatalog() {
 
   const local = loadLocalDB();
   return {
-    data: {
-      products: local.products || [],
-      benefits: local.benefits || [],
-      sources: (local.sources || []).map(s => ({
-        source_id: s.source_id,
-        title: s.title,
-        published_or_reviewed_date: s.published_or_reviewed_date,
-      })),
-    },
+    data: { products: local.products || [], benefits: local.benefits || [] },
     source: "db.json",
   };
 }
 
-function buildCatalogContext(catalog) {
-  const products = (catalog.products || []).filter(p => p.service_type !== "통신사" || p.carrier_code);
-  const byProduct = new Map(products.map(p => [p.product_id, { ...p, benefits: [] }]));
-
-  for (const b of catalog.benefits || []) {
-    const row = byProduct.get(b.product_id);
-    if (!row) continue;
-    row.benefits.push({
-      name: b.benefit_name,
-      category: b.category,
-      merchants: b.merchants_or_scope,
-      value: b.benefit_value,
-      unit: b.benefit_unit,
-      spend_min: b.spend_min,
-      end_date: b.end_date,
-      required_grade: b.required_grade || null,
-    });
-  }
-
-  const lines = [];
-  for (const p of byProduct.values()) {
-    if (!p.benefits.length && p.service_type === "통신사") continue;
-    lines.push(`- ${p.product_name} (${p.provider}, ${p.product_type}${p.carrier_code ? `, ${p.carrier_code}` : ""})`);
-    const top = p.benefits.slice(0, 12);
-    for (const b of top) {
-      const rate = b.unit === "%"
-        ? `${b.value}%`
-        : b.unit
-          ? `${b.value}${b.unit}`
-          : String(b.value ?? "");
-      const bits = [
-        b.name,
-        b.category && `카테고리:${b.category}`,
-        b.merchants && `대상:${String(b.merchants).slice(0, 80)}`,
-        rate && `혜택:${rate}`,
-        b.spend_min != null && `실적≥${b.spend_min}`,
-        b.required_grade && `등급:${b.required_grade}+`,
-        b.end_date && `~${b.end_date}`,
-      ].filter(Boolean);
-      lines.push(`  · ${bits.join(" | ")}`);
-    }
-    if (p.benefits.length > top.length) {
-      lines.push(`  · …외 ${p.benefits.length - top.length}개 혜택`);
-    }
-  }
-  return lines.join("\n");
-}
-
-function systemPrompt(catalogText, dataSource) {
+/** Solar는 이제 "선택"이 아니라 "설명"만 담당한다 */
+function systemPrompt(candidateText) {
   return `당신은 "결제 지시서" 서비스의 카드 추천 챗봇입니다.
-아래는 ${dataSource === "supabase" ? "Supabase" : "로컬 DB"}에 있는 전체 결제수단·혜택 데이터입니다.
-이 데이터에 있는 카드/혜택만 근거로 추천하세요. 데이터에 없는 카드·수치·조건을 지어내지 마세요.
-정보가 부족하면 질문을 짧게 되묻고, 확실하지 않은 조건(실적·횟수·기간)은 "확인 필요"라고 말하세요.
+아래 [추천 후보]는 이미 시스템이 규칙 기반으로 계산해서 선정한 결과입니다.
+당신의 역할은 이 후보를 사용자에게 자연스럽게 설명하는 것뿐입니다.
 
-답변 규칙:
-- 한국어로 답변한다, 친근하고 짧게 (핵심 2~5개 카드/혜택)
-- 카드명, 왜 맞는지, 주요 조건(실적·등급 등)을 적기
-- 필요하면 마이페이지에서 카드/통신사를 등록하라고 안내
-- 마크다운 굵게(**)는 써도 되지만 HTML은 쓰지 말 것
-- 절대로 생각 과정(reasoning)을 출력하지 마라.
-- "생각해보겠습니다", "Let me check", "Hmm", "Wait" 같은 문장은 절대 출력하지 않는다.
-- 사용자에게는 최종 답변만 제공한다.
+절대 하지 말아야 할 것:
+- [추천 후보]에 없는 카드를 언급하지 않는다.
+- 후보의 순서를 임의로 바꾸지 않는다.
+- 후보 데이터에 없는 수치·조건을 새로 만들어내지 않는다.
+- 생각 과정(reasoning), "Let me check", "Hmm", "Wait" 같은 문장을 출력하지 않는다.
+- '자동 적용', '무조건', '가장 좋다'처럼 후보 데이터로 확인할 수 없는 단정적 표현을 쓰지 않는다.
+- 데이터에 없는 카드·수치·조건을 지어내지 않는다.
+- 정보가 부족하면 질문을 짧게 되묻고, 확실하지 않은 조건(실적·횟수·기간)은 "확인 필요"라고 말한다.
 
-답변은 반드시 아래 형식을 따른다.
+
+답변은 반드시 아래 형식을 따른다 (한국어, 친근하고 간결하게):
 
 추천 카드
-(최대 3개)
 
 각 카드마다
-
 1. 카드명
-2. 추천 이유(반드시 DB에 있는 혜택만 근거로 설명)
-3. 주요 혜택(불릿 형식)
-4. 이용 조건(전월실적, 등급, 횟수 등)
+2. 추천 이유 (후보의 매칭 혜택을 근거로 자연스럽게 설명)
+3. 주요 혜택 (불릿 형식)
+4. 이용 조건 (전월실적, 등급 등)
 
-절대로 '자동 적용', '자동 캐시백', '최고의 카드', '무조건', '가장 좋다'처럼 DB로 확인할 수 없는 표현은 사용하지 않는다.
+마지막에: 마이페이지에서 카드/통신사를 등록하면 더 정확한 추천이 가능하다고 짧게 안내한다.
+마크다운 굵게(**)는 써도 되지만 HTML은 쓰지 않는다.
 
-DB에 없는 혜택이나 조건은 추측해서 작성하지 않는다.
-내부추론은 절대 출력하지 않는다.
-
-[카탈로그]
-${catalogText}`;
+[추천 후보]
+${candidateText}`;
 }
 
 export default async function handler(req, res) {
@@ -155,7 +89,6 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  // 요청마다 env 재확인 (키는 코드에 없음 — process.env / .env.local 만 사용)
   loadEnv();
   const apiKey = getUpstageApiKey();
   if (!apiKey) {
@@ -165,20 +98,32 @@ export default async function handler(req, res) {
   }
 
   try {
-    const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
+    const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body || {};
     const message = String(body.message || "").trim();
     if (!message) return res.status(400).json({ error: "message가 비어 있습니다." });
 
     const history = Array.isArray(body.history) ? body.history.slice(-8) : [];
-    const { data: catalog, source } = await loadCatalog();
-    const catalogText = buildCatalogContext(catalog);
-    const model = getUpstageModel();
 
+    /* ---- ① 질문 분석 (AI 호출 없음, Node에서 키워드로 판단) ---- */
+    const category = detectCategory(message);
+    const amount = detectAmount(message);
+
+    /* ---- ② 카탈로그 로드 ---- */
+    const { data: catalog, source } = await loadCatalog();
+
+    /* ---- ③ Engine.findBestCards() — TOP3를 Node가 결정 ---- */
+    const candidates = findBestCards(catalog, { category, amount }, 3);
+
+    /* ---- ④ candidateText 생성 (후보 3개만, 카탈로그 전체 아님) ---- */
+    const candidateText = buildCandidateText(candidates, { category, amount });
+
+    /* ---- ⑤ Solar-Pro: 설명만 작성 ---- */
+    const model = getUpstageModel();
     const messages = [
-      { role: "system", content: systemPrompt(catalogText, source) },
+      { role: "system", content: systemPrompt(candidateText) },
       ...history
-        .filter(m => m && (m.role === "user" || m.role === "assistant") && m.content)
-        .map(m => ({ role: m.role, content: String(m.content).slice(0, 2000) })),
+        .filter((m) => m && (m.role === "user" || m.role === "assistant") && m.content)
+        .map((m) => ({ role: m.role, content: String(m.content).slice(0, 2000) })),
       { role: "user", content: message.slice(0, 2000) },
     ];
 
@@ -188,14 +133,10 @@ export default async function handler(req, res) {
         Authorization: "Bearer " + apiKey,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        model,
-        messages,
-      }),
+      body: JSON.stringify({ model, messages }),
     });
 
     const raw = await upstream.json().catch(() => ({}));
-    console.log(JSON.stringify(raw, null, 2));
     if (!upstream.ok) {
       const detail = raw?.error?.message || raw?.message || `Upstage HTTP ${upstream.status}`;
       return res.status(502).json({ error: `Solar API 오류: ${detail}` });
@@ -209,8 +150,10 @@ export default async function handler(req, res) {
       meta: {
         model,
         dataSource: source,
-        productCount: (catalog.products || []).length,
-        benefitCount: (catalog.benefits || []).length,
+        category,
+        amount,
+        candidateCount: candidates.length,
+        candidateProducts: candidates.map((c) => c.product_id),
       },
     });
   } catch (err) {
