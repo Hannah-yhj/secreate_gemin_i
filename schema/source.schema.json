@@ -17,7 +17,7 @@
     "title": { "type": "string", "minLength": 1 },
     "file_name": { "type": "string", "minLength": 1 },
     "source_url": { "type": ["string", "null"] },
-    "published_or_reviewed_date": { "type": ["string", "null"], "format": "date" },
+    "published_or_reviewed_date": { "type": ["string", "null"] },
     "note": { "type": ["string", "null"] },
     "document_hash": { "type": "string", "minLength": 1 },
     "product_id": { "type": "string", "minLength": 1 }
