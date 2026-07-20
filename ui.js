@@ -55,7 +55,7 @@ const S = {
   chat: {
     busy: false,
     messages: [
-      { role: 'bot', text: '안녕하세요! 카드 추천 챗봇이에요.\n소비 패턴이나 원하는 혜택을 말씀해 주세요. 예: "카페 많이 가요", "교통비 아끼고 싶어요"', html: null }
+      { role: 'bot', text: '안녕하세요! 카드 추천이에요.\n소비 패턴이나 원하는 혜택을 말씀해 주세요. 예: "카페 많이 가요", "교통비 아끼고 싶어요"\n통신사 멤버십이 궁금하면 멤버십이라고 말씀해 주세요.', html: null }
     ]
   }
 };
@@ -1288,7 +1288,7 @@ function disclaimHtml() {
   return `<p class="disclaim">이 지시서는 첨부된 약관·프로모션 데이터(샘플 6종) 기준의 예상치예요. 잔여 한도·사용 횟수·매장별 제외 조건에 따라 실제 혜택은 달라질 수 있어요.</p>`;
 }
 
-/* ==================== 추가 기능 (챗봇) ==================== */
+/* ==================== 카드 추천 (챗봇) ==================== */
 function chatBubbleHtml(m) {
   if (m.role === 'bot') {
     const body = m.html || esc(m.text).replace(/\n/g, '<br>');
@@ -1302,24 +1302,10 @@ function viewMore() {
 
   return `
   <div class="page-head">
-    <h2>추가 기능</h2>
-    <p>카드 추천 챗봇과 곧 추가될 기능들</p>
+    <h2>카드 추천</h2>
+    <p>소비 패턴에 맞는 카드를 대화로 찾아요</p>
   </div>
-  <div class="more-layout">
-    <div class="feature-list">
-      <button type="button" class="feature-card on">
-        <span class="fi">💬</span>
-        <span><b>카드 추천 챗봇</b><small>소비 패턴에 맞는 카드를 대화로 찾아요</small></span>
-      </button>
-      <button type="button" class="feature-card coming">
-        <span class="fi">📊</span>
-        <span><b>월간 혜택 리포트</b><small>준비 중</small></span>
-      </button>
-      <button type="button" class="feature-card coming">
-        <span class="fi">🔔</span>
-        <span><b>한도 알림</b><small>준비 중</small></span>
-      </button>
-    </div>
+  <div class="more-layout chat-only">
     <div class="chat-wrap">
       <div class="chat-msgs" id="chatMsgs">${msgs}</div>
       <div class="chat-quick">

@@ -693,12 +693,16 @@ details.more[open] summary::before{transform:rotate(90deg)}
 .more-results:hover{background:var(--blue-soft);border-color:var(--blue-mid)}
 .more-results.ghost{color:var(--mut-ink);border-style:solid}
 
-/* ---- 추가 기능: 좌 기능 / 우 챗봇 ---- */
+/* ---- 카드 추천 챗봇 ---- */
 .more-layout{
   display:grid;
   grid-template-columns:280px 1fr;
   gap:20px;
   align-items:start;
+}
+.more-layout.chat-only{
+  grid-template-columns:1fr;
+  max-width:720px;
 }
 .chat-wrap{
   display:flex;flex-direction:column;height:min(72dvh,640px);
