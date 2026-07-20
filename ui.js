@@ -421,6 +421,29 @@ function cardProducts() {
   return (DB?.products || []).filter(isCardProduct);
 }
 
+// '카드 추가' / '간편결제 추가' 패널을 분리하기 위한 좁은 분류.
+// isCardProduct/cardProducts()는 지갑 표시 등 기존 동작에 그대로 쓰이므로 건드리지 않는다.
+function isCardOnlyProduct(p) {
+  return p && p.service_type === '카드';
+}
+
+function isPaymentAppProduct(p) {
+  return p && p.service_type === '간편결제';
+}
+
+function cardOnlyProducts() {
+  return (DB?.products || []).filter(isCardOnlyProduct);
+}
+
+function paymentAppProducts() {
+  return (DB?.products || []).filter(isPaymentAppProduct);
+}
+
+// 현재 열린 추가 패널('card' | 'payment')에 맞는 상품 목록을 돌려준다.
+function currentAddPool() {
+  return S.addPanel === 'payment' ? paymentAppProducts() : cardOnlyProducts();
+}
+
 
 //회원가입 함수
 async function signUp(email, password) {
@@ -869,7 +892,7 @@ function ownedCardTile(p) {
 function fabAndPanel() {
   const open = S.addPanel;
   const menuOpen = open === 'menu';
-  const panelOpen = open === 'carrier' || open === 'card';
+  const panelOpen = open === 'carrier' || open === 'card' || open === 'payment';
 
   let panelBody = '';
   if (open === 'carrier') {
@@ -902,12 +925,25 @@ function fabAndPanel() {
         <h3>카드 추가</h3>
         <button type="button" class="icon-x" data-close-add aria-label="닫기">✕</button>
       </div>
-      <p class="sub">카드사를 고르거나 검색해서 결제수단을 추가하세요.</p>
-      <div class="provider-tabs" id="providerTabs">${renderProviderTabs()}</div>
+      <p class="sub">카드사를 고르거나 검색해서 카드를 추가하세요.</p>
+      <div class="provider-tabs" id="providerTabs">${renderProviderTabs(cardOnlyProducts())}</div>
       <div class="card-search">
         <input type="search" id="cardSearchInput" placeholder="카드 이름 검색…" value="${esc(S.cardSearch)}" autocomplete="off">
       </div>
-      <div id="addCardList">${renderAddCardList()}</div>`;
+      <div id="addCardList">${renderAddCardList('카드')}</div>`;
+  } else if (open === 'payment') {
+    panelBody = `
+      <div class="add-panel-head">
+        <button type="button" class="back-btn" data-open-add="menu">←</button>
+        <h3>간편결제 추가</h3>
+        <button type="button" class="icon-x" data-close-add aria-label="닫기">✕</button>
+      </div>
+      <p class="sub">간편결제 서비스를 고르거나 검색해서 추가하세요.</p>
+      <div class="provider-tabs" id="providerTabs">${renderProviderTabs(paymentAppProducts())}</div>
+      <div class="card-search">
+        <input type="search" id="cardSearchInput" placeholder="간편결제 이름 검색…" value="${esc(S.cardSearch)}" autocomplete="off">
+      </div>
+      <div id="addCardList">${renderAddCardList('간편결제')}</div>`;
   }
 
   return `
@@ -919,7 +955,11 @@ function fabAndPanel() {
       </button>
       <button type="button" data-open-add="card">
         <span class="fi">💳</span>
-        <span><b>카드 추가</b><small>결제수단을 지갑에 등록</small></span>
+        <span><b>카드 추가</b><small>카드를 지갑에 등록</small></span>
+      </button>
+      <button type="button" data-open-add="payment">
+        <span class="fi">💰</span>
+        <span><b>간편결제 추가</b><small>네이버페이 · 토스페이 등</small></span>
       </button>
     </div>
     <button type="button" class="fab ${open ? 'on' : ''}" id="fabAdd" aria-label="추가" aria-expanded="${open ? 'true' : 'false'}">
@@ -940,14 +980,14 @@ const PROVIDER_SHORT = {
   '네이버파이낸셜': '네이버',
 };
 
-function providerList() {
-  return [...new Set(cardProducts().map(p => p.provider))];
+function providerList(pool) {
+  return [...new Set(pool.map(p => p.provider))];
 }
 
-function renderProviderTabs() {
+function renderProviderTabs(pool) {
   const tabs = [
     `<button type="button" data-provider="all" class="${S.cardProvider === 'all' ? 'on' : ''}">전체</button>`,
-    ...providerList().map(p =>
+    ...providerList(pool).map(p =>
       `<button type="button" data-provider="${esc(p)}" class="${S.cardProvider === p ? 'on' : ''}">${esc(PROVIDER_SHORT[p] || p)}</button>`
     ),
   ];
@@ -956,7 +996,7 @@ function renderProviderTabs() {
 
 function filteredAddableCards() {
   const q = S.cardSearch.trim().toLowerCase();
-  return cardProducts().filter(p => {
+  return currentAddPool().filter(p => {
     if (S.wallet.includes(p.product_id)) return false;
     if (S.cardProvider !== 'all' && p.provider !== S.cardProvider) return false;
     if (!q) return true;
@@ -965,9 +1005,9 @@ function filteredAddableCards() {
   });
 }
 
-function renderAddCardList() {
+function renderAddCardList(categoryLabel) {
   const inWallet = new Set(S.wallet);
-  const pool = cardProducts().filter(p => {
+  const pool = currentAddPool().filter(p => {
     if (inWallet.has(p.product_id)) return false;
     if (S.cardProvider !== 'all' && p.provider !== S.cardProvider) return false;
     return true;
@@ -975,8 +1015,8 @@ function renderAddCardList() {
   if (!pool.length) {
     const label = S.cardProvider === 'all' ? '' : (PROVIDER_SHORT[S.cardProvider] || S.cardProvider);
     return label
-      ? `<p class="sub">${esc(label)} 카드는 모두 등록되어 있어요.</p>`
-      : '<p class="sub">추가할 수 있는 카드가 모두 등록되어 있어요.</p>';
+      ? `<p class="sub">${esc(label)} ${esc(categoryLabel)}는 모두 등록되어 있어요.</p>`
+      : `<p class="sub">추가할 수 있는 ${esc(categoryLabel)}가 모두 등록되어 있어요.</p>`;
   }
   const list = filteredAddableCards();
   if (!list.length) {
@@ -996,7 +1036,7 @@ function renderAddCardList() {
 function refreshAddCardList() {
   const box = $('#addCardList');
   if (box) {
-    box.innerHTML = renderAddCardList();
+    box.innerHTML = renderAddCardList(S.addPanel === 'payment' ? '간편결제' : '카드');
     bindAddCardList();
   }
   $$('[data-provider]').forEach(b => b.classList.toggle('on', b.dataset.provider === S.cardProvider));
@@ -1007,9 +1047,8 @@ function bindAddCardList() {
     const id = el.dataset.addCard;
     const p = DB.products.find(x => x.product_id === id);
     S.wallet = [...new Set([...S.wallet, id])];
-    S.addPanel = 'card';
     savePersisted();
-    showToast(p ? `${shortName(p)} 추가됐어요` : '카드가 추가됐어요');
+    showToast(p ? `${shortName(p)} 추가됐어요` : '추가됐어요');
     render();
   }));
 }
@@ -1632,7 +1671,7 @@ function bind() {
   });
   $$('[data-open-add]').forEach(el => el.addEventListener('click', () => {
     const next = el.dataset.openAdd;
-    if (next === 'card' && S.addPanel !== 'card') {
+    if ((next === 'card' || next === 'payment') && S.addPanel !== next) {
       S.cardSearch = '';
       S.cardProvider = 'all';
     }
