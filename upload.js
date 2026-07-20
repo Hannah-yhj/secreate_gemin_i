@@ -1,8 +1,9 @@
-const fs = require("fs");
-const { createClient } = require("@supabase/supabase-js");
+import fs from "fs";
+import { createClient } from "@supabase/supabase-js";
+import dotenv from "dotenv";
 
 // .env.local 읽기
-require("dotenv").config({ path: ".env.local" });
+dotenv.config({ path: ".env.local" });
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
