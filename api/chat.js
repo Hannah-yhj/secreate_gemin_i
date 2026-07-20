@@ -120,10 +120,20 @@ function systemPrompt(catalogText, dataSource) {
 정보가 부족하면 질문을 짧게 되묻고, 확실하지 않은 조건(실적·횟수·기간)은 "확인 필요"라고 말하세요.
 
 답변 규칙:
-- 한국어, 친근하고 짧게 (핵심 2~5개 카드/혜택)
+- 한국어로 답변한다, 친근하고 짧게 (핵심 2~5개 카드/혜택)
 - 카드명, 왜 맞는지, 주요 조건(실적·등급 등)을 적기
 - 필요하면 마이페이지에서 카드/통신사를 등록하라고 안내
 - 마크다운 굵게(**)는 써도 되지만 HTML은 쓰지 말 것
+- 절대로 생각 과정(reasoning)을 출력하지 마라.
+- "생각해보겠습니다", "Let me check", "Hmm", "Wait" 같은 문장은 절대 출력하지 않는다.
+- 사용자에게는 최종 답변만 제공한다.
+- 답변 형식은 아래를 따른다.
+1. 추천 카드
+2. 추천 이유
+3. 주요 혜택
+4. 전월실적
+5. 한 줄 요약
+내부 추론은 절대 출력하지 않는다.
 
 [카탈로그]
 ${catalogText}`;
@@ -175,6 +185,7 @@ export default async function handler(req, res) {
     });
 
     const raw = await upstream.json().catch(() => ({}));
+    console.log(JSON.stringify(raw, null, 2));
     if (!upstream.ok) {
       const detail = raw?.error?.message || raw?.message || `Upstage HTTP ${upstream.status}`;
       return res.status(502).json({ error: `Solar API 오류: ${detail}` });
