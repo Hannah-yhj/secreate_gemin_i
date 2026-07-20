@@ -2,9 +2,28 @@ import "dotenv/config";
 import dotenv from "dotenv";
 dotenv.config({ path: "./.env.local" });
 
-import { readFile } from "fs/promises";
+import { readFile, readdir } from "fs/promises";
 import path from "path";
 import { processCardUploadWithKnownName } from "./lib/process-upload.js";
+
+function normalizeFileName(s) {
+  return (s || "").replace(/[\s_]+/g, "").toLowerCase();
+}
+
+// 파일명이 정확히 일치하지 않으면(언더스코어/공백 표기 차이 등) 정규화해서 다시 찾아본다.
+async function resolveFileName(dir, requested) {
+  try {
+    await readFile(path.join(dir, requested));
+    return { fileName: requested, fuzzy: false };
+  } catch {
+    // fall through to fuzzy match
+  }
+  const files = await readdir(dir);
+  const target = normalizeFileName(requested);
+  const match = files.find(f => normalizeFileName(f) === target);
+  if (match) return { fileName: match, fuzzy: true };
+  return null;
+}
 
 const args = process.argv.slice(2);
 const csvPath = args.find(a => !a.startsWith("--"));
@@ -60,16 +79,44 @@ async function main() {
 
   console.log(`대상 CSV: ${csvPath}`);
   console.log(`PDF 폴더: ${DIR}`);
-  console.log(`총 ${dataRows.length}행 처리 예정\n`);
+  console.log(`총 ${dataRows.length}행 처리 예정`);
+
+  // 같은 카드명이 여러 행에 있으면 미리 알려줌 (의도한 갱신인지, 실수로 중복 입력한 건지 확인용)
+  const nameCounts = {};
+  dataRows.forEach(row => {
+    const name = row[idx.product_name]?.trim();
+    if (name) nameCounts[name] = (nameCounts[name] || 0) + 1;
+  });
+  const dupNames = Object.entries(nameCounts).filter(([, c]) => c > 1);
+  if (dupNames.length) {
+    console.log("\n주의: 같은 카드명이 여러 행에 있습니다 (의도한 게 아니면 확인해주세요):");
+    dupNames.forEach(([name, count]) => console.log(`  - "${name}" (${count}행)`));
+  }
+  console.log("");
 
   const results = [];
+  let lastProvider = "";
   for (let i = 0; i < dataRows.length; i++) {
     const row = dataRows[i];
-    const provider = row[idx.provider]?.trim();
+    let provider = row[idx.provider]?.trim();
+    if (provider) lastProvider = provider;
+    else provider = lastProvider; // 빈 칸은 바로 위 행 값으로 채움 (엑셀에서 반복값 생략하는 경우 대비)
     const productName = row[idx.product_name]?.trim();
-    const fileName = row[idx.file_name]?.trim();
+    const requestedFileName = row[idx.file_name]?.trim();
 
-    process.stdout.write(`[${i + 1}/${dataRows.length}] ${provider} / ${productName} (${fileName}) ... `);
+    process.stdout.write(`[${i + 1}/${dataRows.length}] ${provider} / ${productName} (${requestedFileName}) ... `);
+
+    const resolved = await resolveFileName(DIR, requestedFileName);
+    if (!resolved) {
+      console.log(`FAIL - 파일을 찾을 수 없습니다: ${requestedFileName}`);
+      results.push({ provider, productName, fileName: requestedFileName, ok: false, error: "파일을 찾을 수 없습니다." });
+      continue;
+    }
+    const fileName = resolved.fileName;
+    if (resolved.fuzzy) {
+      console.log(`\n   (참고: CSV 파일명과 정확히 안 맞아서 유사한 실제 파일로 매칭함 -> "${fileName}")`);
+    }
+
     try {
       const buffer = await readFile(path.join(DIR, fileName));
       const result = await processCardUploadWithKnownName({ buffer, fileName, provider, productName, note: "수동 확인 카드명 + AI 혜택 추출" });
