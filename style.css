@@ -21,6 +21,20 @@
   --radius:14px;
   --shadow:0 4px 20px rgba(26,86,219,.08);
   --content-max:1180px;
+  --corp-shinhan: #0046FF;
+  --corp-kb: #FFD000;
+  --corp-samsung: #0A6EBD;
+  --corp-hyundai: #121212;
+  --corp-woori: #0075C8;
+  --corp-hana: #00938A;
+  --corp-lotte: rgb(61, 57, 57);
+  --corp-nh: #009543;
+  --corp-bc: #E6002A;
+  --corp-post: #E43625;
+  --corp-kakao: #FFE300;
+  --corp-toss: #2272EB;
+  --corp-kbank: #0114A7;
+  --corp-default: #5A6A7E;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
@@ -398,10 +412,54 @@ p.sub{font-size:13px;color:var(--mut-ink);margin-bottom:12px}
 .owned-empty strong{color:var(--blue)}
 .mypage-actions{margin-top:20px}
 .plate{
-  width:52px;height:34px;border-radius:6px;flex:none;
-  display:inline-flex;align-items:center;justify-content:center;
-  color:#fff;font-size:9px;font-weight:800;font-family:var(--mono);letter-spacing:.4px;
-  box-shadow:inset 0 -6px 12px rgba(0,0,0,.2);
+  width: 56px; 
+  height: 36px; /* 기존보다 살짝 키워서 시원하게 */
+  border-radius: 6px; 
+  flex: none;
+  display: inline-flex; 
+  align-items: center; 
+  justify-content: center;
+  color: #fff; 
+  font-size: 11px; /* 가독성을 위해 살짝 키움 */
+  font-weight: 800; 
+  font-family: var(--body); /* 모노스페이스 대신 기본 폰트로 변경해 세련미 강조 */
+  letter-spacing: -0.3px;
+  
+  /* ✨ 핵심: 실물 카드 같은 유리 광택 질감과 입체감 부여 */
+  background-color: var(--corp-default);
+  background-image: linear-gradient(135deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 40%, rgba(0,0,0,0.15) 100%);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.3);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  border: 1px solid rgba(0,0,0,0.1);
+  
+  overflow: hidden; 
+  white-space: nowrap; 
+  padding: 0 4px;
+}
+
+/* JS에서 제어할 카드사별 배경색 클래스 세팅 */
+.plate.woori { background-color: var(--corp-woori); }
+.plate.shinhan { background-color: var(--corp-shinhan); }
+.plate.samsung { background-color: var(--corp-samsung); }
+.plate.hyundai { background-color: var(--corp-hyundai); }
+.plate.hana { background-color: var(--corp-hana); }
+.plate.lotte { background-color: var(--corp-lotte); }
+.plate.nh { background-color: var(--corp-nh); }
+.plate.bc { background-color: var(--corp-bc); }
+.plate.post { background-color: var(--corp-post); }
+.plate.toss { background-color: var(--corp-toss); }
+.plate.kbank { background-color: var(--corp-kbank); }
+
+/* 국민카드, 카카오뱅크는 배경이 노란색이므로 글자를 어둡게 처리 */
+.plate.kb { 
+  background-color: var(--corp-kb); 
+  color: #222; 
+  text-shadow: none;
+}
+.plate.kakao { 
+  background-color: var(--corp-kakao); 
+  color: #222; 
+  text-shadow: none;
 }
 .spend-badge{
   font-size:11px;font-weight:800;padding:3px 8px;border-radius:6px;white-space:nowrap;align-self:flex-start;
