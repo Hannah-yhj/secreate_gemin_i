@@ -1189,6 +1189,7 @@ function viewHome() {
 
   const cards = board
     .filter(c => c.combos.length)
+    .sort((a, b) => b.combos.length - a.combos.length)
     .map(c => `<div class="cat cat-list">
       <button type="button" class="cat-list-head" data-cat="${c.key}">
         <span class="ic">${c.icon}</span><span class="ct">${c.key}</span>
