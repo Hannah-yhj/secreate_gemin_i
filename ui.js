@@ -1168,7 +1168,9 @@ function viewHome() {
     });
   }
   const board = Engine.homeBoard(engineState(), wallet, new Date());
-  const cards = board.map(c => {
+  // 추천 혜택이 있는 카테고리를 먼저, 없는 카테고리는 뒤로
+  const sortedBoard = [...board].sort((a, b) => (b.best ? 1 : 0) - (a.best ? 1 : 0));
+  const cards = sortedBoard.map(c => {
     if (!c.best) {
       return `<button type="button" class="cat" data-cat="${c.key}">
         <span class="ic">${c.icon}</span><span class="ct">${c.key}</span>
