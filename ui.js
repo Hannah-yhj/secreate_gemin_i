@@ -1169,8 +1169,6 @@ function viewHome() {
     });
   }
   const board = Engine.homeBoard(engineState(), wallet, new Date());
-  // 추천 혜택이 있는 카테고리를 먼저, 없는 카테고리는 뒤로
-  const sortedBoard = [...board].sort((a, b) => (b.combos.length ? 1 : 0) - (a.combos.length ? 1 : 0));
 
   function comboRowHtml(b, sample) {
     const it = b.items[0], bf = it.benefit;
@@ -1189,29 +1187,21 @@ function viewHome() {
     </li>`;
   }
 
-  const cards = sortedBoard.map(c => {
-    if (!c.combos.length) {
-      return `<button type="button" class="cat" data-cat="${c.key}">
-        <span class="ic">${c.icon}</span><span class="ct">${c.key}</span>
-        <span class="none">등록된 혜택 없음</span></button>`;
-    }
-    return `<div class="cat cat-list">
+  const cards = board
+    .filter(c => c.combos.length)
+    .map(c => `<div class="cat cat-list">
       <button type="button" class="cat-list-head" data-cat="${c.key}">
         <span class="ic">${c.icon}</span><span class="ct">${c.key}</span>
         <span class="cat-list-count">${c.combos.length}개 수단</span>
       </button>
       <ul class="cat-list-body">${c.combos.map(b => comboRowHtml(b, c.sample)).join('')}</ul>
-    </div>`;
-  }).join('');
-
-  const carrierNote = S.carrier
-    ? `${S.carrier}${S.grade ? ' · ' + S.grade : ''} 기준으로도 함께 보면 좋아요.`
-    : '통신사는 마이페이지에서 설정할 수 있어요.';
+    </div>`)
+    .join('');
 
   return `
-  <div class="hint-bar">카테고리를 누르면 결제 계산으로 넘어가요. ${carrierNote}</div>
-  <div class="homegrid">${cards}</div>
-  <p class="homenote">기간 한정은 D-day, 주말 전용은 '주말' 뱃지로 표시해요. 실적 미입력 시 최소 구간 기준으로 보수적으로 계산합니다.</p>`;
+  <div class="hint-bar">카테고리를 누르면 결제 계산으로 넘어가요.</div>
+  <p class="homenote">기간 한정은 D-day, 주말 전용은 '주말' 뱃지로 표시해요. 실적 미입력 시 최소 구간 기준으로 보수적으로 계산합니다.</p>
+  <div class="homegrid">${cards}</div>`;
 }
 
 function viewCalc() {
