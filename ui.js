@@ -1240,30 +1240,40 @@ function viewHome() {
       : bf.benefit_unit === '원/L' ? `L당 ${bf.benefit_value}원`
       : bf.benefit_unit === '원_결제가' ? `${won(bf.benefit_value)}원 정액`
       : `${won(bf.benefit_value)}${bf.benefit_unit === '포인트' ? 'P' : '원'}`;
-    const caveat = it.isGift ? '🎁 무료 증정' : `~${won(b.grandTotal)}원 (${won(sample)}원 결제 시 기준)`;
+    const caveat = it.isGift ? '' : `~${won(b.grandTotal)}원 (${won(sample)}원 결제 시 기준)`;
     return `<li class="cat-row">
-      <div class="row-top">
-        ${dday ? `<span class="badge dday">${dday[0]}</span>` : isWknd ? `<span class="badge wknd">주말</span>` : ''}
-        <div class="row-main">
-          <span class="item-name">${esc(itemLabel(bf))}</span>
-          <span class="pay-method">${esc(shortName(b.product))}</span>
+      ${dday ? `<span class="badge dday">${dday[0]}</span>` : isWknd ? `<span class="badge wknd">주말</span>` : ''}
+      <div class="row-main">
+        <span class="item-name" title="가맹점">🏪 ${esc(itemLabel(bf))}</span>
+        <span class="pay-method" title="결제수단">💳 ${esc(shortName(b.product))}</span>
+        <div class="rate-col">
           <span class="item-rate">${rate}</span>
+          ${caveat ? `<span class="row-caveat">${caveat}</span>` : ''}
         </div>
       </div>
-      <div class="row-caveat">${caveat}</div>
     </li>`;
   }
 
+  // '기타'는 개수가 많아도 항상 맨 뒤로, 나머지는 개수 많은 순
   const cards = board
     .filter(c => c.combos.length)
-    .sort((a, b) => b.combos.length - a.combos.length)
+    .sort((a, b) => {
+      const aEtc = a.key === '기타' ? 1 : 0;
+      const bEtc = b.key === '기타' ? 1 : 0;
+      if (aEtc !== bEtc) return aEtc - bEtc;
+      return b.combos.length - a.combos.length;
+    })
     .map(c => {
       const groups = {};
-      const order = [];
       c.combos.forEach(b => {
         const sub = deriveSubcat(c.key, b.items[0].benefit) || '기타';
-        if (!groups[sub]) { groups[sub] = []; order.push(sub); }
-        groups[sub].push(b);
+        (groups[sub] = groups[sub] || []).push(b);
+      });
+      const order = Object.keys(groups).sort((a, b) => {
+        const aEtc = a === '기타' ? 1 : 0;
+        const bEtc = b === '기타' ? 1 : 0;
+        if (aEtc !== bEtc) return aEtc - bEtc;
+        return groups[b].length - groups[a].length;
       });
       const row = b => comboRowHtml(b, c.sample);
       const body = order.length <= 1
