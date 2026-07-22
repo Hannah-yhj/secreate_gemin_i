@@ -15,7 +15,14 @@
     "benefit_id": { "type": "string", "minLength": 1 },
     "product_id": { "type": "string", "minLength": 1 },
     "benefit_name": { "type": "string", "minLength": 1 },
-    "category": { "type": "string", "minLength": 1 },
+    "category": {
+      "enum": [
+        "카페", "편의점", "외식", "배달", "영화", "구독", "통신", "교통", "택시",
+        "대형마트", "주유", "온라인쇼핑", "의료", "도서", "패션", "뷰티", "테마파크",
+        "여행", "면세점", "공과금", "쇼핑", "문화", "해외", "간편결제", "기타",
+        "교육", "항공", "금융", "렌탈"
+      ]
+    },
     "merchant_scope_type": { "type": ["string", "null"] },
     "merchants_or_scope": { "type": ["string", "null"] },
     "benefit_type": { "type": "string", "minLength": 1 },

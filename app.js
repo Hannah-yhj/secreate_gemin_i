@@ -421,6 +421,15 @@ const Engine = (() => {
     { key: '여행', icon: '✈️', sample: 200000 },
     { key: '면세점', icon: '🛍️', sample: 300000 },
     { key: '공과금', icon: '🧾', sample: 50000 },
+    { key: '쇼핑', icon: '🏬', sample: 50000 },
+    { key: '문화', icon: '🎭', sample: 20000 },
+    { key: '해외', icon: '🌍', sample: 100000 },
+    { key: '간편결제', icon: '💳', sample: 30000 },
+    { key: '기타', icon: '🗂️', sample: 20000 },
+    { key: '교육', icon: '🎓', sample: 100000 },
+    { key: '항공', icon: '🛫', sample: 150000 },
+    { key: '금융', icon: '🏦', sample: 30000 },
+    { key: '렌탈', icon: '🛋️', sample: 30000 },
   ];
 
   function homeBoard(state, wallet, date) {
