@@ -139,10 +139,9 @@ export default async function handler(req, res) {
     const category = detectCategory(message);
     const amount = detectAmount(message);
     const includeMembership = wantsMembership(message);
+    const { data: catalog, source } = await loadCatalog();
     const brand = detectBrand(message, catalog);
 
-    /* ---- ② 카탈로그 로드 ---- */
-    const { data: catalog, source } = await loadCatalog();
 
     /* ---- ③ Engine.findBestCards() — TOP3를 Node가 결정 (기본: 카드만) ---- */
     const candidates = findBestCards(catalog, { category, brand, amount, includeMembership }, 3);
