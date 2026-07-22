@@ -139,7 +139,6 @@ export default async function handler(req, res) {
     const category = detectCategory(message);
     const amount = detectAmount(message);
     const includeMembership = wantsMembership(message);
-    const { data: catalog, source } = await loadCatalog();
     const brand = detectBrand(message, catalog);
 
     /* ---- ② 카탈로그 로드 ---- */
