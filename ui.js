@@ -1434,7 +1434,6 @@ function receiptHtml(c, i) {
     : `<div class="r-it"><span class="n">${esc(x.benefit.benefit_name)}${x.estimate ? ' <small style="color:var(--mut)">(추정)</small>' : ''}</span>
     <span class="v ${x.isPoint ? 'pt' : ''}">${x.isPoint ? '+' : '-'}${won(x.value)}${x.isPoint ? 'P' : '원'}</span></div>`
   ).join('');
-  const how = buildInstruction(c);
   const srcs = c.sourceIds.map(id => Engine.sourceById(id)).filter(Boolean);
   const srcTxt = srcs.map(s =>
     `${esc(s.title)}${s.published_or_reviewed_date ? `<br>(${String(s.published_or_reviewed_date).slice(0, 10)} 기준)` : ''}`
@@ -1455,9 +1454,8 @@ function receiptHtml(c, i) {
           <span class="n" style="color:var(--mut-ink)">실 부담 예상</span>
           <span class="v">${won(Math.max(0, S.q.amount - c.total))}원</span></div>
       </div>
-      ${how ? `<div class="r-how">${how}</div>` : ''}
       ${allChecks.length ? `<div class="r-checks"><div class="ck-t">결제 전 확인하세요</div><ul>${allChecks.map(k => `<li>${esc(k)}</li>`).join('')}</ul></div>` : ''}
-      ${allNotes.length ? `<ul class="r-notes">${allNotes.map(n => `<li>${esc(n)}</li>`).join('')}</ul>` : ''}
+      ${allNotes.length ? `<div class="r-notes-wrap"><div class="nt-t">참고</div><ul class="r-notes">${allNotes.map(n => `<li>${esc(n)}</li>`).join('')}</ul></div>` : ''}
     </div>
     <div class="r-foot">
       <span class="conf ${c.confidence}">${c.confidence === 'high' ? '신뢰도 높음 · 약관 기반' : '프로모션 · 변동 가능'}</span>
@@ -1466,28 +1464,6 @@ function receiptHtml(c, i) {
   </article>`;
 }
 
-function buildInstruction(c) {
-  const steps = [];
-  c.items.forEach(x => {
-    const b = x.benefit;
-    if (b.merchant_scope_type === 'payment_method' && b.merchants_or_scope)
-      steps.push(`<b>${esc(b.merchants_or_scope)}</b>에 이 카드를 등록하고 ${esc(b.merchants_or_scope)}로 결제`);
-    else if (b.merchant_scope_type === 'payment_method')
-      steps.push(`특정 간편결제 앱에 이 카드를 등록하고 결제 (구체적인 결제수단은 약관에서 확인 필요)`);
-    else if (/결제창/.test(b.payment_channel || ''))
-      steps.push(`브랜드 결제창에서 <b>${esc(shortName(c.product))}</b> 선택 후 결제`);
-    else if (/자동납부/.test(b.payment_channel || ''))
-      steps.push(`<b>자동납부 수단</b>을 이 카드로 등록`);
-    else if (/앱 내/.test(b.payment_channel || ''))
-      steps.push(`앱 안에서 <b>이 카드로 직접 결제</b>`);
-    else if (b.benefit_id === 'B_NARA_CU_EVENT')
-      steps.push(`행사상품은 <b>즉시할인</b> 먼저 적용`);
-    else if (b.benefit_id === 'B_NARA_CVS')
-      steps.push(`남은 금액에 <b>캐시백 20%</b> 중복 적용`);
-  });
-  if (!steps.length) steps.push(`<b>${esc(c.product.product_name)}</b>(으)로 결제`);
-  return '결제 방법: ' + steps.join(' <span class="arrow">→</span> ');
-}
 
 function disclaimHtml() {
   return `<p class="disclaim">이 지시서는 첨부된 약관·프로모션 데이터(샘플 6종) 기준의 예상치예요. 잔여 한도·사용 횟수·매장별 제외 조건에 따라 실제 혜택은 달라질 수 있어요.</p>`;

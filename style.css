@@ -735,15 +735,13 @@ details.more[open] summary::before{transform:rotate(90deg)}
 .r-it.gift{background:#FFF7EB;margin:2px -8px;padding:5px 8px;border-radius:8px}
 .r-it.gift .n{color:var(--amber)}
 .r-it.gift .v.gift{font-family:var(--body);color:var(--amber)}
-.r-how{margin-top:12px;background:var(--blue-soft);border-radius:9px;padding:10px 12px;font-size:13px;line-height:1.6}
-.r-how b{font-weight:800}
-.r-how .arrow{color:var(--blue);font-weight:800}
 .r-checks{margin-top:12px}
 .r-checks .ck-t{font-size:11px;font-weight:800;color:var(--red);letter-spacing:.5px;margin-bottom:5px}
 .r-checks ul{list-style:none}
 .r-checks li{font-size:12.5px;color:#5A4038;padding:2.5px 0 2.5px 18px;position:relative;line-height:1.5}
 .r-checks li::before{content:'□';position:absolute;left:0;color:var(--red);font-weight:700}
-.r-notes{margin-top:9px}
+.r-notes-wrap{margin-top:9px}
+.r-notes-wrap .nt-t{font-size:11px;font-weight:800;color:var(--mut);letter-spacing:.5px;margin-bottom:5px}
 .r-notes li{font-size:12px;color:var(--mut);list-style:none;padding:1.5px 0 1.5px 14px;position:relative}
 .r-notes li::before{content:'·';position:absolute;left:3px;font-weight:900}
 .r-foot{border-top:1px dashed var(--line);padding:10px 20px 14px;display:flex;justify-content:space-between;align-items:center;gap:8px}
