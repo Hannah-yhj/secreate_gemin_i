@@ -15,6 +15,8 @@
   --red-soft:#FFEDD5;
   --amber:#B45309;
   --amber-soft:#FEF3C7;
+  --purple:#7C3AED;
+  --purple-soft:#EDE6FD;
   --mono:'IBM Plex Mono',monospace;
   --display:'Outfit',var(--body);
   --body:'Pretendard Variable',Pretendard,-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;
@@ -639,6 +641,7 @@ button.cat{display:flex;align-items:center;gap:10px}
 }
 .cat-row:last-child{border-bottom:none}
 .row-main{display:flex;align-items:center;gap:6px;flex:1;min-width:0}
+.row-main .kind-dot{margin-right:0}
 .item-name, .pay-method, .item-rate{
   font-size:13.5px;font-weight:700;letter-spacing:-.2px;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
@@ -747,6 +750,16 @@ button.cat{display:flex;align-items:center;gap:10px}
   display:inline-block;margin-right:6px;padding:1px 7px;border-radius:999px;
   background:var(--blue-soft);color:var(--blue);font-size:11px;font-weight:800;vertical-align:middle;
 }
+.kind-dot{
+  display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;
+  vertical-align:middle;flex-shrink:0;cursor:help;
+}
+.kind-dot.brand{background:var(--blue)}
+.kind-dot.scope{background:var(--purple)}
+.kind-dot.reward{background:var(--green)}
+.kind-legend{display:flex;flex-wrap:wrap;gap:4px 14px;margin:2px 2px 12px;font-size:11.5px;color:var(--mut-ink)}
+.kind-legend-item{display:inline-flex;align-items:center}
+.kind-legend-item .kind-dot{margin-right:5px}
 .r-it .v{font-family:var(--mono);font-weight:600;white-space:nowrap}
 .r-it .v.pt{color:var(--blue)}
 .r-it.gift{background:#FFF7EB;margin:2px -8px;padding:5px 8px;border-radius:8px}
@@ -787,12 +800,13 @@ button.cat{display:flex;align-items:center;gap:10px}
 .empty-illu.sm svg{width:26px;height:26px}
 .owned-empty .cta{margin-top:14px;min-width:0}
 .more-results{
-  align-self:start;border:1.5px dashed var(--line);background:var(--surface);
+  display:flex;align-items:center;justify-content:center;text-align:center;
+  border:1.5px dashed var(--line);background:var(--surface);
   border-radius:12px;padding:14px 18px;font-size:14px;font-weight:800;color:var(--blue);
   transition:background .15s, border-color .15s;
 }
 @media (max-width:640px){
-  .more-results{grid-column:1 / -1}
+  .more-results{grid-column:1 / -1;align-self:auto}
 }
 .more-results:hover{background:var(--blue-soft);border-color:var(--blue-mid)}
 .more-results.ghost{color:var(--mut-ink);border-style:solid}

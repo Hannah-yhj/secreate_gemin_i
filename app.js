@@ -431,6 +431,18 @@ const Engine = (() => {
 
   function sourceById(id) { return engineDB.sources.find(s => s.source_id === id); }
 
-  return { init, brandList, brandsByCategory, categoriesOfBrand, buildCombos, homeBoard, sourceById, won, HOME_CATS, productById: () => productById };
+  // 혜택의 성격: 특정 브랜드 할인(brand) / 업종·결제수단 전체 적용(scope) / 적립·캐시백형(reward).
+  // 스코프와 지급 방식은 서로 다른 축이지만(예: 특정 브랜드에서도 캐시백 지급 가능), 화면에 하나의
+  // 색으로만 표시해야 하므로 지급 방식(적립·캐시백)을 우선 판정하고, 아니면 스코프 넓이로 구분한다.
+  function benefitKind(b) {
+    const type = String(b.benefit_type || '');
+    const unit = String(b.benefit_unit || '');
+    if (/적립|캐시백|캐쉬백/.test(type) || /포인트|마일/.test(unit)) return 'reward';
+    const toks = split(b.merchants_or_scope);
+    const isBroad = b.merchant_scope_type === 'payment_method' || b.merchant_scope_type === 'mixed' || toks.some(t => t.includes('업종'));
+    return isBroad ? 'scope' : 'brand';
+  }
+
+  return { init, brandList, brandsByCategory, categoriesOfBrand, buildCombos, homeBoard, sourceById, benefitKind, won, HOME_CATS, productById: () => productById };
 })();
 

@@ -525,6 +525,21 @@ function shortName(p) {
     .replace(' 카드', '').replace(' 체크카드', '').replace(' 체크', '');
 }
 
+const KIND_META = {
+  brand: { cls: 'brand', label: '특정 브랜드 할인' },
+  scope: { cls: 'scope', label: '업종·결제수단 전체 적용' },
+  reward: { cls: 'reward', label: '적립·캐시백' },
+};
+function kindDotHtml(bf) {
+  const meta = KIND_META[Engine.benefitKind(bf)];
+  return `<span class="kind-dot ${meta.cls}" title="${esc(meta.label)}"></span>`;
+}
+function kindLegendHtml() {
+  return Object.values(KIND_META)
+    .map(m => `<span class="kind-legend-item"><span class="kind-dot ${m.cls}"></span>${esc(m.label)}</span>`)
+    .join('');
+}
+
 function telecomProductId() {
   if (!DB || !S.carrier || !S.grade) return null;
   const p = DB.products.find(p => p.service_type === '통신사' && p.carrier_code === S.carrier);
@@ -1256,6 +1271,7 @@ function viewHome() {
     return `<li class="cat-row">
       ${dday ? `<span class="badge dday">${dday[0]}</span>` : isWknd ? `<span class="badge wknd">주말</span>` : ''}
       <div class="row-main">
+        ${kindDotHtml(bf)}
         <span class="item-name" title="가맹점">${esc(itemLabel(bf))}</span>
         <span class="pay-method" title="결제수단">${esc(shortName(b.product))}</span>
         <span class="item-rate">${rate}</span>
@@ -1305,6 +1321,7 @@ function viewHome() {
   return `
   <div class="hint-bar">카테고리를 누르면 결제 계산으로 넘어가요.</div>
   <p class="homenote">기간 한정은 D-day, 주말 전용은 '주말' 뱃지로 표시해요. 실적 미입력 시 최소 구간 기준으로 보수적으로 계산합니다.<br>예상 절감액·결제 기준금액 등 자세한 내용은 '결제 계산' 탭에서 확인하세요.</p>
+  <div class="kind-legend">${kindLegendHtml()}</div>
   <div class="homegrid">${cards}</div>`;
 }
 
@@ -1424,6 +1441,7 @@ function renderResults() {
 
   box.innerHTML = `<div class="res-head"><span><span class="q">${esc(target)}</span> · ${won(S.q.amount)}원 결제</span>
     <span class="cnt">${combos.length}개 수단 비교</span></div>
+    <div class="kind-legend">${kindLegendHtml()}</div>
     <div class="results-grid">
       ${visible.map((c, i) => receiptHtml(c, i)).join('')}
       ${moreBtn}
@@ -1457,9 +1475,9 @@ function receiptHtml(c, i) {
     const tag = showMerchant ? benefitMerchantTag(x.benefit) : '';
     const tagHtml = tag ? `<span class="r-it-merchant">${esc(tag)}</span>` : '';
     return x.isGift
-      ? `<div class="r-it gift"><span class="n">${tagHtml}🎁 ${esc(x.benefit.benefit_name)}</span>
+      ? `<div class="r-it gift"><span class="n">${kindDotHtml(x.benefit)}${tagHtml}🎁 ${esc(x.benefit.benefit_name)}</span>
     <span class="v gift">무료 증정</span></div>`
-      : `<div class="r-it"><span class="n">${tagHtml}${esc(x.benefit.benefit_name)}${x.estimate ? ' <small style="color:var(--mut)">(추정)</small>' : ''}</span>
+      : `<div class="r-it"><span class="n">${kindDotHtml(x.benefit)}${tagHtml}${esc(x.benefit.benefit_name)}${x.estimate ? ' <small style="color:var(--mut)">(추정)</small>' : ''}</span>
     <span class="v ${x.isPoint ? 'pt' : ''}">${x.isPoint ? '+' : '-'}${won(x.value)}${x.isPoint ? 'P' : '원'}</span></div>`;
   }).join('');
   const srcs = c.sourceIds.map(id => Engine.sourceById(id)).filter(Boolean);
