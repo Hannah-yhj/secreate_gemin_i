@@ -383,8 +383,11 @@ const Engine = (() => {
         const bestStack = stackers.reduce((m, r) => r.value > m.value ? r : m, stackers[0]);
         if (items.length) {
           bestStack.notes.push('기본 혜택과 중복 적용(추가 환급)');
-          items.push(bestStack);
         }
+        // 기본(order 1) 혜택이 없으면 추가 적립형(order>1) 혜택 하나만 있어도
+        // 그게 이 카드의 유일한 후보이므로 그대로 보여준다 (이전엔 items.length가 0이면
+        // 조용히 버려져서, 실제로 유효한 혜택인데도 화면에 아예 안 뜨는 버그가 있었음).
+        items.push(bestStack);
       }
       if (gifts.length) {
         items.push(gifts[0]);
