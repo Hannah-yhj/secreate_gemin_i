@@ -15,6 +15,23 @@ function hasCardProducts(data) {
     && data.products.some(p => p && p.service_type !== "통신사");
 }
 
+// Supabase/PostgREST는 .select()에 range를 안 주면 기본 1000행까지만 돌려준다.
+// 테이블 row 수가 1000을 넘으면(예: benefits) 나머지가 조용히 잘려나가므로
+// 전부 받을 때까지 range를 밀어가며 이어붙인다.
+async function fetchAll(supabase, table) {
+  const pageSize = 1000;
+  let all = [];
+  let from = 0;
+  while (true) {
+    const { data, error } = await supabase.from(table).select("*").range(from, from + pageSize - 1);
+    if (error) return { data: null, error };
+    all = all.concat(data);
+    if (data.length < pageSize) break;
+    from += pageSize;
+  }
+  return { data: all, error: null };
+}
+
 export default async function handler(req, res) {
   try {
     const url = process.env.SUPABASE_URL;
@@ -22,10 +39,10 @@ export default async function handler(req, res) {
 
     if (url && key) {
       const supabase = createClient(url, key);
-      const { data: products, error: pErr } = await supabase.from("products").select("*");
-      const { data: benefits, error: bErr } = await supabase.from("benefits").select("*");
-      const { data: rules, error: rErr } = await supabase.from("rules").select("*");
-      const { data: sources, error: sErr } = await supabase.from("sources").select("*");
+      const { data: products, error: pErr } = await fetchAll(supabase, "products");
+      const { data: benefits, error: bErr } = await fetchAll(supabase, "benefits");
+      const { data: rules, error: rErr } = await fetchAll(supabase, "rules");
+      const { data: sources, error: sErr } = await fetchAll(supabase, "sources");
 
       if (!pErr && !bErr && !rErr && !sErr) {
         const payload = { products, benefits, rules, sources };
