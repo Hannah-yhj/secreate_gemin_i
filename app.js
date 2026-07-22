@@ -70,7 +70,7 @@ const Engine = (() => {
   // input: { brand, category, amount, channel('offline'|'online'|null), date(Date), time('HH:MM'|null) }
   function matchesTarget(b, input) {
     // KB Pay 등 결제방식 스코프 혜택: 국내 모든 가맹점에서 해당 방식으로 결제 시 적용
-    if (b.merchant_scope_type === 'payment_method') return !input.overseas && !input.categoryOnly;
+    if (b.merchant_scope_type === 'payment_method') return !input.overseas;
     if (b.merchant_scope_type === 'region') return !!input.overseas;
     const toks = split(b.merchants_or_scope);
     const bCats = cats(b.category);
@@ -423,7 +423,7 @@ const Engine = (() => {
 
   function homeBoard(state, wallet, date) {
     return HOME_CATS.map(c => {
-      const input = { category: c.key, amount: c.sample, channel: null, date: date || new Date(), time: null, ignoreDays: true, categoryOnly: true };
+      const input = { category: c.key, amount: c.sample, channel: null, date: date || new Date(), time: null, ignoreDays: true };
       const combos = buildCombos(input, state, wallet);
       return { ...c, combos, best: combos[0] || null };
     });
