@@ -400,36 +400,22 @@ const Engine = (() => {
   }
 
   // ---------- 홈: 카테고리별 최고 혜택 ----------
+  // 카테고리를 13개로 통합 (카페/편의점/배달->외식, 구독->통신, 택시/주유->교통,
+  // 온라인쇼핑/패션->쇼핑, 항공/교육/금융/렌탈/해외/면세점/공과금/간편결제->기타)
   const HOME_CATS = [
-    { key: '카페', icon: '☕', sample: 6000 },
-    { key: '편의점', icon: '🏪', sample: 8000 },
     { key: '외식', icon: '🍽️', sample: 30000 },
-    { key: '배달', icon: '🛵', sample: 25000 },
     { key: '영화', icon: '🎬', sample: 15000 },
-    { key: '구독', icon: '📺', sample: 17000 },
     { key: '통신', icon: '📱', sample: 60000 },
-    { key: '교통', icon: '🚌', sample: 60000 },
-    { key: '택시', icon: '🚕', sample: 12000 },
+    { key: '교통', icon: '🚌', sample: 65000 },
     { key: '대형마트', icon: '🛒', sample: 80000 },
-    { key: '주유', icon: '⛽', sample: 70000 },
-    { key: '온라인쇼핑', icon: '📦', sample: 50000 },
+    { key: '쇼핑', icon: '🏬', sample: 60000 },
     { key: '의료', icon: '💊', sample: 15000 },
     { key: '도서', icon: '📚', sample: 20000 },
-    { key: '패션', icon: '👕', sample: 80000 },
     { key: '뷰티', icon: '💄', sample: 30000 },
     { key: '테마파크', icon: '🎢', sample: 62000 },
     { key: '여행', icon: '✈️', sample: 200000 },
-    { key: '면세점', icon: '🛍️', sample: 300000 },
-    { key: '공과금', icon: '🧾', sample: 50000 },
-    { key: '쇼핑', icon: '🏬', sample: 50000 },
     { key: '문화', icon: '🎭', sample: 20000 },
-    { key: '해외', icon: '🌍', sample: 100000 },
-    { key: '간편결제', icon: '💳', sample: 30000 },
     { key: '기타', icon: '🗂️', sample: 20000 },
-    { key: '교육', icon: '🎓', sample: 100000 },
-    { key: '항공', icon: '🛫', sample: 150000 },
-    { key: '금융', icon: '🏦', sample: 30000 },
-    { key: '렌탈', icon: '🛋️', sample: 30000 },
   ];
 
   function homeBoard(state, wallet, date) {
