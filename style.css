@@ -634,17 +634,20 @@ button.cat{display:flex;align-items:center;gap:10px}
   letter-spacing:.2px;background:var(--surface2, rgba(0,0,0,.02));
 }
 .cat-row{
-  display:flex;align-items:center;gap:10px;padding:11px 15px;
+  display:flex;flex-direction:column;gap:4px;padding:11px 15px;
   border-bottom:1px solid var(--line);
 }
 .cat-row:last-child{border-bottom:none}
-.row-main{display:flex;align-items:baseline;gap:8px;flex:1;min-width:0}
-.item-name{
-  font-size:15px;font-weight:800;color:var(--ink);letter-spacing:-.2px;
+.row-top{display:flex;align-items:center;gap:10px}
+.row-main{display:flex;align-items:center;gap:14px;flex:1;min-width:0}
+.item-name, .pay-method, .item-rate{
+  font-size:14px;font-weight:700;letter-spacing:-.2px;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
-.item-rate{font-size:14.5px;font-weight:800;color:var(--blue);white-space:nowrap;margin-left:auto}
-.pay-method{font-size:12px;color:var(--mut);flex-shrink:0}
+.item-name{color:var(--ink);flex:1 1 0;min-width:0}
+.pay-method{color:var(--ink);flex:1 1 0;min-width:0;text-align:center}
+.item-rate{color:var(--blue);flex:0 0 auto;text-align:right}
+.row-caveat{font-size:11.5px;color:var(--mut);line-height:1.4}
 .homenote{margin:6px 2px 16px;font-size:12.5px;color:var(--mut);line-height:1.6;max-width:720px}
 .hint-bar{
   background:var(--blue-soft);color:var(--blue-dark);font-size:13.5px;

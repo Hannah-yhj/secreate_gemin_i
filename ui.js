@@ -1229,7 +1229,7 @@ function viewHome() {
     return bf.benefit_name;
   }
 
-  function comboRowHtml(b) {
+  function comboRowHtml(b, sample) {
     const it = b.items[0], bf = it.benefit;
     const isWknd = b.items.some(x => x.checks.some(k => k.includes('토·일')));
     const dday = b.items.map(x => (x.notes.find(n => n.includes('D-')) || '').match(/D-\d+/)).find(Boolean);
@@ -1238,13 +1238,17 @@ function viewHome() {
       : bf.benefit_unit === '원/L' ? `L당 ${bf.benefit_value}원`
       : bf.benefit_unit === '원_결제가' ? `${won(bf.benefit_value)}원 정액`
       : `${won(bf.benefit_value)}${bf.benefit_unit === '포인트' ? 'P' : '원'}`;
+    const caveat = it.isGift ? '🎁 무료 증정' : `~${won(b.grandTotal)}원 (${won(sample)}원 결제 시 기준)`;
     return `<li class="cat-row">
-      ${dday ? `<span class="badge dday">${dday[0]}</span>` : isWknd ? `<span class="badge wknd">주말</span>` : ''}
-      <div class="row-main">
-        <span class="item-name">${esc(itemLabel(bf))}</span>
-        <span class="item-rate">${rate}</span>
+      <div class="row-top">
+        ${dday ? `<span class="badge dday">${dday[0]}</span>` : isWknd ? `<span class="badge wknd">주말</span>` : ''}
+        <div class="row-main">
+          <span class="item-name">${esc(itemLabel(bf))}</span>
+          <span class="pay-method">${esc(shortName(b.product))}</span>
+          <span class="item-rate">${rate}</span>
+        </div>
       </div>
-      <div class="pay-method">${esc(shortName(b.product))}</div>
+      <div class="row-caveat">${caveat}</div>
     </li>`;
   }
 
@@ -1259,12 +1263,13 @@ function viewHome() {
         if (!groups[sub]) { groups[sub] = []; order.push(sub); }
         groups[sub].push(b);
       });
+      const row = b => comboRowHtml(b, c.sample);
       const body = order.length <= 1
-        ? `<ul class="cat-list-body">${c.combos.map(comboRowHtml).join('')}</ul>`
+        ? `<ul class="cat-list-body">${c.combos.map(row).join('')}</ul>`
         : order.map(sub => `
           <div class="subcat-block">
             <div class="subcat-head">${esc(sub)}</div>
-            <ul class="cat-list-body">${groups[sub].map(comboRowHtml).join('')}</ul>
+            <ul class="cat-list-body">${groups[sub].map(row).join('')}</ul>
           </div>`).join('');
       return `<div class="cat cat-list">
       <button type="button" class="cat-list-head" data-cat="${c.key}">
