@@ -1240,16 +1240,12 @@ function viewHome() {
       : bf.benefit_unit === '원/L' ? `L당 ${bf.benefit_value}원`
       : bf.benefit_unit === '원_결제가' ? `${won(bf.benefit_value)}원 정액`
       : `${won(bf.benefit_value)}${bf.benefit_unit === '포인트' ? 'P' : '원'}`;
-    const caveat = it.isGift ? '' : `${won(sample)}원 결제 시 기준`;
     return `<li class="cat-row">
       ${dday ? `<span class="badge dday">${dday[0]}</span>` : isWknd ? `<span class="badge wknd">주말</span>` : ''}
       <div class="row-main">
         <span class="item-name" title="가맹점">${esc(itemLabel(bf))}</span>
         <span class="pay-method" title="결제수단">${esc(shortName(b.product))}</span>
-        <div class="rate-col">
-          <span class="item-rate">${rate}</span>
-          ${caveat ? `<span class="row-caveat">${caveat}</span>` : ''}
-        </div>
+        <span class="item-rate">${rate}</span>
       </div>
     </li>`;
   }
@@ -1295,7 +1291,7 @@ function viewHome() {
 
   return `
   <div class="hint-bar">카테고리를 누르면 결제 계산으로 넘어가요.</div>
-  <p class="homenote">기간 한정은 D-day, 주말 전용은 '주말' 뱃지로 표시해요. 실적 미입력 시 최소 구간 기준으로 보수적으로 계산합니다.</p>
+  <p class="homenote">기간 한정은 D-day, 주말 전용은 '주말' 뱃지로 표시해요. 실적 미입력 시 최소 구간 기준으로 보수적으로 계산합니다. 예상 절감액·결제 기준금액 등 자세한 내용은 '결제 계산' 탭에서 확인하세요.</p>
   <div class="homegrid">${cards}</div>`;
 }
 
