@@ -7,16 +7,8 @@ import { processCardUpload } from "./lib/process-upload.js";
 const ROOT = "D:/26-summer/upstage 대회/카드사DB_0720";
 
 const COMPANIES = [
-  "BC 바로카드",
-  "KB국민카드",
-  "롯데카드",
-  "삼성카드",
-  "신한카드",
-  "우체국",
-  "카카오뱅크",
-  "케이뱅크",
-  "토스뱅크",
-  "현대카드",
+  "하나카드",
+  "IBK기업은행",
 ];
 
 async function main() {

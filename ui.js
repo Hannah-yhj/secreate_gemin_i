@@ -47,6 +47,7 @@ const S = {
   cardSearch: '',
   cardProvider: 'all',
   addPanel: null,
+  walletTab: 'card',
   resultsExpanded: false,
   q: {
     brand: '', category: null, amount: 10000,
@@ -204,6 +205,7 @@ function loadPersisted() {
     const pages = ['home', 'mypage', 'benefits', 'more'];
     if (pages.includes(d.page)) S.page = d.page;
     if (d.benefitTab === 'map' || d.benefitTab === 'calc') S.benefitTab = d.benefitTab;
+    if (d.walletTab === 'card' || d.walletTab === 'payment') S.walletTab = d.walletTab;
   } catch (_) { /* ignore corrupt storage */ }
 }
 
@@ -217,6 +219,7 @@ function savePersisted() {
       grade: S.grade,
       page: S.page,
       benefitTab: S.benefitTab,
+      walletTab: S.walletTab,
     }));
   } catch (_) { /* quota / private mode */ }
   // 로그인 상태면 클라우드(Supabase)에도 반영 예약
@@ -396,21 +399,13 @@ document.addEventListener('click', e => {
 });
 
 function startApp() {
-  if (!S.wallet.length) {
-    S.page = 'mypage';
-    S.addPanel = 'card';
-    S.showLoginForm = false;
-  } else {
-    S.page = 'benefits';
-    S.benefitTab = 'calc';
-    S.addPanel = null;
-  }
+  S.page = 'benefits';
+  S.benefitTab = 'map';
+  S.addPanel = null;
+  S.showLoginForm = false;
   closeDrawer();
   savePersisted();
   render();
-  if (S.page === 'benefits' && S.benefitTab === 'calc') {
-    requestAnimationFrame(() => renderResults());
-  }
 }
 
 function isCardProduct(p) {
@@ -768,16 +763,28 @@ function viewProfileEdit() {
 }
 
 function viewMyCards() {
-  const cards = cardProducts().filter(p => S.wallet.includes(p.product_id));
-  
-  cards.sort((a, b) => {
+  const sortByCorp = (a, b) => {
     const aCorp = getCorpShortName(a.provider);
     const bCorp = getCorpShortName(b.provider);
     if (aCorp !== bCorp) return aCorp.localeCompare(bCorp);
     return (a.product_name || '').localeCompare(b.product_name || '');
-  });
+  };
+
+  const myCardOnly = cardOnlyProducts().filter(p => S.wallet.includes(p.product_id)).sort(sortByCorp);
+  const myPaymentApps = paymentAppProducts().filter(p => S.wallet.includes(p.product_id)).sort(sortByCorp);
+
+  const walletTab = S.walletTab === 'payment' ? 'payment' : 'card';
+  const cards = walletTab === 'payment' ? myPaymentApps : myCardOnly;
+  const sectionLabel = walletTab === 'payment' ? '간편결제' : '내 카드';
+  const openAddType = walletTab === 'payment' ? 'payment' : 'card';
 
   const cardTiles = cards.map(ownedCardTile).join('');
+
+  const walletTabs = `
+    <div class="subtabs">
+      <button type="button" data-wtab="card" class="${walletTab === 'card' ? 'on' : ''}">내 카드${myCardOnly.length ? ` (${myCardOnly.length})` : ''}</button>
+      <button type="button" data-wtab="payment" class="${walletTab === 'payment' ? 'on' : ''}">간편결제${myPaymentApps.length ? ` (${myPaymentApps.length})` : ''}</button>
+    </div>`;
 
   const carrierLabel = S.carrier === 'LGU+' ? 'LG U+' : S.carrier;
   const carrierBar = S.carrier ? `
@@ -803,9 +810,9 @@ function viewMyCards() {
   const cardsEmpty = !cards.length ? `
     <div class="owned-empty">
       <div class="empty-illu sm" aria-hidden="true">${Ico.wallet}</div>
-      <b>등록된 카드가 없어요</b>
-      <p>오른쪽 아래 <strong>+</strong> 버튼에서 카드를 추가해 주세요.</p>
-      <button type="button" class="cta" data-open-add="card">카드 추가하기</button>
+      <b>등록된 ${esc(sectionLabel)}이(가) 없어요</b>
+      <p>오른쪽 아래 <strong>+</strong> 버튼에서 ${esc(sectionLabel)}을(를) 추가해 주세요.</p>
+      <button type="button" class="cta" data-open-add="${openAddType}">${esc(sectionLabel)} 추가하기</button>
     </div>` : '';
 
   const sub = S.user.loggedIn
@@ -836,8 +843,9 @@ function viewMyCards() {
   ${carrierBar}
 
   <div class="cards-section">
+    ${walletTabs}
     <div class="cards-section-head">
-      <h3>내 카드</h3>
+      <h3>${esc(sectionLabel)}</h3>
       <span class="cards-count">${cards.length}장</span>
     </div>
     <div class="owned-grid">
@@ -1023,8 +1031,9 @@ function fabAndPanel() {
 }
 
 const PROVIDER_SHORT = {
-  'KB국민카드': '국민',
-  '신한카드': '신한',
+  'KB국민카드': '국민카드',
+  '신한카드': '신한카드',
+  '우체국': '우체국카드',
   '토스': '토스',
   '네이버파이낸셜': '네이버',
 };
@@ -1174,10 +1183,15 @@ function viewHome() {
       : bf.benefit_unit === '원_결제가' ? `${won(bf.benefit_value)}원 정액`
       : `${won(bf.benefit_value)}${bf.benefit_unit === '포인트' ? 'P' : '원'}`;
     const valLabel = it.isGift ? '🎁 무료 증정' : `~${won(b.grandTotal)}원`;
+    // 카테고리 전체 적용이 아니라 특정 가맹점/브랜드에만 적용되는 혜택이면 표시해 준다
+    // (예: '구독' 카테고리 최고 혜택이 사실은 '왓챠'에만 적용되는 경우, 다른 OTT엔 적용 안 됨을 알려줌)
+    const scope = String(bf.merchants_or_scope || '').trim();
+    const isBrandLimited = scope && !scope.includes('업종');
+    const scopeNote = isBrandLimited ? `<span class="scope-note">${esc(scope.split('|')[0].trim())} 한정</span>` : '';
     return `<button type="button" class="cat" data-cat="${c.key}">
       ${dday ? `<span class="badge dday">${dday[0]}</span>` : isWknd ? `<span class="badge wknd">주말</span>` : ''}
       <span class="ic">${c.icon}</span><span class="ct">${c.key}</span>
-      <span class="best"><b>${esc(shortName(b.product))}</b> · ${esc(bf.benefit_name)} <b>${rate}</b></span>
+      <span class="best"><b>${esc(shortName(b.product))}</b> · ${esc(bf.benefit_name)} <b>${rate}</b> ${scopeNote}</span>
       <span class="val">${valLabel} <small>${won(c.sample)}원 결제 시</small></span>
     </button>`;
   }).join('');
@@ -1825,6 +1839,12 @@ function bind() {
     savePersisted();
     render();
     if (S.benefitTab === 'calc') requestAnimationFrame(() => renderResults());
+  }));
+
+  $$('[data-wtab]').forEach(el => el.addEventListener('click', () => {
+    S.walletTab = el.dataset.wtab;
+    savePersisted();
+    render();
   }));
 
   $$('[data-cat]').forEach(el => el.addEventListener('click', () => {
