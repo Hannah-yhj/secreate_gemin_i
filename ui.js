@@ -1240,7 +1240,7 @@ function viewHome() {
       : bf.benefit_unit === '원/L' ? `L당 ${bf.benefit_value}원`
       : bf.benefit_unit === '원_결제가' ? `${won(bf.benefit_value)}원 정액`
       : `${won(bf.benefit_value)}${bf.benefit_unit === '포인트' ? 'P' : '원'}`;
-    const caveat = it.isGift ? '' : `~${won(b.grandTotal)}원 (${won(sample)}원 결제 시 기준)`;
+    const caveat = it.isGift ? '' : `${won(sample)}원 결제 시 기준`;
     return `<li class="cat-row">
       ${dday ? `<span class="badge dday">${dday[0]}</span>` : isWknd ? `<span class="badge wknd">주말</span>` : ''}
       <div class="row-main">
