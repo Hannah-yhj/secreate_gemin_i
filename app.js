@@ -69,11 +69,19 @@ const Engine = (() => {
   // ---------- 매칭 ----------
   // input: { brand, category, amount, channel('offline'|'online'|null), date(Date), time('HH:MM'|null) }
   function matchesTarget(b, input) {
-    // KB Pay 등 결제방식 스코프 혜택: 국내 모든 가맹점에서 해당 방식으로 결제 시 적용
-    if (b.merchant_scope_type === 'payment_method') return !input.overseas;
+    const bCats = cats(b.category);
+    // KB Pay 등 결제방식 스코프 혜택: 브랜드를 콕 집어 검색할 땐 그 결제수단으로 결제하면
+    // 어디서든 적용되니 항상 매치하되, 카테고리만으로 훑어볼 땐 이 혜택 자체의 category와
+    // 일치할 때만 보여준다 - 안 그러면 "일반 가맹점 적립"류 혜택이 13개 카테고리 전부에
+    // 찍히는 문제가 생김(실제로 한 번 이렇게 됐다가 되돌린 적 있음).
+    if (b.merchant_scope_type === 'payment_method') {
+      if (input.overseas) return false;
+      if (input.brand) return true;
+      if (input.category) return bCats.some(c => cats(input.category).includes(c) || c === input.category);
+      return false;
+    }
     if (b.merchant_scope_type === 'region') return !!input.overseas;
     const toks = split(b.merchants_or_scope);
-    const bCats = cats(b.category);
     if (input.brand) {
       // 1) 브랜드 직접 매칭
       if (toks.some(t => t === input.brand || t.includes(input.brand) || input.brand.includes(t.replace(' 업종', '')))) return true;
