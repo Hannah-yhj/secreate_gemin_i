@@ -1244,8 +1244,8 @@ function viewHome() {
     return `<li class="cat-row">
       ${dday ? `<span class="badge dday">${dday[0]}</span>` : isWknd ? `<span class="badge wknd">주말</span>` : ''}
       <div class="row-main">
-        <span class="item-name" title="가맹점">🏪 ${esc(itemLabel(bf))}</span>
-        <span class="pay-method" title="결제수단">💳 ${esc(shortName(b.product))}</span>
+        <span class="item-name" title="가맹점">${esc(itemLabel(bf))}</span>
+        <span class="pay-method" title="결제수단">${esc(shortName(b.product))}</span>
         <div class="rate-col">
           <span class="item-rate">${rate}</span>
           ${caveat ? `<span class="row-caveat">${caveat}</span>` : ''}
