@@ -772,9 +772,12 @@ details.more[open] summary::before{transform:rotate(90deg)}
 .empty-illu.sm svg{width:26px;height:26px}
 .owned-empty .cta{margin-top:14px;min-width:0}
 .more-results{
-  grid-column:1 / -1;border:1.5px dashed var(--line);background:var(--surface);
+  align-self:start;border:1.5px dashed var(--line);background:var(--surface);
   border-radius:12px;padding:14px 18px;font-size:14px;font-weight:800;color:var(--blue);
   transition:background .15s, border-color .15s;
+}
+@media (max-width:640px){
+  .more-results{grid-column:1 / -1}
 }
 .more-results:hover{background:var(--blue-soft);border-color:var(--blue-mid)}
 .more-results.ghost{color:var(--mut-ink);border-style:solid}

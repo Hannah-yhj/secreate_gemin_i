@@ -1437,7 +1437,7 @@ function receiptHtml(c, i) {
   const how = buildInstruction(c);
   const srcs = c.sourceIds.map(id => Engine.sourceById(id)).filter(Boolean);
   const srcTxt = srcs.map(s =>
-    `${esc(s.title)}${s.published_or_reviewed_date ? ` (기준 ${String(s.published_or_reviewed_date).slice(0, 10)})` : ''}`
+    `${esc(s.title)}${s.published_or_reviewed_date ? `<br>(${String(s.published_or_reviewed_date).slice(0, 10)} 기준)` : ''}`
   ).join('<br>');
   return `<article class="receipt ${i === 0 ? 'top1' : ''}">
     <div class="r-body">
@@ -1470,8 +1470,10 @@ function buildInstruction(c) {
   const steps = [];
   c.items.forEach(x => {
     const b = x.benefit;
-    if (b.merchant_scope_type === 'payment_method')
+    if (b.merchant_scope_type === 'payment_method' && b.merchants_or_scope)
       steps.push(`<b>${esc(b.merchants_or_scope)}</b>에 이 카드를 등록하고 ${esc(b.merchants_or_scope)}로 결제`);
+    else if (b.merchant_scope_type === 'payment_method')
+      steps.push(`특정 간편결제 앱에 이 카드를 등록하고 결제 (구체적인 결제수단은 약관에서 확인 필요)`);
     else if (/결제창/.test(b.payment_channel || ''))
       steps.push(`브랜드 결제창에서 <b>${esc(shortName(c.product))}</b> 선택 후 결제`);
     else if (/자동납부/.test(b.payment_channel || ''))
