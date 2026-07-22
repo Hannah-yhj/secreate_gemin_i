@@ -921,7 +921,8 @@ function ownedCardTile(p) {
     </select>`;
   }
 
-  const spend = p.product_type === '간편결제' ? '' : `
+  const hasSpendCondition = DB.benefits.some(b => b.product_id === p.product_id && b.spend_min);
+  const spend = (p.product_type === '간편결제' || !hasSpendCondition) ? '' : `
     <div class="owned-spend">
       <span class="spend-badge ${st.cls}">${st.label}</span>
       <select data-spend="${p.product_id}" aria-label="${esc(p.product_name)} 전월실적">

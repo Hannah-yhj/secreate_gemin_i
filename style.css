@@ -595,11 +595,18 @@ p.sub{font-size:13px;color:var(--mut-ink);margin-bottom:12px}
 }
 .subtabs button.on{background:var(--blue);color:#fff;box-shadow:0 2px 8px rgba(26,86,219,.25)}
 
-/* ---- 혜택 지도: 카테고리별 목록 ---- */
+/* ---- 혜택 지도: 카테고리별 목록 (2~3단) ---- */
 .homegrid{
-  display:flex;
-  flex-direction:column;
+  display:grid;
+  grid-template-columns:1fr;
+  align-items:start;
   gap:12px;
+}
+@media (min-width:720px){
+  .homegrid{grid-template-columns:repeat(2,1fr)}
+}
+@media (min-width:1180px){
+  .homegrid{grid-template-columns:repeat(3,1fr)}
 }
 .cat{
   background:var(--surface);border-radius:13px;padding:14px 15px;
