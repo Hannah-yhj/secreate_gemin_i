@@ -1159,6 +1159,59 @@ function viewBenefits() {
   ${S.benefitTab === 'map' ? viewHome() : viewCalc()}`;
 }
 
+// 큰 카테고리 안을 다시 나누는 소분류 키워드 규칙. category 컬럼 자체는 29->13개로
+// 합쳐버려서 원래 세부값이 DB에 안 남아있어, merchants_or_scope/benefit_name 텍스트를
+// 보고 화면에서만 즉석으로 재분류한다 (DB 재마이그레이션 없이 바로 조정 가능).
+const SUBCAT_RULES = {
+  외식: [
+    ['카페', ['카페', '커피', '스타벅스', '이디야', '투썸', '폴바셋', '블루보틀', '커피빈', '할리스', '탐앤탐스', '엔제리너스', '파스쿠찌', '아티제', 'mgc', '매머드']],
+    ['배달앱', ['배달의민족', '요기요', '쿠팡이츠', '배달특급', '배달']],
+    ['편의점', ['편의점', 'cu', 'gs25', '세븐일레븐', '미니스톱', '이마트24']],
+  ],
+  교통: [
+    ['대중교통', ['버스', '지하철', '대중교통', '환승', 'k-패스', 'k패스', '하이패스']],
+    ['택시', ['택시', '카카오t', '우티', '대리운전']],
+    ['주유', ['주유', '오일뱅크', '칼텍스', 's-oil', '에너지', '전기차', 'ev충전']],
+  ],
+  쇼핑: [
+    ['온라인몰', ['쿠팡', '11번가', 'g마켓', '옥션', 'ssg', '티몬', '위메프', '인터파크', '무신사', '지그재그', 'w컨셉', '29cm', '크림', '오늘의집', '올리브영']],
+    ['홈쇼핑', ['홈쇼핑', 'gs샵', 'cj온스타일', 'ns홈쇼핑', '공영쇼핑']],
+    ['마트/백화점', ['이마트', '롯데마트', '홈플러스', '백화점', '트레이더스']],
+  ],
+  통신: [
+    ['통신요금', ['통신', '이동전화', '요금제', '자동이체', 'skt', 'kt', 'lgu', '컬러링']],
+    ['구독/OTT', ['넷플릭스', '왓챠', '유튜브', '멜론', '지니', '디즈니', '티빙', '웨이브', 'ott', '구독']],
+  ],
+  여행: [
+    ['항공', ['항공', '비행기', '대한항공', '아시아나', '마일리지', '스카이패스']],
+    ['숙박', ['호텔', '숙소', '아고다', '여기어때', '야놀자', '리조트']],
+    ['라운지', ['라운지']],
+    ['투어/액티비티', ['투어', '여행사', '클룩', '마이리얼트립', 'nol', '하나투어', '트립비토즈']],
+  ],
+  문화: [
+    ['영화관', ['cgv', '롯데시네마', '메가박스', '영화']],
+    ['서점', ['교보문고', '영풍문고', '예스24', '알라딘', '서점']],
+    ['공연/전시', ['공연', '전시', '티켓', '콘서트']],
+  ],
+  기타: [
+    ['항공/면세점', ['항공', '면세', '공항']],
+    ['교육', ['교육', '학원', '토익', '인강']],
+    ['금융', ['보험', '금융', '대출']],
+    ['렌탈/구독', ['렌탈', '정기결제', '구독']],
+    ['간편결제', ['pay', '카카오페이', '네이버페이', '삼성페이']],
+    ['공과금', ['공과금', '관리비', '전기', '가스', '수도']],
+  ],
+};
+function deriveSubcat(categoryKey, benefit) {
+  const rules = SUBCAT_RULES[categoryKey];
+  if (!rules) return null;
+  const hay = `${benefit.merchants_or_scope || ''} ${benefit.benefit_name || ''}`.toLowerCase();
+  for (const [label, keywords] of rules) {
+    if (keywords.some(k => hay.includes(k))) return label;
+  }
+  return '기타';
+}
+
 function viewHome() {
   const wallet = effectiveWallet();
   if (!wallet.length) {
@@ -1170,7 +1223,13 @@ function viewHome() {
   }
   const board = Engine.homeBoard(engineState(), wallet, new Date());
 
-  function comboRowHtml(b, sample) {
+  function itemLabel(bf) {
+    const scope = String(bf.merchants_or_scope || '').trim();
+    if (scope) return scope.split('|')[0].trim();
+    return bf.benefit_name;
+  }
+
+  function comboRowHtml(b) {
     const it = b.items[0], bf = it.benefit;
     const isWknd = b.items.some(x => x.checks.some(k => k.includes('토·일')));
     const dday = b.items.map(x => (x.notes.find(n => n.includes('D-')) || '').match(/D-\d+/)).find(Boolean);
@@ -1179,24 +1238,42 @@ function viewHome() {
       : bf.benefit_unit === '원/L' ? `L당 ${bf.benefit_value}원`
       : bf.benefit_unit === '원_결제가' ? `${won(bf.benefit_value)}원 정액`
       : `${won(bf.benefit_value)}${bf.benefit_unit === '포인트' ? 'P' : '원'}`;
-    const valLabel = it.isGift ? '🎁 무료 증정' : `~${won(b.grandTotal)}원`;
     return `<li class="cat-row">
       ${dday ? `<span class="badge dday">${dday[0]}</span>` : isWknd ? `<span class="badge wknd">주말</span>` : ''}
-      <span class="best"><b>${esc(shortName(b.product))}</b> · ${esc(bf.benefit_name)} <b>${rate}</b></span>
-      <span class="val">${valLabel} <small>${won(sample)}원 결제 시</small></span>
+      <div class="row-main">
+        <span class="item-name">${esc(itemLabel(bf))}</span>
+        <span class="item-rate">${rate}</span>
+      </div>
+      <div class="pay-method">${esc(shortName(b.product))}</div>
     </li>`;
   }
 
   const cards = board
     .filter(c => c.combos.length)
     .sort((a, b) => b.combos.length - a.combos.length)
-    .map(c => `<div class="cat cat-list">
+    .map(c => {
+      const groups = {};
+      const order = [];
+      c.combos.forEach(b => {
+        const sub = deriveSubcat(c.key, b.items[0].benefit) || '기타';
+        if (!groups[sub]) { groups[sub] = []; order.push(sub); }
+        groups[sub].push(b);
+      });
+      const body = order.length <= 1
+        ? `<ul class="cat-list-body">${c.combos.map(comboRowHtml).join('')}</ul>`
+        : order.map(sub => `
+          <div class="subcat-block">
+            <div class="subcat-head">${esc(sub)}</div>
+            <ul class="cat-list-body">${groups[sub].map(comboRowHtml).join('')}</ul>
+          </div>`).join('');
+      return `<div class="cat cat-list">
       <button type="button" class="cat-list-head" data-cat="${c.key}">
         <span class="ic">${c.icon}</span><span class="ct">${c.key}</span>
         <span class="cat-list-count">${c.combos.length}개 수단</span>
       </button>
-      <ul class="cat-list-body">${c.combos.map(b => comboRowHtml(b, c.sample)).join('')}</ul>
-    </div>`)
+      ${body}
+    </div>`;
+    })
     .join('');
 
   return `
