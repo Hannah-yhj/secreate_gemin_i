@@ -1169,14 +1169,10 @@ function viewHome() {
   }
   const board = Engine.homeBoard(engineState(), wallet, new Date());
   // 추천 혜택이 있는 카테고리를 먼저, 없는 카테고리는 뒤로
-  const sortedBoard = [...board].sort((a, b) => (b.best ? 1 : 0) - (a.best ? 1 : 0));
-  const cards = sortedBoard.map(c => {
-    if (!c.best) {
-      return `<button type="button" class="cat" data-cat="${c.key}">
-        <span class="ic">${c.icon}</span><span class="ct">${c.key}</span>
-        <span class="none">등록된 혜택 없음</span></button>`;
-    }
-    const b = c.best, it = b.items[0], bf = it.benefit;
+  const sortedBoard = [...board].sort((a, b) => (b.combos.length ? 1 : 0) - (a.combos.length ? 1 : 0));
+
+  function comboRowHtml(b, sample) {
+    const it = b.items[0], bf = it.benefit;
     const isWknd = b.items.some(x => x.checks.some(k => k.includes('토·일')));
     const dday = b.items.map(x => (x.notes.find(n => n.includes('D-')) || '').match(/D-\d+/)).find(Boolean);
     const rate = bf.benefit_unit === '증정' ? '무료 증정'
@@ -1190,12 +1186,26 @@ function viewHome() {
     const scope = String(bf.merchants_or_scope || '').trim();
     const isBrandLimited = scope && !scope.includes('업종');
     const scopeNote = isBrandLimited ? `<span class="scope-note">${esc(scope.split('|')[0].trim())} 한정</span>` : '';
-    return `<button type="button" class="cat" data-cat="${c.key}">
+    return `<li class="cat-row">
       ${dday ? `<span class="badge dday">${dday[0]}</span>` : isWknd ? `<span class="badge wknd">주말</span>` : ''}
-      <span class="ic">${c.icon}</span><span class="ct">${c.key}</span>
       <span class="best"><b>${esc(shortName(b.product))}</b> · ${esc(bf.benefit_name)} <b>${rate}</b> ${scopeNote}</span>
-      <span class="val">${valLabel} <small>${won(c.sample)}원 결제 시</small></span>
-    </button>`;
+      <span class="val">${valLabel} <small>${won(sample)}원 결제 시</small></span>
+    </li>`;
+  }
+
+  const cards = sortedBoard.map(c => {
+    if (!c.combos.length) {
+      return `<button type="button" class="cat" data-cat="${c.key}">
+        <span class="ic">${c.icon}</span><span class="ct">${c.key}</span>
+        <span class="none">등록된 혜택 없음</span></button>`;
+    }
+    return `<div class="cat cat-list">
+      <button type="button" class="cat-list-head" data-cat="${c.key}">
+        <span class="ic">${c.icon}</span><span class="ct">${c.key}</span>
+        <span class="cat-list-count">${c.combos.length}개 수단</span>
+      </button>
+      <ul class="cat-list-body">${c.combos.map(b => comboRowHtml(b, c.sample)).join('')}</ul>
+    </div>`;
   }).join('');
 
   const carrierNote = S.carrier

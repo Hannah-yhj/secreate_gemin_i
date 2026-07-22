@@ -74,6 +74,14 @@ const Engine = (() => {
     if (b.merchant_scope_type === 'region') return !!input.overseas;
     const toks = split(b.merchants_or_scope);
     const bCats = cats(b.category);
+    // 카테고리만 보고 대표 수단을 고를 때(홈/혜택 지도)는 특정 가맹점 한정 혜택을 제외한다.
+    // 안 그러면 "V컬러링 100% 할인"처럼 아주 좁은 특정 가맹점에만 적용되는 혜택이
+    // 카테고리 대표 결제금액 전체에 적용되는 것처럼 계산돼서 카테고리 대표 자리를
+    // 부당하게 차지해버린다(브랜드 검색 시에는 정확히 그 가맹점에만 매칭되므로 문제 없음).
+    // "업종" 범위로 넓게 지정된 merchant 스코프 혜택은 카테고리 전체 적용이 맞으므로 제외하지 않는다.
+    if (input.categoryOnly && b.merchant_scope_type === 'merchant' && !toks.some(t => t.includes('업종'))) {
+      return false;
+    }
     if (input.brand) {
       // 1) 브랜드 직접 매칭
       if (toks.some(t => t === input.brand || t.includes(input.brand) || input.brand.includes(t.replace(' 업종', '')))) return true;
@@ -422,8 +430,7 @@ const Engine = (() => {
     return HOME_CATS.map(c => {
       const input = { category: c.key, amount: c.sample, channel: null, date: date || new Date(), time: null, ignoreDays: true, categoryOnly: true };
       const combos = buildCombos(input, state, wallet);
-      const best = combos[0] || null;
-      return { ...c, best };
+      return { ...c, combos, best: combos[0] || null };
     });
   }
 
