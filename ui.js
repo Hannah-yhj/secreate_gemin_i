@@ -1132,17 +1132,30 @@ function bindProviderTabs() {
 }
 
 function updateBrandDatalist() {
-  const brands = S.q.category
-    ? Engine.brandsByCategory(S.q.category)
-    : Engine.brandList();
-  const dl = $('#brandDl');
-  if (dl) dl.innerHTML = brands.map(b => `<option value="${esc(b)}">`).join('');
   const bi = $('#brandInput');
   if (bi) {
     bi.placeholder = S.q.category
       ? `${S.q.category} 브랜드만 검색됩니다…`
       : '예: 스타벅스, CU, 넷플릭스…';
   }
+  const box = $('#brandSuggest');
+  if (box) { box.innerHTML = ''; box.classList.remove('show'); }
+}
+
+function renderBrandSuggest(query) {
+  const box = $('#brandSuggest');
+  if (!box) return;
+  const q = query.trim();
+  if (!q) { box.innerHTML = ''; box.classList.remove('show'); return; }
+  const list = S.q.category ? Engine.brandsByCategory(S.q.category) : Engine.brandList();
+  const matches = list.filter(b => b.toLowerCase().includes(q.toLowerCase())).slice(0, 8);
+  if (!matches.length) {
+    box.innerHTML = '<div class="brand-suggest-empty">일치하는 브랜드가 없어요</div>';
+    box.classList.add('show');
+    return;
+  }
+  box.innerHTML = matches.map(b => `<button type="button" class="brand-suggest-item" data-brand="${esc(b)}">${esc(b)}</button>`).join('');
+  box.classList.add('show');
 }
 
 /* ==================== 혜택 추천 ==================== */
@@ -1159,6 +1172,61 @@ function viewBenefits() {
   ${S.benefitTab === 'map' ? viewHome() : viewCalc()}`;
 }
 
+// 큰 카테고리 안을 다시 나누는 소분류 키워드 규칙. category 컬럼 자체는 29->13개로
+// 합쳐버려서 원래 세부값이 DB에 안 남아있어, merchants_or_scope/benefit_name 텍스트를
+// 보고 화면에서만 즉석으로 재분류한다 (DB 재마이그레이션 없이 바로 조정 가능).
+const SUBCAT_RULES = {
+  외식: [
+    ['카페', ['카페', '커피', '스타벅스', '이디야', '투썸', '폴바셋', '블루보틀', '커피빈', '할리스', '탐앤탐스', '엔제리너스', '파스쿠찌', '아티제', 'mgc', '매머드']],
+    ['배달앱', ['배달의민족', '요기요', '쿠팡이츠', '배달특급', '배달']],
+    ['편의점', ['편의점', 'cu', 'gs25', '세븐일레븐', '미니스톱', '이마트24']],
+  ],
+  교통: [
+    ['대중교통', ['버스', '지하철', '대중교통', '환승', 'k-패스', 'k패스', '하이패스']],
+    ['택시', ['택시', '카카오t', '우티', '대리운전']],
+    ['주유', ['주유', '오일뱅크', '칼텍스', 's-oil', '에너지', '전기차', 'ev충전']],
+  ],
+  쇼핑: [
+    ['온라인몰', ['쿠팡', '11번가', 'g마켓', '옥션', 'ssg', '티몬', '위메프', '인터파크', '무신사', '지그재그', 'w컨셉', '29cm', '크림', '오늘의집', '올리브영']],
+    ['홈쇼핑', ['홈쇼핑', 'gs샵', 'cj온스타일', 'ns홈쇼핑', '공영쇼핑']],
+    ['마트/백화점', ['이마트', '롯데마트', '홈플러스', '백화점', '트레이더스', '대형마트', '대형할인점']],
+    ['면세점', ['면세점']],
+  ],
+  통신: [
+    ['통신요금', ['통신', '이동전화', '요금제', '자동이체', 'skt', 'kt', 'lgu', '컬러링']],
+    ['구독/OTT', ['넷플릭스', '왓챠', '유튜브', '멜론', '지니', '디즈니', '티빙', '웨이브', 'ott', '구독']],
+  ],
+  여행: [
+    ['항공', ['항공', '비행기', '대한항공', '아시아나', '마일리지', '스카이패스']],
+    ['숙박', ['호텔', '숙소', '아고다', '여기어때', '야놀자', '리조트']],
+    ['라운지', ['라운지']],
+    ['투어/액티비티', ['투어', '여행사', '클룩', '마이리얼트립', 'nol', '하나투어', '트립비토즈']],
+  ],
+  문화: [
+    ['영화관', ['cgv', '롯데시네마', '메가박스', '영화']],
+    ['서점', ['교보문고', '영풍문고', '예스24', '알라딘', '서점']],
+    ['공연/전시', ['공연', '전시', '티켓', '콘서트', '인터파크']],
+    ['테마파크/레저', ['에버랜드', '롯데월드', '캐리비안베이', '서울랜드', '워터파크', '아쿠아리움', '골프', '헬스', '사우나', '찜질방', '스포츠센터']],
+  ],
+  기타: [
+    ['항공/면세점', ['항공', '면세', '공항']],
+    ['교육', ['교육', '학원', '토익', '인강']],
+    ['금융', ['보험', '금융', '대출']],
+    ['렌탈/구독', ['렌탈', '정기결제', '구독']],
+    ['간편결제', ['pay', '카카오페이', '네이버페이', '삼성페이']],
+    ['공과금', ['공과금', '관리비', '전기', '가스', '수도']],
+  ],
+};
+function deriveSubcat(categoryKey, benefit) {
+  const rules = SUBCAT_RULES[categoryKey];
+  if (!rules) return null;
+  const hay = `${benefit.merchants_or_scope || ''} ${benefit.benefit_name || ''}`.toLowerCase();
+  for (const [label, keywords] of rules) {
+    if (keywords.some(k => hay.includes(k))) return label;
+  }
+  return '기타';
+}
+
 function viewHome() {
   const wallet = effectiveWallet();
   if (!wallet.length) {
@@ -1170,9 +1238,32 @@ function viewHome() {
   }
   const board = Engine.homeBoard(engineState(), wallet, new Date());
 
-  // '기타'는 개수가 많아도 항상 맨 뒤로, 나머지는 개수 많은 순.
-  // 개별 혜택 목록은 여기서 노출하지 않고(브랜드별 정제 품질이 카테고리마다 들쭉날쭉해서
-  // 화면에 그대로 보여주면 혼란스러움), 카드를 누르면 '결제 계산'에서 검색해서 보게 한다.
+  function itemLabel(bf) {
+    const scope = String(bf.merchants_or_scope || '').trim();
+    if (scope) return scope.split('|')[0].trim();
+    return bf.benefit_name;
+  }
+
+  function comboRowHtml(b, sample) {
+    const it = b.items[0], bf = it.benefit;
+    const isWknd = b.items.some(x => x.checks.some(k => k.includes('토·일')));
+    const dday = b.items.map(x => (x.notes.find(n => n.includes('D-')) || '').match(/D-\d+/)).find(Boolean);
+    const rate = bf.benefit_unit === '증정' ? '무료 증정'
+      : bf.benefit_unit === '%' ? `${bf.benefit_value}%`
+      : bf.benefit_unit === '원/L' ? `L당 ${bf.benefit_value}원`
+      : bf.benefit_unit === '원_결제가' ? `${won(bf.benefit_value)}원 정액`
+      : `${won(bf.benefit_value)}${bf.benefit_unit === '포인트' ? 'P' : '원'}`;
+    return `<li class="cat-row">
+      ${dday ? `<span class="badge dday">${dday[0]}</span>` : isWknd ? `<span class="badge wknd">주말</span>` : ''}
+      <div class="row-main">
+        <span class="item-name" title="가맹점">${esc(itemLabel(bf))}</span>
+        <span class="pay-method" title="결제수단">${esc(shortName(b.product))}</span>
+        <span class="item-rate">${rate}</span>
+      </div>
+    </li>`;
+  }
+
+  // '기타'는 개수가 많아도 항상 맨 뒤로, 나머지는 개수 많은 순
   const cards = board
     .filter(c => c.combos.length)
     .sort((a, b) => {
@@ -1181,15 +1272,39 @@ function viewHome() {
       if (aEtc !== bEtc) return aEtc - bEtc;
       return b.combos.length - a.combos.length;
     })
-    .map(c => `<button type="button" class="cat" data-cat="${c.key}">
-      <span class="ic">${c.icon}</span><span class="ct">${c.key}</span>
-      <span class="cat-list-count">${c.combos.length}개 수단</span>
-    </button>`)
+    .map(c => {
+      const groups = {};
+      c.combos.forEach(b => {
+        const sub = deriveSubcat(c.key, b.items[0].benefit) || '기타';
+        (groups[sub] = groups[sub] || []).push(b);
+      });
+      const order = Object.keys(groups).sort((a, b) => {
+        const aEtc = a === '기타' ? 1 : 0;
+        const bEtc = b === '기타' ? 1 : 0;
+        if (aEtc !== bEtc) return aEtc - bEtc;
+        return groups[b].length - groups[a].length;
+      });
+      const row = b => comboRowHtml(b, c.sample);
+      const body = order.length <= 1
+        ? `<ul class="cat-list-body">${c.combos.map(row).join('')}</ul>`
+        : order.map(sub => `
+          <div class="subcat-block">
+            <div class="subcat-head">${esc(sub)}</div>
+            <ul class="cat-list-body">${groups[sub].map(row).join('')}</ul>
+          </div>`).join('');
+      return `<div class="cat cat-list">
+      <button type="button" class="cat-list-head" data-cat="${c.key}">
+        <span class="ic">${c.icon}</span><span class="ct">${c.key}</span>
+        <span class="cat-list-count">${c.combos.length}개 수단</span>
+      </button>
+      ${body}
+    </div>`;
+    })
     .join('');
 
   return `
-  <div class="hint-bar">카테고리를 누르면 결제 계산에서 검색할 수 있어요.</div>
-  <p class="homenote">실적 미입력 시 최소 구간 기준으로 보수적으로 계산합니다. 혜택 목록·예상 절감액 등 자세한 내용은 카테고리를 눌러 '결제 계산'에서 확인하세요.</p>
+  <div class="hint-bar">카테고리를 누르면 결제 계산으로 넘어가요.</div>
+  <p class="homenote">기간 한정은 D-day, 주말 전용은 '주말' 뱃지로 표시해요. 실적 미입력 시 최소 구간 기준으로 보수적으로 계산합니다.<br>예상 절감액·결제 기준금액 등 자세한 내용은 '결제 계산' 탭에서 확인하세요.</p>
   <div class="homegrid">${cards}</div>`;
 }
 
@@ -1215,11 +1330,13 @@ function viewCalc() {
       <div class="field">
         <label class="fl" for="brandInput">브랜드/매장 ${S.q.category ? `<span class="cat-filter-tag">${esc(S.q.category)}</span>` : ''}</label>
         <label class="catall-toggle" id="catAllRow" style="${S.q.category ? '' : 'display:none'}">
-          <input type="checkbox" id="catAllChk" ${!S.q.brand ? 'checked' : ''}>
+          <input type="checkbox" id="catAllChk">
           <span id="catAllTxt">${esc(S.q.category || '')} 전체보기 (브랜드 무관)</span>
         </label>
-        <input type="search" id="brandInput" list="brandDl" placeholder="${esc(brandPh)}" value="${esc(S.q.brand)}" autocomplete="off" ${S.q.category && !S.q.brand ? 'disabled' : ''}>
-        <datalist id="brandDl">${brands.map(b => `<option value="${esc(b)}">`).join('')}</datalist>
+        <div class="brand-search">
+          <input type="text" id="brandInput" placeholder="${esc(brandPh)}" value="${esc(S.q.brand)}" autocomplete="off">
+          <div class="brand-suggest" id="brandSuggest"></div>
+        </div>
         ${S.q.category && !brands.length ? '<p class="sub" style="margin-top:8px">이 카테고리에 등록된 브랜드가 없어요. 카테고리만으로도 계산할 수 있어요.</p>' : ''}
       </div>
       <div class="field">
@@ -1239,20 +1356,17 @@ function viewCalc() {
           <button type="button" data-v="offline" class="${S.q.channel === 'offline' ? 'on' : ''}">오프라인</button>
           <button type="button" data-v="online" class="${S.q.channel === 'online' ? 'on' : ''}">온라인</button>
         </div></div>
-      <details class="more" ${S.q.time || S.q.dayMode !== 'today' ? 'open' : ''}>
-        <summary>선택 정보 입력 — 정확도가 올라가요</summary>
-        <div class="field"><label class="fl">결제 시점</label>
-          <div class="timegrid">
-            <select id="daySel">
-              <option value="today" ${S.q.dayMode === 'today' ? 'selected' : ''}>오늘 (${dayNames[new Date().getDay()]}요일)</option>
-              ${dayNames.map((d, i) =>
-                `<option value="${i}" ${S.q.dayMode === 'day' && S.q.day == i ? 'selected' : ''}>${d}요일</option>`
-              ).join('')}
-            </select>
-            <input type="time" id="timeInput" value="${S.q.time}" aria-label="결제 시간 (선택)">
-          </div></div>
-        <p class="hintlink">카드별 전월 실적은 <a id="goMyPageLink">마이페이지</a>에서 입력할 수 있어요.</p>
-      </details>
+      <div class="field"><label class="fl">결제 시점</label>
+        <div class="timegrid">
+          <select id="daySel">
+            <option value="today" ${S.q.dayMode === 'today' ? 'selected' : ''}>오늘 (${dayNames[new Date().getDay()]}요일)</option>
+            ${dayNames.map((d, i) =>
+              `<option value="${i}" ${S.q.dayMode === 'day' && S.q.day == i ? 'selected' : ''}>${d}요일</option>`
+            ).join('')}
+          </select>
+          <input type="time" id="timeInput" value="${S.q.time}" aria-label="결제 시간 (선택)">
+        </div></div>
+      <p class="hintlink">카드별 전월 실적은 <a id="goMyPageLink">마이페이지</a>에서 입력할 수 있어요.</p>
       <p class="auto-hint">입력하면 지시서가 자동으로 갱신돼요</p>
     </section>
     <div class="results" id="results"></div>
@@ -1845,10 +1959,29 @@ function bind() {
   if (brandInput) {
     brandInput.addEventListener('input', e => {
       S.q.brand = e.target.value.trim();
+      renderBrandSuggest(e.target.value);
       scheduleCalc();
     });
+    brandInput.addEventListener('focus', e => renderBrandSuggest(e.target.value));
+    brandInput.addEventListener('blur', () => setTimeout(() => {
+      const box = $('#brandSuggest');
+      if (box) { box.innerHTML = ''; box.classList.remove('show'); }
+    }, 150));
     brandInput.addEventListener('keydown', e => {
       if (e.key === 'Enter') { updateAmt(); S.resultsExpanded = false; renderResults(); }
+    });
+  }
+  const brandSuggest = $('#brandSuggest');
+  if (brandSuggest) {
+    brandSuggest.addEventListener('mousedown', e => {
+      const btn = e.target.closest('[data-brand]');
+      if (!btn) return;
+      e.preventDefault();
+      S.q.brand = btn.dataset.brand;
+      if (brandInput) brandInput.value = btn.dataset.brand;
+      brandSuggest.innerHTML = '';
+      brandSuggest.classList.remove('show');
+      scheduleCalc();
     });
   }
   const catAllChk = $('#catAllChk');
@@ -1870,7 +2003,7 @@ function bind() {
     S.q.category = S.q.category === key ? null : key;
     S.q.brand = '';
     const bi = $('#brandInput');
-    if (bi) { bi.value = ''; bi.disabled = !!S.q.category; }
+    if (bi) { bi.value = ''; bi.disabled = false; }
     $$('[data-chip]').forEach(b => b.classList.toggle('on', b.dataset.chip === S.q.category));
     updateBrandDatalist();
     const label = document.querySelector('label[for="brandInput"]');
@@ -1884,7 +2017,7 @@ function bind() {
     const chk = $('#catAllChk');
     if (catAllRow) catAllRow.style.display = S.q.category ? '' : 'none';
     if (catAllTxt) catAllTxt.textContent = `${S.q.category || ''} 전체보기 (브랜드 무관)`;
-    if (chk) chk.checked = true;
+    if (chk) chk.checked = false;
     scheduleCalc();
   }));
 
