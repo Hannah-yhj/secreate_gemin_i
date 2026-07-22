@@ -41,6 +41,7 @@
     "payment_channel": { "type": ["string", "null"] },
     "required_funding_method": { "type": ["string", "null"] },
     "requires_coupon": { "type": "boolean" },
+    "required_grade": { "type": ["string", "null"] },
     "user_segment": { "type": ["string", "null"] },
     "option_group_id": { "type": ["string", "null"] },
     "option_value": { "type": ["string", "null"] },
