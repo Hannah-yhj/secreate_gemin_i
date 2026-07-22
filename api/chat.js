@@ -5,6 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 import { getUpstageApiKey, getUpstageModel, loadEnv } from "../lib/load-env.js";
 import {
   detectCategory,
+  detectBrand,
   detectAmount,
   findBestCards,
   buildCandidateText,
@@ -80,7 +81,10 @@ function systemPrompt(candidateText, { includeMembership = false } = {}) {
 
   return `당신은 "결제 지시서" 서비스의 카드 추천 챗봇입니다.
 아래 [추천 후보]는 이미 시스템이 규칙 기반으로 계산해서 선정한 결과입니다.
-당신의 역할은 이 후보를 사용자에게 자연스럽게 설명하는 것뿐입니다.
+추천 후보는 score가 높은 순서대로 정렬되어 있습니다.
+절대로 순서를 변경하지 마세요.
+절대로 새로운 카드를 추가하지 마세요.
+당신의 역할은 이 후보 카드만 사용자에게 자연스럽게 설명하는 것뿐입니다.
 ${scope}
 
 절대 하지 말아야 할 것:
@@ -129,21 +133,23 @@ export default async function handler(req, res) {
     const message = String(body.message || "").trim();
     if (!message) return res.status(400).json({ error: "message가 비어 있습니다." });
 
-    const history = Array.isArray(body.history) ? body.history.slice(-8) : [];
+    const history = Array.isArray(body.history) ? body.history.slice(-2) : [];
 
     /* ---- ① 질문 분석 (AI 호출 없음, Node에서 키워드로 판단) ---- */
     const category = detectCategory(message);
     const amount = detectAmount(message);
     const includeMembership = wantsMembership(message);
+    const { data: catalog, source } = await loadCatalog();
+    const brand = detectBrand(message, catalog);
 
     /* ---- ② 카탈로그 로드 ---- */
     const { data: catalog, source } = await loadCatalog();
 
     /* ---- ③ Engine.findBestCards() — TOP3를 Node가 결정 (기본: 카드만) ---- */
-    const candidates = findBestCards(catalog, { category, amount, includeMembership }, 3);
+    const candidates = findBestCards(catalog, { category, brand, amount, includeMembership }, 3);
 
     /* ---- ④ candidateText 생성 (후보 3개만, 카탈로그 전체 아님) ---- */
-    const candidateText = buildCandidateText(candidates, { category, amount });
+    const candidateText = buildCandidateText(candidates, { category, brand, amount });
 
     /* ---- ⑤ Solar-Pro: 설명만 작성 ---- */
     const model = getUpstageModel();
@@ -179,6 +185,7 @@ export default async function handler(req, res) {
         model,
         dataSource: source,
         category,
+        brand,
         amount,
         includeMembership,
         candidateCount: candidates.length,
