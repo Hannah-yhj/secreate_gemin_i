@@ -1317,7 +1317,7 @@ function viewCalc() {
       <div class="field">
         <label class="fl" for="brandInput">브랜드/매장 ${S.q.category ? `<span class="cat-filter-tag">${esc(S.q.category)}</span>` : ''}</label>
         <input type="search" id="brandInput" list="brandDl" placeholder="${esc(brandPh)}" value="${esc(S.q.brand)}" autocomplete="off">
-        <datalist id="brandDl">${brands.map(b => `<option value="${esc(b)}">`).join('')}</datalist>
+        <datalist id="brandDl"><option value="전체">${brands.map(b => `<option value="${esc(b)}">`).join('')}</datalist>
         ${S.q.category && !brands.length ? '<p class="sub" style="margin-top:8px">이 카테고리에 등록된 브랜드가 없어요. 카테고리만으로도 계산할 수 있어요.</p>' : ''}
       </div>
       <div class="field">
@@ -1942,7 +1942,8 @@ function bind() {
   const brandInput = $('#brandInput');
   if (brandInput) {
     brandInput.addEventListener('input', e => {
-      S.q.brand = e.target.value.trim();
+      const v = e.target.value.trim();
+      S.q.brand = v === '전체' ? '' : v;
       scheduleCalc();
     });
     brandInput.addEventListener('keydown', e => {
