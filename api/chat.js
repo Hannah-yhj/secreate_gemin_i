@@ -133,8 +133,6 @@ export default async function handler(req, res) {
     const message = String(body.message || "").trim();
     if (!message) return res.status(400).json({ error: "message가 비어 있습니다." });
 
-    const history = Array.isArray(body.history) ? body.history.slice(-2) : [];
-
     /* ---- ① 질문 분석 (AI 호출 없음, Node에서 키워드로 판단) ---- */
     const category = detectCategory(message);
     const amount = detectAmount(message);
@@ -153,9 +151,6 @@ export default async function handler(req, res) {
     const model = getUpstageModel();
     const messages = [
       { role: "system", content: systemPrompt(candidateText, { includeMembership }) },
-      ...history
-        .filter((m) => m && (m.role === "user" || m.role === "assistant") && m.content)
-        .map((m) => ({ role: m.role, content: String(m.content).slice(0, 2000) })),
       { role: "user", content: message.slice(0, 2000) },
     ];
 
