@@ -1181,14 +1181,9 @@ function viewHome() {
       : bf.benefit_unit === '원_결제가' ? `${won(bf.benefit_value)}원 정액`
       : `${won(bf.benefit_value)}${bf.benefit_unit === '포인트' ? 'P' : '원'}`;
     const valLabel = it.isGift ? '🎁 무료 증정' : `~${won(b.grandTotal)}원`;
-    // 카테고리 전체 적용이 아니라 특정 가맹점/브랜드에만 적용되는 혜택이면 표시해 준다
-    // (예: '구독' 카테고리 최고 혜택이 사실은 '왓챠'에만 적용되는 경우, 다른 OTT엔 적용 안 됨을 알려줌)
-    const scope = String(bf.merchants_or_scope || '').trim();
-    const isBrandLimited = scope && !scope.includes('업종');
-    const scopeNote = isBrandLimited ? `<span class="scope-note">${esc(scope.split('|')[0].trim())} 한정</span>` : '';
     return `<li class="cat-row">
       ${dday ? `<span class="badge dday">${dday[0]}</span>` : isWknd ? `<span class="badge wknd">주말</span>` : ''}
-      <span class="best"><b>${esc(shortName(b.product))}</b> · ${esc(bf.benefit_name)} <b>${rate}</b> ${scopeNote}</span>
+      <span class="best"><b>${esc(shortName(b.product))}</b> · ${esc(bf.benefit_name)} <b>${rate}</b></span>
       <span class="val">${valLabel} <small>${won(sample)}원 결제 시</small></span>
     </li>`;
   }
