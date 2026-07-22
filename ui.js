@@ -1424,16 +1424,28 @@ function renderResults() {
   });
 }
 
+// 카테고리로만 찾을 때(특정 브랜드를 안 골랐을 때)는 결과 카드마다 혜택이 서로 다른
+// 매장/브랜드에 적용될 수 있는데 그게 안 보이면 헷갈리므로, 그럴 때만 매장명을 붙여준다.
+function benefitMerchantTag(bf) {
+  const scope = String(bf.merchants_or_scope || '').trim();
+  if (!scope || scope.includes('업종')) return '';
+  return scope.split('|')[0].trim();
+}
+
 function receiptHtml(c, i) {
   const p = c.product;
   const allChecks = [...new Set(c.items.flatMap(x => x.checks))];
   const allNotes = [...new Set(c.items.flatMap(x => x.notes))];
-  const items = c.items.map(x => x.isGift
-    ? `<div class="r-it gift"><span class="n">🎁 ${esc(x.benefit.benefit_name)}</span>
+  const showMerchant = !S.q.brand;
+  const items = c.items.map(x => {
+    const tag = showMerchant ? benefitMerchantTag(x.benefit) : '';
+    const tagHtml = tag ? `<span class="r-it-merchant">${esc(tag)}</span>` : '';
+    return x.isGift
+      ? `<div class="r-it gift"><span class="n">${tagHtml}🎁 ${esc(x.benefit.benefit_name)}</span>
     <span class="v gift">무료 증정</span></div>`
-    : `<div class="r-it"><span class="n">${esc(x.benefit.benefit_name)}${x.estimate ? ' <small style="color:var(--mut)">(추정)</small>' : ''}</span>
-    <span class="v ${x.isPoint ? 'pt' : ''}">${x.isPoint ? '+' : '-'}${won(x.value)}${x.isPoint ? 'P' : '원'}</span></div>`
-  ).join('');
+      : `<div class="r-it"><span class="n">${tagHtml}${esc(x.benefit.benefit_name)}${x.estimate ? ' <small style="color:var(--mut)">(추정)</small>' : ''}</span>
+    <span class="v ${x.isPoint ? 'pt' : ''}">${x.isPoint ? '+' : '-'}${won(x.value)}${x.isPoint ? 'P' : '원'}</span></div>`;
+  }).join('');
   const srcs = c.sourceIds.map(id => Engine.sourceById(id)).filter(Boolean);
   const srcTxt = srcs.map(s =>
     `${esc(s.title)}${s.published_or_reviewed_date ? `<br>(${String(s.published_or_reviewed_date).slice(0, 10)} 기준)` : ''}`

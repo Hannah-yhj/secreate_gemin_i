@@ -730,6 +730,10 @@ details.more[open] summary::before{transform:rotate(90deg)}
 .r-items{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
 .r-it{display:flex;justify-content:space-between;gap:12px;font-size:13.5px;padding:3.5px 0}
 .r-it .n{color:var(--ink);font-weight:600}
+.r-it-merchant{
+  display:inline-block;margin-right:6px;padding:1px 7px;border-radius:999px;
+  background:var(--blue-soft);color:var(--blue);font-size:11px;font-weight:800;vertical-align:middle;
+}
 .r-it .v{font-family:var(--mono);font-weight:600;white-space:nowrap}
 .r-it .v.pt{color:var(--blue)}
 .r-it.gift{background:#FFF7EB;margin:2px -8px;padding:5px 8px;border-radius:8px}
