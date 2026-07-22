@@ -769,6 +769,14 @@ function viewProfileEdit() {
 
 function viewMyCards() {
   const cards = cardProducts().filter(p => S.wallet.includes(p.product_id));
+  
+  cards.sort((a, b) => {
+    const aCorp = getCorpShortName(a.provider);
+    const bCorp = getCorpShortName(b.provider);
+    if (aCorp !== bCorp) return aCorp.localeCompare(bCorp);
+    return (a.product_name || '').localeCompare(b.product_name || '');
+  });
+
   const cardTiles = cards.map(ownedCardTile).join('');
 
   const carrierLabel = S.carrier === 'LGU+' ? 'LG U+' : S.carrier;
@@ -846,6 +854,44 @@ function viewMyCards() {
   ${fabAndPanel()}`;
 }
 
+// 1. 카드사 이름을 입력받아 CSS 클래스명을 반환하는 함수
+function getCorpClass(providerName) {
+  if (!providerName) return '';
+  if (providerName.includes('우리')) return 'woori';
+  if (providerName.includes('신한')) return 'shinhan';
+  if (providerName.includes('국민') || providerName.includes('KB')) return 'kb';
+  if (providerName.includes('삼성')) return 'samsung';
+  if (providerName.includes('현대')) return 'hyundai';
+  if (providerName.includes('하나')) return 'hana';
+  if (providerName.includes('롯데')) return 'lotte';
+  if (providerName.includes('농협') || providerName.includes('NH')) return 'nh';
+  if (providerName.includes('BC') || providerName.includes('비씨')) return 'bc';
+  if (providerName.includes('우체국')) return 'post';
+  if (providerName.includes('카카오')) return 'kakao';
+  if (providerName.includes('토스')) return 'toss';
+  if (providerName.includes('케이')) return 'kbank';
+  return ''; 
+}
+
+// 2. 카드사 이름을 짧게 줄여서 반환하는 함수 (썸네일 표시 및 정렬용)
+function getCorpShortName(providerName) {
+  if (!providerName) return '';
+  if (providerName.includes('우리')) return '우리';
+  if (providerName.includes('신한')) return '신한';
+  if (providerName.includes('국민') || providerName.includes('KB')) return '국민';
+  if (providerName.includes('삼성')) return '삼성';
+  if (providerName.includes('현대')) return '현대';
+  if (providerName.includes('하나')) return '하나';
+  if (providerName.includes('롯데')) return '롯데';
+  if (providerName.includes('농협') || providerName.includes('NH')) return '농협';
+  if (providerName.includes('BC') || providerName.includes('비씨')) return 'BC';
+  if (providerName.includes('우체국')) return '우체국';
+  if (providerName.includes('카카오')) return '카카오';
+  if (providerName.includes('토스')) return '토스';
+  if (providerName.includes('케이')) return '케이';
+  return providerName.replace(/카드|은행|파이낸셜/g, '').trim(); 
+}
+
 function ownedCardTile(p) {
   const st = p.product_type === '간편결제'
     ? { cls: 'ok', label: '실적 조건 없음' }
@@ -877,9 +923,12 @@ function ownedCardTile(p) {
       </select>
     </div>`;
 
+  const corpClass = getCorpClass(p.provider);
+  const keyword = getCorpShortName(p.provider);
+
   return `<article class="owned-tile">
     <div class="owned-top">
-      <span class="plate" style="background:${PLATE_COLORS[p.product_id]}">${PLATE_LABEL[p.product_id]}</span>
+      <div class="plate ${corpClass}">${esc(keyword)}</div>
       <button type="button" class="icon-x" data-remove-card="${p.product_id}" aria-label="카드 삭제">✕</button>
     </div>
     <div class="owned-name">${esc(p.product_name)}</div>
@@ -1022,15 +1071,27 @@ function renderAddCardList(categoryLabel) {
   if (!list.length) {
     return `<p class="sub">검색 결과가 없어요.</p>`;
   }
-  return list.map(p => `
+
+  list.sort((a, b) => {
+    const aCorp = getCorpShortName(a.provider);
+    const bCorp = getCorpShortName(b.provider);
+    if (aCorp !== bCorp) return aCorp.localeCompare(bCorp);
+    return (a.product_name || '').localeCompare(b.product_name || '');
+  });
+
+  return list.map(p => {
+    const corpClass = getCorpClass(p.provider);
+    const keyword = getCorpShortName(p.provider);
+    return `
     <button type="button" class="add-card-row" data-add-card="${p.product_id}">
-      <span class="plate" style="background:${PLATE_COLORS[p.product_id] || '#64748B'}">${PLATE_LABEL[p.product_id] || esc((p.product_name || '?').slice(0, 4))}</span>
+      <div class="plate ${corpClass}">${esc(keyword)}</div>
       <span class="info">
         <span class="nm">${esc(p.product_name)}</span>
         <span class="tp">${esc(p.product_type)} · ${esc(p.provider)}</span>
       </span>
       <span class="plus-mini">+</span>
-    </button>`).join('');
+    </button>`;
+  }).join('');
 }
 
 function refreshAddCardList() {
