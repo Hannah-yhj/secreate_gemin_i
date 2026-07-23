@@ -128,6 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     allQueueItems = data;
+    renderQueue(allQueueItems);
     applyFiltersAndRender();
   }
 
@@ -141,6 +142,8 @@ document.addEventListener('DOMContentLoaded', () => {
     items.forEach(item => {
       const el = document.createElement('div');
       el.className = 'queue-item';
+      el.dataset.provider = (item.provider || '').toLowerCase();
+      el.dataset.name = (item.card_name || '').toLowerCase();
       
       const isFailed = item.status === 'failed';
       
@@ -287,6 +290,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     allUserQueueItems = data;
+    renderUserQueue(allUserQueueItems);
     applyFiltersAndRender();
   }
 
@@ -300,6 +304,8 @@ document.addEventListener('DOMContentLoaded', () => {
     items.forEach(item => {
       const el = document.createElement('div');
       el.className = 'queue-item';
+      el.dataset.provider = (item.provider_hint || '').toLowerCase();
+      el.dataset.name = (item.card_name_hint || '').toLowerCase();
       
       const isFailed = item.status === 'failed';
       const hasPdf = !!item.attached_file_path;
@@ -529,6 +535,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     allIgnoredQueueItems = items;
+    renderIgnoredQueue(allIgnoredQueueItems);
     applyFiltersAndRender();
   }
 
@@ -542,6 +549,8 @@ document.addEventListener('DOMContentLoaded', () => {
     items.forEach(item => {
       const el = document.createElement('div');
       el.className = 'queue-item';
+      el.dataset.provider = (item.provider || item.provider_hint || '').toLowerCase();
+      el.dataset.name = (item.card_name || item.card_name_hint || '').toLowerCase();
       
       const provider = item._type === 'admin_queue' ? item.provider : item.provider_hint;
       const name = item._type === 'admin_queue' ? item.card_name : item.card_name_hint;
@@ -641,6 +650,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       allRegisteredCards = json.cards;
       renderProviderFilters();
+      const sortedCards = [...allRegisteredCards].sort((a, b) => a.product_name.localeCompare(b.product_name, 'ko-KR'));
+      renderCardsTab(sortedCards);
       applyFiltersAndRender();
     } catch (err) {
       cardsList.innerHTML = `<div class="error-text">${err.message}</div>`;
@@ -672,32 +683,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function applyFiltersAndRender() {
     const query = cardSearchInput.value.toLowerCase().trim();
+    const selProv = selectedProvider.toLowerCase();
     
-    const filterList = (list) => {
-      let filtered = list;
-      if (selectedProvider !== '전체') {
-        filtered = filtered.filter(item => {
-           const prov = item.provider || item.provider_hint || '';
-           return prov === selectedProvider || prov.includes(selectedProvider);
-        });
-      }
-      if (query) {
-        filtered = filtered.filter(item => {
-          const name = (item.product_name || item.card_name || item.card_name_hint || '').toLowerCase();
-          const prov = (item.provider || item.provider_hint || '').toLowerCase();
-          return name.includes(query) || prov.includes(query);
-        });
-      }
-      return filtered;
+    const applyToNodes = (container) => {
+      const items = container.querySelectorAll('.queue-item');
+      items.forEach(el => {
+        const prov = el.dataset.provider || '';
+        const name = el.dataset.name || '';
+        
+        let matchProv = true;
+        if (selectedProvider !== '전체') {
+          matchProv = prov === selProv || prov.includes(selProv);
+        }
+        
+        let matchQuery = true;
+        if (query) {
+          matchQuery = name.includes(query) || prov.includes(query);
+        }
+        
+        el.style.display = (matchProv && matchQuery) ? '' : 'none';
+      });
     };
 
-    // Sorting only for registered cards
-    const sortedCards = [...filterList(allRegisteredCards)].sort((a, b) => a.product_name.localeCompare(b.product_name, 'ko-KR'));
-    
-    renderCardsTab(sortedCards);
-    renderQueue(filterList(allQueueItems));
-    renderUserQueue(filterList(allUserQueueItems));
-    renderIgnoredQueue(filterList(allIgnoredQueueItems));
+    applyToNodes(queueList);
+    applyToNodes(userQueueList);
+    applyToNodes(ignoredList);
+    applyToNodes(cardsList);
   }
 
   function renderCardsTab(cards) {
@@ -710,6 +721,8 @@ document.addEventListener('DOMContentLoaded', () => {
     cards.forEach(card => {
       const el = document.createElement('div');
       el.className = 'queue-item';
+      el.dataset.provider = (card.provider || '').toLowerCase();
+      el.dataset.name = (card.product_name || '').toLowerCase();
       
       el.innerHTML = `
         <div class="item-info">
