@@ -46,6 +46,15 @@
           <button class="tab-btn" data-target="cardsTab">등록된 카드 관리</button>
         </div>
 
+        <div class="filter-controls" style="margin: 1rem 0; padding: 1rem; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+          <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <input type="text" id="cardSearchInput" placeholder="카드명 검색..." style="flex: 1; padding: 0.8rem; border-radius: 6px; border: 1px solid #444; background: #222; color: white;">
+          </div>
+          <div id="providerFilters" style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <!-- Provider buttons will be generated here -->
+          </div>
+        </div>
+
         <div id="queueTab" class="tab-content active glass-panel">
           <div class="tab-header">
             <h2>대기 중인 신규 카드</h2>
@@ -88,15 +97,6 @@
           </div>
           <p class="desc">현재 DB에 정식 등록된 모든 카드 목록입니다. 내용을 수정하거나 완전히 삭제(큐로 롤백)할 수 있습니다.</p>
           
-          <div class="filter-controls" style="margin: 1rem 0; padding: 1rem; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
-            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-              <input type="text" id="cardSearchInput" placeholder="카드명 검색..." style="flex: 1; padding: 0.8rem; border-radius: 6px; border: 1px solid #444; background: #222; color: white;">
-            </div>
-            <div id="providerFilters" style="display: flex; gap: 8px; flex-wrap: wrap;">
-              <!-- Provider buttons will be generated here -->
-            </div>
-          </div>
-
           <div id="cardsList" class="queue-list">
             <div class="loading-state">데이터를 불러오는 중입니다...</div>
           </div>

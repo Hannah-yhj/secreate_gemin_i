@@ -38,6 +38,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const cardSearchInput = document.getElementById('cardSearchInput');
   const providerFilters = document.getElementById('providerFilters');
   let allRegisteredCards = [];
+  let allQueueItems = [];
+  let allUserQueueItems = [];
+  let allIgnoredQueueItems = [];
   let selectedProvider = '전체';
 
   // Preview Modal Elements
@@ -119,14 +122,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (!data || data.length === 0) {
-      queueList.innerHTML = '<div class="empty-state">🎉 처리할 대기열이 없습니다!</div>';
+      queueList.innerHTML = '<div class="empty-state">현재 대기 중인 크롤링 큐가 없습니다!</div>';
+      allQueueItems = [];
       return;
     }
 
-    renderQueue(data);
+    allQueueItems = data;
+    applyFiltersAndRender();
   }
 
   function renderQueue(items) {
+    if (!items || items.length === 0) {
+      queueList.innerHTML = '<div class="empty-state">검색 결과가 없습니다.</div>';
+      return;
+    }
     queueList.innerHTML = '';
     
     items.forEach(item => {
@@ -243,14 +252,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (!data || data.length === 0) {
-      userQueueList.innerHTML = '<div class="empty-state">🎉 처리할 유저 요청이 없습니다!</div>';
+      userQueueList.innerHTML = '<div class="empty-state">현재 대기 중인 유저 요청이 없습니다!</div>';
+      allUserQueueItems = [];
       return;
     }
 
-    renderUserQueue(data);
+    allUserQueueItems = data;
+    applyFiltersAndRender();
   }
 
   function renderUserQueue(items) {
+    if (!items || items.length === 0) {
+      userQueueList.innerHTML = '<div class="empty-state">검색 결과가 없습니다.</div>';
+      return;
+    }
     userQueueList.innerHTML = '';
     
     items.forEach(item => {
@@ -449,14 +464,20 @@ document.addEventListener('DOMContentLoaded', () => {
     ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
     if (items.length === 0) {
-      ignoredList.innerHTML = '<div class="empty-state">휴지통이 비어있습니다.</div>';
+      ignoredList.innerHTML = '<div class="empty-state">제외된 카드가 없습니다.</div>';
+      allIgnoredQueueItems = [];
       return;
     }
 
-    renderIgnoredQueue(items);
+    allIgnoredQueueItems = items;
+    applyFiltersAndRender();
   }
 
   function renderIgnoredQueue(items) {
+    if (!items || items.length === 0) {
+      ignoredList.innerHTML = '<div class="empty-state">검색 결과가 없습니다.</div>';
+      return;
+    }
     ignoredList.innerHTML = '';
     
     items.forEach(item => {
@@ -572,24 +593,33 @@ document.addEventListener('DOMContentLoaded', () => {
   cardSearchInput.addEventListener('input', applyFiltersAndRender);
 
   function applyFiltersAndRender() {
-    let filtered = allRegisteredCards;
-    
-    if (selectedProvider !== '전체') {
-      filtered = filtered.filter(c => c.provider === selectedProvider);
-    }
-    
     const query = cardSearchInput.value.toLowerCase().trim();
-    if (query) {
-      filtered = filtered.filter(c => 
-        c.product_name.toLowerCase().includes(query) || 
-        c.provider.toLowerCase().includes(query)
-      );
-    }
     
-    // Sort alphabetically by card name
-    filtered.sort((a, b) => a.product_name.localeCompare(b.product_name, 'ko-KR'));
+    const filterList = (list) => {
+      let filtered = list;
+      if (selectedProvider !== '전체') {
+        filtered = filtered.filter(item => {
+           const prov = item.provider || item.provider_hint || '';
+           return prov === selectedProvider || prov.includes(selectedProvider);
+        });
+      }
+      if (query) {
+        filtered = filtered.filter(item => {
+          const name = (item.product_name || item.card_name || item.card_name_hint || '').toLowerCase();
+          const prov = (item.provider || item.provider_hint || '').toLowerCase();
+          return name.includes(query) || prov.includes(query);
+        });
+      }
+      return filtered;
+    };
+
+    // Sorting only for registered cards
+    const sortedCards = [...filterList(allRegisteredCards)].sort((a, b) => a.product_name.localeCompare(b.product_name, 'ko-KR'));
     
-    renderCardsTab(filtered);
+    renderCardsTab(sortedCards);
+    renderQueue(filterList(allQueueItems));
+    renderUserQueue(filterList(allUserQueueItems));
+    renderIgnoredQueue(filterList(allIgnoredQueueItems));
   }
 
   function renderCardsTab(cards) {
