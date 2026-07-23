@@ -621,9 +621,9 @@ function viewLanding() {
     <div class="hero-orb b" aria-hidden="true"></div>
     <div class="hero-orb c" aria-hidden="true"></div>
     <div class="hero-inner">
-      <h1 class="hero-brand">결제 <span class="hl">지시서</span></h1>
-      <p class="hero-lead">결제 직전, 지갑에서 뭘 꺼낼지 한 번에 정해 드려요.</p>
-      <p class="hero-sub">보유 카드와 혜택을 비교해 지금 당장 가장 이득인 결제 수단을 알려주는 서비스입니다.</p>
+      <h1 class="hero-brand">How <span class="hl">Pay</span></h1>
+      <p class="hero-lead">결제, 가장 좋은 방법을 찾다.</p>
+      <p class="hero-sub">보유 카드와 혜택을 비교해 가장 이득인 결제 수단을 알려주는 서비스입니다.</p>
       <button type="button" class="hero-cta" id="startHero">시작하기 <span>→</span></button>
     </div>
   </section>
@@ -1060,7 +1060,7 @@ function fabAndPanel() {
       </button>
       <button type="button" data-open-add="request">
         <span class="fi">📝</span>
-        <span><b>없는 카드 요청</b><small>찾는 카드가 없다면?</small></span>
+        <span><b>카드 등록 요청</b><small>찾는 카드가 없다면?</small></span>
       </button>
     </div>
     <button type="button" class="fab ${open ? 'on' : ''}" id="fabAdd" aria-label="추가" aria-expanded="${open ? 'true' : 'false'}">
@@ -1206,7 +1206,7 @@ function viewBenefits() {
   return `
   <div class="page-head">
     <h2>혜택 추천</h2>
-    <p>카테고리 지도와 결제 지시서를 확인하세요</p>
+    <p>카테고리 지도와 결제 계산 탭을 확인하세요</p>
   </div>
   <div class="subtabs">
     <button type="button" data-btab="map" class="${S.benefitTab === 'map' ? 'on' : ''}">혜택 지도</button>
@@ -1412,7 +1412,7 @@ function viewCalc() {
           <input type="time" id="timeInput" value="${S.q.time}" aria-label="결제 시간 (선택)">
         </div></div>
       <p class="hintlink">카드별 전월 실적은 <a id="goMyPageLink">마이페이지</a>에서 입력할 수 있어요.</p>
-      <p class="auto-hint">입력하면 지시서가 자동으로 갱신돼요</p>
+      <p class="auto-hint">입력한 내용이 결제 계산 페이지에 자동으로 반영됩니다.</p>
     </section>
     <div class="results" id="results"></div>
   </div>`;
@@ -1438,7 +1438,7 @@ function renderResults() {
   }
   if (!S.q.brand && !S.q.category) {
     box.innerHTML = `<div class="noresult"><div class="big">브랜드나 카테고리를 골라 주세요</div>
-      <p>어디서 결제하는지 알아야 지시서를 발행할 수 있어요.</p></div>`;
+      <p>어디에서 결제하는지 알아야 최적의 결제 방법을 추천할 수 있어요.</p></div>`;
     return;
   }
   const input = {
@@ -1539,9 +1539,6 @@ function receiptHtml(c, i) {
 }
 
 
-function disclaimHtml() {
-  return `<p class="disclaim">이 지시서는 첨부된 약관·프로모션 데이터(샘플 6종) 기준의 예상치예요. 잔여 한도·사용 횟수·매장별 제외 조건에 따라 실제 혜택은 달라질 수 있어요.</p>`;
-}
 
 /* ==================== 카드 추천 (챗봇) ==================== */
 function chatBubbleHtml(m) {
@@ -1558,7 +1555,7 @@ function viewMore() {
   return `
   <div class="page-head">
     <h2>카드 추천</h2>
-    <p>소비 패턴에 맞는 카드를 대화로 찾아요</p>
+    <p>소비 패턴에 맞는 카드를 챗봇으로 찾아요</p>
   </div>
   <div class="more-layout chat-only">
     <div class="chat-wrap">
