@@ -570,7 +570,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="item-date">제외일: ${new Date(item.created_at).toLocaleString()}</div>
         </div>
         <div class="item-actions">
-          <button class="btn-secondary" id="restore-btn-${item.id}">복구 (대기열로 이동)</button>
+          <button class="btn-secondary" id="restore-btn-${item.id}">복구 (크롤러 큐로 롤백)</button>
           <button class="btn-action" id="delete-btn-${item.id}" style="background:#dc2626;">영구 삭제</button>
         </div>
       `;
@@ -739,7 +739,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         <div class="item-actions">
           <button class="btn-secondary" id="edit-btn-${card.product_id}" style="color:#2563eb; background:#eff6ff;">DB 수정 (JSON)</button>
-          <button class="btn-secondary" id="del-btn-${card.product_id}" style="color:#dc2626; background:#fee2e2;">삭제 (큐로 롤백)</button>
+          <button class="btn-secondary" id="del-btn-${card.product_id}" style="color:#dc2626; background:#fee2e2;">삭제 (휴지통으로 롤백)</button>
         </div>
       `;
       cardsList.appendChild(el);
@@ -760,7 +760,14 @@ document.addEventListener('DOMContentLoaded', () => {
         body: JSON.stringify({ product_id: card.product_id, provider: card.provider, product_name: card.product_name })
       });
       
-      if (!res.ok) throw new Error('삭제 실패');
+      if (!res.ok) {
+        let errStr = '알 수 없는 서버 오류';
+        try {
+          const errData = await res.json();
+          errStr = errData.error || errStr;
+        } catch(e) {}
+        throw new Error(errStr);
+      }
       
       alert('성공적으로 삭제 및 롤백되었습니다.');
       el.remove();
