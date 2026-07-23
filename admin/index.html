@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>관리자 대시보드 - 카드(통신사, 간편결제) 큐 시스템</title>
+  <title>관리자 대시보드 - 결제수단 큐 시스템</title>
   <link rel="stylesheet" href="../style.css">
   <link rel="stylesheet" href="admin.css">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/9.10.2/jsoneditor.min.css" rel="stylesheet" type="text/css">
@@ -43,12 +43,12 @@
           <button class="tab-btn active" data-target="queueTab">크롤러 큐</button>
           <button class="tab-btn" data-target="userRequestTab">유저 요청</button>
           <button class="tab-btn" data-target="ignoredTab">제외된 카드</button>
-          <button class="tab-btn" data-target="cardsTab">등록된 카드(통신사, 간편결제) 관리</button>
+          <button class="tab-btn" data-target="cardsTab">등록된 결제수단 관리</button>
         </div>
 
         <div class="filter-controls" style="margin: 1rem 0; padding: 1rem; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
           <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-            <input type="text" id="cardSearchInput" placeholder="카드명 검색..." style="flex: 1; padding: 0.8rem; border-radius: 6px; border: 1px solid #444; background: #222; color: white;">
+            <input type="text" id="cardSearchInput" placeholder="결제수단명 검색..." style="flex: 1; padding: 0.8rem; border-radius: 6px; border: 1px solid #444; background: #222; color: white;">
           </div>
           <div id="providerFilters" style="display: flex; gap: 8px; flex-wrap: wrap;">
             <!-- Provider buttons will be generated here -->
@@ -57,10 +57,10 @@
 
         <div id="queueTab" class="tab-content active glass-panel">
           <div class="tab-header">
-            <h2>대기 중인 신규 카드(통신사, 간편결제)</h2>
+            <h2>대기 중인 신규 결제수단</h2>
             <button id="refreshQueueBtn" class="btn-secondary">새로고침</button>
           </div>
-          <p class="desc">크롤러가 수집한 신규 카드(통신사, 간편결제)를 확인하고 약관을 업로드해 AI 등록 파이프라인을 실행하세요.</p>
+          <p class="desc">크롤러가 수집한 신규 결제수단을 확인하고 약관을 업로드해 AI 등록 파이프라인을 실행하세요.</p>
           
           <div id="queueList" class="queue-list">
             <!-- Queue items injected by JS -->
@@ -70,10 +70,10 @@
         
         <div id="userRequestTab" class="tab-content glass-panel" hidden>
           <div class="tab-header">
-            <h2>유저 카드(통신사, 간편결제) 추가 요청</h2>
+            <h2>유저 결제수단 추가 요청</h2>
             <button id="refreshUserQueueBtn" class="btn-secondary">새로고침</button>
           </div>
-          <p class="desc">유저가 신청한 카드(통신사, 간편결제) 목록입니다. 누락된 약관이 있다면 직접 업로드하여 AI 파이프라인으로 넘기세요.</p>
+          <p class="desc">유저가 신청한 결제수단 목록입니다. 누락된 약관이 있다면 직접 업로드하여 AI 파이프라인으로 넘기세요.</p>
           <div id="userQueueList" class="queue-list">
             <div class="loading-state">데이터를 불러오는 중입니다...</div>
           </div>
@@ -81,10 +81,10 @@
 
         <div id="ignoredTab" class="tab-content glass-panel" hidden>
           <div class="tab-header">
-            <h2>제외된 카드(통신사, 간편결제) 목록 (휴지통)</h2>
+            <h2>제외된 결제수단 목록 (휴지통)</h2>
             <button id="refreshIgnoredBtn" class="btn-secondary">새로고침</button>
           </div>
-          <p class="desc">제외(무시) 처리된 카드(통신사, 간편결제)들입니다. 복구 버튼을 누르면 다시 대기열로 돌아갑니다.</p>
+          <p class="desc">제외(무시) 처리된 결제수단들입니다. 복구 버튼을 누르면 다시 대기열로 돌아갑니다.</p>
           <div id="ignoredList" class="queue-list">
             <div class="loading-state">데이터를 불러오는 중입니다...</div>
           </div>
@@ -92,10 +92,10 @@
 
         <div id="cardsTab" class="tab-content glass-panel" hidden>
           <div class="tab-header">
-            <h2>등록된 전체 카드(통신사, 간편결제) 관리</h2>
+            <h2>등록된 전체 결제수단 관리</h2>
             <button id="refreshCardsBtn" class="btn-secondary">새로고침</button>
           </div>
-          <p class="desc">현재 DB에 정식 등록된 모든 카드(통신사, 간편결제) 목록입니다. 내용을 수정하거나 완전히 삭제(휴지통으로 이동)할 수 있습니다.</p>
+          <p class="desc">현재 DB에 정식 등록된 모든 결제수단 목록입니다. 내용을 수정하거나 완전히 삭제(휴지통으로 이동)할 수 있습니다.</p>
           
           <div id="cardsList" class="queue-list">
             <div class="loading-state">데이터를 불러오는 중입니다...</div>
@@ -128,11 +128,11 @@
   <div id="editModal" class="modal-backdrop" hidden>
     <div class="modal-content">
       <div class="modal-header">
-        <h2>등록된 카드(통신사, 간편결제) DB 수정</h2>
+        <h2>등록된 결제수단 DB 수정</h2>
         <button id="closeEditBtn" class="btn-secondary">닫기</button>
       </div>
       <div class="modal-body">
-        <p class="desc">아래 JSON 데이터를 수정하여 카드(통신사, 간편결제) 상세 정보를 업데이트합니다. 우측 상단의 메뉴를 통해 Tree, Code 등 원하는 보기 모드로 변경할 수 있습니다.</p>
+        <p class="desc">아래 JSON 데이터를 수정하여 결제수단 상세 정보를 업데이트합니다. 우측 상단의 메뉴를 통해 Tree, Code 등 원하는 보기 모드로 변경할 수 있습니다.</p>
         <div id="editJsonContainer" style="width: 100%; height: 500px;"></div>
       </div>
       <div class="modal-footer">
