@@ -1,6 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
 import { loadEnv } from "../lib/load-env.js";
-import fetch from "node-fetch";
 
 loadEnv();
 
