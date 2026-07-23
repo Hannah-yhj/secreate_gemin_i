@@ -1,5 +1,5 @@
 import { getServiceClient } from '../lib/supabase.js';
-import { processCardUploadWithKnownName } from '../lib/process-upload.js';
+import { updateExistingCard, insertNewCard } from '../lib/supabase.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -20,44 +20,23 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
     
-    const { queue_id, provider, product_name, storage_path, type, preview } = req.body;
-    if (!queue_id || !provider || !product_name || !storage_path) {
+    const { queue_id, type, previewData } = req.body;
+    if (!queue_id || !previewData || !previewData.payload) {
       return res.status(400).json({ error: 'Missing required parameters' });
     }
     
     const tableName = type === 'user_request' ? 'user_card_requests' : 'admin_card_queue';
+    
+    console.log(`Committing queue ${queue_id} to DB`);
 
-    console.log(`Processing queue ${queue_id} for ${provider} ${product_name}`);
+    const { isExisting, payload } = previewData;
 
-    // 2. Download file from Supabase Storage
-    const { data: fileData, error: downloadError } = await supabase.storage
-      .from('card-pdfs')
-      .download(storage_path);
+    // 2. Commit to DB
+    const rpcResult = isExisting
+      ? await updateExistingCard(payload)
+      : await insertNewCard(payload);
 
-    if (downloadError || !fileData) {
-      throw new Error(`Failed to download file from storage: ${downloadError?.message}`);
-    }
-
-    // 3. Convert Blob to Buffer (Node.js environment)
-    const arrayBuffer = await fileData.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    // 4. Process with AI pipeline
-    const result = await processCardUploadWithKnownName({
-      buffer,
-      fileName: storage_path,
-      provider,
-      productName: product_name,
-      note: "Admin Dashboard Upload",
-      force: true,
-      dryRun: !!preview
-    });
-
-    if (preview) {
-      return res.status(200).json({ success: true, previewData: result });
-    }
-
-    // 5. Update queue status to completed
+    // 3. Update queue status to completed
     const { error: updateError } = await supabase
       .from(tableName)
       .update({ status: 'completed' })
@@ -67,11 +46,10 @@ export default async function handler(req, res) {
       throw new Error(`Failed to update queue status: ${updateError.message}`);
     }
 
-    res.status(200).json({ success: true });
+    res.status(200).json({ success: true, product_id: rpcResult.product_id });
   } catch (err) {
-    console.error("Queue process error:", err);
+    console.error("Queue commit error:", err);
     
-    // Update queue status to failed if possible
     if (req.body?.queue_id) {
       const failTable = req.body.type === 'user_request' ? 'user_card_requests' : 'admin_card_queue';
       await supabase

@@ -39,7 +39,9 @@
       <section id="dashboardView" class="dashboard-view" hidden>
         <div class="tabs">
           <button class="tab-btn active" data-target="queueTab">크롤러 큐</button>
-          <button class="tab-btn" data-target="userRequestTab">유저 요청 탭 (준비중)</button>
+          <button class="tab-btn" data-target="userRequestTab">유저 요청</button>
+          <button class="tab-btn" data-target="ignoredTab">제외된 카드</button>
+          <button class="tab-btn" data-target="cardsTab">등록된 카드 관리</button>
         </div>
 
         <div id="queueTab" class="tab-content active glass-panel">
@@ -65,8 +67,78 @@
             <div class="loading-state">데이터를 불러오는 중입니다...</div>
           </div>
         </div>
+
+        <div id="ignoredTab" class="tab-content glass-panel" hidden>
+          <div class="tab-header">
+            <h2>제외된 카드 목록 (휴지통)</h2>
+            <button id="refreshIgnoredBtn" class="btn-secondary">새로고침</button>
+          </div>
+          <p class="desc">제외(무시) 처리된 카드들입니다. 복구 버튼을 누르면 다시 대기열로 돌아갑니다.</p>
+          <div id="ignoredList" class="queue-list">
+            <div class="loading-state">데이터를 불러오는 중입니다...</div>
+          </div>
+        </div>
+
+        <div id="cardsTab" class="tab-content glass-panel" hidden>
+          <div class="tab-header">
+            <h2>등록된 전체 카드 관리</h2>
+            <button id="refreshCardsBtn" class="btn-secondary">새로고침</button>
+          </div>
+          <p class="desc">현재 DB에 정식 등록된 모든 카드 목록입니다. 내용을 수정하거나 완전히 삭제(큐로 롤백)할 수 있습니다.</p>
+          
+          <div class="filter-controls" style="margin: 1rem 0; padding: 1rem; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+              <input type="text" id="cardSearchInput" placeholder="카드명 검색..." style="flex: 1; padding: 0.8rem; border-radius: 6px; border: 1px solid #444; background: #222; color: white;">
+            </div>
+            <div id="providerFilters" style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <!-- Provider buttons will be generated here -->
+            </div>
+          </div>
+
+          <div id="cardsList" class="queue-list">
+            <div class="loading-state">데이터를 불러오는 중입니다...</div>
+          </div>
+        </div>
       </section>
     </main>
   </div>
+
+  <!-- Preview Modal -->
+  <div id="previewModal" class="modal-backdrop" hidden>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>AI 파싱 결과 미리보기</h2>
+        <button id="closePreviewBtn" class="btn-secondary">닫기</button>
+      </div>
+      <div class="modal-body">
+        <div id="previewMeta" style="margin-bottom: 1rem; font-weight: bold;"></div>
+        <p class="desc">아래는 AI가 추출하여 DB에 저장할 최종 데이터(JSON)입니다.</p>
+        <pre id="previewJson" class="json-viewer"></pre>
+      </div>
+      <div class="modal-footer">
+        <button id="cancelCommitBtn" class="btn-secondary">취소</button>
+        <button id="confirmCommitBtn" class="btn-primary" style="background:#2ecc71;">최종 승인 (DB 저장)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DB Edit Modal -->
+  <div id="editModal" class="modal-backdrop" hidden>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>등록된 카드 DB 수정</h2>
+        <button id="closeEditBtn" class="btn-secondary">닫기</button>
+      </div>
+      <div class="modal-body">
+        <p class="desc">아래의 JSON 데이터를 수정하여 카드 정보를 변경할 수 있습니다. 문법 오류에 주의하세요.</p>
+        <textarea id="editJson" class="json-viewer" spellcheck="false" style="width:100%; min-height:400px; resize:vertical; border:1px solid #444; color:#a5d6ff; background:rgba(0,0,0,0.5);"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button id="cancelEditBtn" class="btn-secondary">취소</button>
+        <button id="saveEditBtn" class="btn-primary" style="background:#3b82f6;">수정 사항 저장</button>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>

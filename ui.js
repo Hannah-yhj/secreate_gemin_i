@@ -586,6 +586,10 @@ function emptyWalletHtml(opts = {}) {
   </div>`;
 }
 
+function disclaimHtml() {
+  return `<p class="disclaim">※ 계산된 혜택은 추정치이며 실제 청구 금액과 다를 수 있습니다. 정확한 조건은 카드사/가맹점 정책을 확인해주세요.</p>`;
+}
+
 function render() {
   $$('.drawer-nav [data-page]').forEach(b => b.classList.toggle('on', b.dataset.page === S.page));
   $$('#bottomNav [data-page]').forEach(b => b.classList.toggle('on', b.dataset.page === S.page));

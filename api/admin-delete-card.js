@@ -1,0 +1,56 @@
+import { getServiceClient } from '../lib/supabase.js';
+
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method Not Allowed' });
+  }
+
+  const supabase = getServiceClient();
+
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
+    if (authErr || !user) return res.status(401).json({ error: 'Unauthorized' });
+    
+    const { product_id, provider, product_name } = req.body;
+    if (!product_id) {
+      return res.status(400).json({ error: 'Missing product_id' });
+    }
+
+    console.log(`Rolling back card: ${product_id} (${provider} ${product_name})`);
+
+    // 1. Delete dependent rows
+    await supabase.table('benefits').delete().eq('product_id', product_id);
+    await supabase.table('rules').delete().eq('product_id', product_id);
+    await supabase.table('product_aliases').delete().eq('product_id', product_id);
+    await supabase.table('sources').delete().eq('product_id', product_id);
+    
+    // 2. Delete main product row
+    const { error: delErr } = await supabase.table('products').delete().eq('product_id', product_id);
+    if (delErr) throw new Error('Failed to delete product: ' + delErr.message);
+
+    // 3. Revert queue status (if it exists)
+    if (provider && product_name) {
+      const { data: adminQ } = await supabase.table('admin_card_queue')
+        .select('id').eq('provider', provider).eq('card_name', product_name).limit(1);
+      
+      if (adminQ && adminQ.length > 0) {
+        await supabase.table('admin_card_queue').update({ status: 'pending' }).eq('id', adminQ[0].id);
+      }
+
+      const { data: userQ } = await supabase.table('user_card_requests')
+        .select('id').eq('provider_hint', provider).eq('card_name_hint', product_name).limit(1);
+      
+      if (userQ && userQ.length > 0) {
+        await supabase.table('user_card_requests').update({ status: 'pending' }).eq('id', userQ[0].id);
+      }
+    }
+
+    res.status(200).json({ success: true });
+  } catch (err) {
+    console.error("Delete card error:", err);
+    res.status(500).json({ error: err.message || 'Internal Server Error' });
+  }
+}
