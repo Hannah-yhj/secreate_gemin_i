@@ -965,7 +965,7 @@ function ownedCardTile(p) {
 function fabAndPanel() {
   const open = S.addPanel;
   const menuOpen = open === 'menu';
-  const panelOpen = open === 'carrier' || open === 'card' || open === 'payment';
+  const panelOpen = open === 'carrier' || open === 'card' || open === 'payment' || open === 'request';
 
   let panelBody = '';
   if (open === 'carrier') {
@@ -1017,6 +1017,30 @@ function fabAndPanel() {
         <input type="search" id="cardSearchInput" placeholder="간편결제 이름 검색…" value="${esc(S.cardSearch)}" autocomplete="off">
       </div>
       <div id="addCardList">${renderAddCardList('간편결제')}</div>`;
+  } else if (open === 'request') {
+    panelBody = `
+      <div class="add-panel-head">
+        <button type="button" class="back-btn" data-open-add="menu">←</button>
+        <h3>카드 추가 요청</h3>
+        <button type="button" class="icon-x" data-close-add aria-label="닫기">✕</button>
+      </div>
+      <p class="sub" style="margin-bottom: 20px;">찾으시는 카드가 없나요? 카드명과 약관(선택)을 남겨주시면 빠르게 추가해 드릴게요.</p>
+      <form id="userRequestForm" style="display:flex; flex-direction:column; gap:15px;">
+        <div>
+          <label class="fl">카드사 (예: 신한카드)</label>
+          <input type="text" id="reqProvider" placeholder="카드사 입력" required style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; font-size:1rem;">
+        </div>
+        <div>
+          <label class="fl">카드명 (예: Mr.Life)</label>
+          <input type="text" id="reqCardName" placeholder="카드명 입력" required style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; font-size:1rem;">
+        </div>
+        <div>
+          <label class="fl">카드 약관 PDF 첨부 (선택 사항)</label>
+          <input type="file" id="reqFile" accept="application/pdf" style="width:100%; padding:10px; font-size:0.9rem;">
+          <p style="font-size:0.75rem; color:#888; margin-top:5px;">PDF를 첨부해주시면 훨씬 빠르게 처리됩니다!</p>
+        </div>
+        <button type="submit" class="cta block" id="reqSubmitBtn" style="margin-top:10px;">요청하기</button>
+      </form>`;
   }
 
   return `
@@ -1033,6 +1057,10 @@ function fabAndPanel() {
       <button type="button" data-open-add="payment">
         <span class="fi">💰</span>
         <span><b>간편결제 추가</b><small>네이버페이 · 토스페이 등</small></span>
+      </button>
+      <button type="button" data-open-add="request">
+        <span class="fi">📝</span>
+        <span><b>없는 카드 요청</b><small>찾는 카드가 없다면?</small></span>
       </button>
     </div>
     <button type="button" class="fab ${open ? 'on' : ''}" id="fabAdd" aria-label="추가" aria-expanded="${open ? 'true' : 'false'}">
@@ -1860,6 +1888,9 @@ function bind() {
       S.cardSearch = '';
       S.cardProvider = 'all';
     }
+    if (next === 'request') {
+      S.cardSearch = '';
+    }
     if (next === 'carrier') {
       // 추가: 빈 초안 / 변경: 현재 값으로 초안 시작 (저장 전엔 S.carrier 건드리지 않음)
       S.carrierDraft = S.carrier ? S.carrier : null;
@@ -1871,6 +1902,13 @@ function bind() {
     }
     S.addPanel = next;
     render();
+    
+    if (next === 'request') {
+      setTimeout(() => {
+        const form = document.getElementById('userRequestForm');
+        if (form) form.addEventListener('submit', handleUserRequestSubmit);
+      }, 50);
+    }
   }));
   $$('[data-close-add]').forEach(el => el.addEventListener('click', () => {
     S.addPanel = null;
@@ -2095,4 +2133,52 @@ function updateAmt() {
   const v = Number(amt.value.replace(/[^\d]/g, ''));
   if (v > 0) S.q.amount = v;
   amt.value = won(S.q.amount);
+}
+
+// User Request Submit Logic
+async function handleUserRequestSubmit(e) {
+  e.preventDefault();
+  const provider = document.getElementById('reqProvider').value.trim();
+  const cardName = document.getElementById('reqCardName').value.trim();
+  const fileInput = document.getElementById('reqFile');
+  const btn = document.getElementById('reqSubmitBtn');
+
+  if (!provider || !cardName) {
+    showToast('카드사와 카드명을 입력해주세요.');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '요청 중...';
+
+  try {
+    let storagePath = null;
+    if (fileInput.files.length > 0) {
+      const file = fileInput.files[0];
+      const fileName = `${Date.now()}_user_request_${file.name}`;
+      const { data, error } = await supabase.storage.from('card-pdfs').upload(fileName, file);
+      if (error) throw new Error('PDF 업로드 실패: ' + error.message);
+      storagePath = data.path;
+    }
+
+    const { error: insertError } = await supabase.from('user_card_requests').insert({
+      provider_hint: provider,
+      card_name_hint: cardName,
+      attached_file_path: storagePath,
+      user_contact: S.user.email || 'anonymous'
+    });
+
+    if (insertError) throw new Error('DB 저장 실패: ' + insertError.message);
+
+    showToast('요청이 완료되었습니다! 검토 후 추가해 드릴게요.');
+    
+    // Reset and close
+    e.target.reset();
+    S.addPanel = null;
+    render();
+  } catch (err) {
+    showToast(err.message);
+    btn.disabled = false;
+    btn.textContent = '다시 시도';
+  }
 }
