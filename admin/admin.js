@@ -827,4 +827,44 @@ document.addEventListener('DOMContentLoaded', () => {
       saveEditBtn.textContent = '수정 사항 저장';
     }
   });
+
+  const manualAddBtn = document.getElementById('manualAddBtn');
+  if (manualAddBtn) {
+    manualAddBtn.addEventListener('click', async () => {
+      const providerInput = document.getElementById('manualProvider');
+      const cardNameInput = document.getElementById('manualCardName');
+      const provider = providerInput.value.trim();
+      const cardName = cardNameInput.value.trim();
+      
+      if (!provider || !cardName) {
+        alert('제공사와 결제수단명을 모두 입력해주세요.');
+        return;
+      }
+
+      manualAddBtn.disabled = true;
+      manualAddBtn.textContent = '추가 중...';
+
+      try {
+        const { error } = await supabase.from('admin_card_queue').insert({
+          provider: provider,
+          card_name: cardName,
+          status: 'pending'
+        });
+
+        if (error) throw error;
+
+        alert('성공적으로 크롤러 큐에 추가되었습니다!');
+        providerInput.value = '';
+        cardNameInput.value = '';
+        
+        // Switch to queue tab
+        document.querySelector('.tab-btn[data-target="queueTab"]').click();
+      } catch (err) {
+        alert('추가 실패: ' + err.message);
+      } finally {
+        manualAddBtn.disabled = false;
+        manualAddBtn.textContent = '크롤러 큐에 추가';
+      }
+    });
+  }
 });

@@ -44,6 +44,7 @@
           <button class="tab-btn" data-target="userRequestTab">유저 요청</button>
           <button class="tab-btn" data-target="ignoredTab">제외된 카드</button>
           <button class="tab-btn" data-target="cardsTab">등록된 결제수단 관리</button>
+          <button class="tab-btn" data-target="manualAddTab">직접 추가</button>
         </div>
 
         <div class="filter-controls" style="margin: 1rem 0; padding: 1rem; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
@@ -99,6 +100,25 @@
           
           <div id="cardsList" class="queue-list">
             <div class="loading-state">데이터를 불러오는 중입니다...</div>
+          </div>
+        </div>
+        
+        <div id="manualAddTab" class="tab-content glass-panel" hidden>
+          <div class="tab-header">
+            <h2>결제수단 직접 추가</h2>
+          </div>
+          <p class="desc">결제수단사(제공사)와 결제수단명을 직접 입력하여 크롤러 큐에 새 항목을 등록합니다.</p>
+          
+          <div style="background: rgba(255,255,255,0.05); padding: 1.5rem; border-radius: 8px; max-width: 500px; margin-top: 1rem;">
+            <div style="margin-bottom: 1rem;">
+              <label style="display:block; margin-bottom: 0.5rem; color:#aaa; font-size:0.9rem;">제공사 (예: 신한카드, 네이버페이)</label>
+              <input type="text" id="manualProvider" placeholder="제공사 입력" style="width: 100%; padding: 0.8rem; border-radius: 6px; border: 1px solid #444; background: #222; color: white;">
+            </div>
+            <div style="margin-bottom: 1.5rem;">
+              <label style="display:block; margin-bottom: 0.5rem; color:#aaa; font-size:0.9rem;">결제수단명 (예: 신한카드 Mr.Life)</label>
+              <input type="text" id="manualCardName" placeholder="결제수단명 입력" style="width: 100%; padding: 0.8rem; border-radius: 6px; border: 1px solid #444; background: #222; color: white;">
+            </div>
+            <button id="manualAddBtn" class="btn-primary" style="width: 100%;">크롤러 큐에 추가</button>
           </div>
         </div>
       </section>
