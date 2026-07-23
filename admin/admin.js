@@ -355,11 +355,13 @@ document.addEventListener('DOMContentLoaded', () => {
       : `<span style="color:#059669;">✨ 새로운 카드로 신규 등록됩니다.</span>`;
     
     previewJson.textContent = JSON.stringify(previewData.payload, null, 2);
-    previewModal.hidden = false;
+    previewModal.removeAttribute('hidden');
+    previewModal.style.display = 'flex';
   }
 
   function closePreview() {
-    previewModal.hidden = true;
+    previewModal.setAttribute('hidden', '');
+    previewModal.style.display = 'none';
     if (pendingCommit && pendingCommit.btn) {
       pendingCommit.btn.disabled = false;
       pendingCommit.btn.textContent = 'AI 전송 (승인)';
