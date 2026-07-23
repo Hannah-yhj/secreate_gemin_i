@@ -1206,7 +1206,7 @@ function viewBenefits() {
   return `
   <div class="page-head">
     <h2>혜택 추천</h2>
-    <p>카테고리 지도와 결제 계산 페이지를 확인하세요</p>
+    <p>카테고리 지도와 결제 계산 탭을 확인하세요</p>
   </div>
   <div class="subtabs">
     <button type="button" data-btab="map" class="${S.benefitTab === 'map' ? 'on' : ''}">혜택 지도</button>
@@ -1347,7 +1347,7 @@ function viewHome() {
     .join('');
 
   return `
-  <div class="hint-bar">카테고리를 누르면 결제 계산 페이지로 넘어가요.</div>
+  <div class="hint-bar">카테고리를 누르면 결제 계산으로 넘어가요.</div>
   <p class="homenote">기간 한정은 D-day, 주말 전용은 '주말' 뱃지로 표시해요. 실적 미입력 시 최소 구간 기준으로 보수적으로 계산합니다.<br>예상 절감액·결제 기준금액 등 자세한 내용은 '결제 계산' 탭에서 확인하세요.</p>
   <div class="kind-legend">${kindLegendHtml()}</div>
   <div class="homegrid">${cards}</div>`;
