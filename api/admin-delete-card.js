@@ -21,11 +21,21 @@ export default async function handler(req, res) {
 
     console.log(`Rolling back card: ${product_id} (${provider} ${product_name})`);
 
-    // 1. Delete dependent rows
-    await supabase.from('benefits').delete().eq('product_id', product_id);
-    await supabase.from('rules').delete().eq('product_id', product_id);
-    await supabase.from('product_aliases').delete().eq('product_id', product_id);
-    await supabase.from('sources').delete().eq('product_id', product_id);
+    // 1. Break circular dependency if products.source_id references sources
+    await supabase.from('products').update({ source_id: null }).eq('product_id', product_id);
+
+    // 2. Delete dependent rows
+    const resBen = await supabase.from('benefits').delete().eq('product_id', product_id);
+    if (resBen.error) throw new Error('benefits: ' + resBen.error.message);
+
+    const resRule = await supabase.from('rules').delete().eq('product_id', product_id);
+    if (resRule.error) throw new Error('rules: ' + resRule.error.message);
+
+    const resAlias = await supabase.from('product_aliases').delete().eq('product_id', product_id);
+    if (resAlias.error && resAlias.error.code !== '42P01') throw new Error('product_aliases: ' + resAlias.error.message);
+
+    const resSrc = await supabase.from('sources').delete().eq('product_id', product_id);
+    if (resSrc.error) throw new Error('sources: ' + resSrc.error.message);
     
     // 2. Delete main product row
     const { error: delErr } = await supabase.from('products').delete().eq('product_id', product_id);
