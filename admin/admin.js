@@ -23,9 +23,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const closeEditBtn = document.getElementById('closeEditBtn');
   const cancelEditBtn = document.getElementById('cancelEditBtn');
   const saveEditBtn = document.getElementById('saveEditBtn');
-  const editJson = document.getElementById('editJson');
+  const editJsonContainer = document.getElementById('editJsonContainer');
+  let jsonEditor = null;
   let editingProductId = null;
   
+  // Initialize JSONEditor
+  if (typeof JSONEditor !== 'undefined') {
+    jsonEditor = new JSONEditor(editJsonContainer, {
+      mode: 'tree',
+      modes: ['code', 'form', 'text', 'tree', 'view'],
+    });
+  }
   // Filtering Elements
   const cardSearchInput = document.getElementById('cardSearchInput');
   const providerFilters = document.getElementById('providerFilters');
@@ -644,7 +652,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const json = await res.json();
       
       editingProductId = card.product_id;
-      editJson.value = JSON.stringify(json.payload, null, 2);
+      if (jsonEditor) {
+        jsonEditor.set(json.payload);
+      } else {
+        editJsonContainer.innerText = JSON.stringify(json.payload, null, 2);
+      }
       editModal.hidden = false;
     } catch (err) {
       alert(err.message);
@@ -653,7 +665,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   saveEditBtn.addEventListener('click', async () => {
     try {
-      const parsed = JSON.parse(editJson.value);
+      const parsed = jsonEditor ? jsonEditor.get() : {};
       
       saveEditBtn.disabled = true;
       saveEditBtn.textContent = '저장 중...';
