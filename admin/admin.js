@@ -64,6 +64,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  let isInitialLoadDone = false;
+  
   // Auth state handling
   supabase.auth.onAuthStateChange((event, session) => {
     if (session) {
@@ -74,14 +76,19 @@ document.addEventListener('DOMContentLoaded', () => {
         <button id="logoutBtn" class="btn-logout">로그아웃</button>
       `;
       document.getElementById('logoutBtn').addEventListener('click', () => supabase.auth.signOut());
-      loadQueue();
-      loadUserQueue();
-      loadIgnoredQueue();
-      loadCardsTab();
+      
+      if (!isInitialLoadDone) {
+        loadQueue();
+        loadUserQueue();
+        loadIgnoredQueue();
+        loadCardsTab();
+        isInitialLoadDone = true;
+      }
     } else {
       loginView.hidden = false;
       dashboardView.hidden = true;
       authPanel.innerHTML = ``;
+      isInitialLoadDone = false;
     }
   });
 
