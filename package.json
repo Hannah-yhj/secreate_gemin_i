@@ -5,7 +5,7 @@
   "main": "app.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest run",
     "upload": "node upload.js"
   },
   "keywords": [],
@@ -19,5 +19,8 @@
     "dotenv": "^17.2.2",
     "playwright": "^1.61.1",
     "playwright-core": "^1.61.1"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.10"
   }
 }

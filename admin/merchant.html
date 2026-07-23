@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>가맹점 정규화 검토</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .status-badge {
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 0.85em;
+      font-weight: bold;
+    }
+    .status-pending_review { background: #ffebee; color: #c62828; }
+    .status-approved { background: #e8f5e9; color: #2e7d32; }
+    .status-rejected { background: #eeeeee; color: #616161; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>가맹점 정규화 검토</h1>
+    
+    <div style="margin-bottom: 20px;">
+      <a href="index.html" class="btn secondary">← 돌아가기</a>
+      <select id="status-filter">
+        <option value="pending_review">검토 대기중 (pending)</option>
+        <option value="approved">승인됨 (approved)</option>
+        <option value="rejected">거절됨 (rejected)</option>
+        <option value="all">전체 보기</option>
+      </select>
+    </div>
+
+    <div class="content-box">
+      <ul class="queue-list" id="merchant-list">
+        <!-- JS will populate -->
+      </ul>
+    </div>
+  </div>
+  <script type="module" src="merchant.js"></script>
+</body>
+</html>
