@@ -37,14 +37,14 @@ export default async function handler(req, res) {
         .select('id').eq('provider', provider).eq('card_name', product_name).limit(1);
       
       if (adminQ && adminQ.length > 0) {
-        await supabase.from('admin_card_queue').update({ status: 'pending' }).eq('id', adminQ[0].id);
+        await supabase.from('admin_card_queue').update({ status: 'ignored' }).eq('id', adminQ[0].id);
       }
 
       const { data: userQ } = await supabase.from('user_card_requests')
         .select('id').eq('provider_hint', provider).eq('card_name_hint', product_name).limit(1);
       
       if (userQ && userQ.length > 0) {
-        await supabase.from('user_card_requests').update({ status: 'pending' }).eq('id', userQ[0].id);
+        await supabase.from('user_card_requests').update({ status: 'ignored' }).eq('id', userQ[0].id);
       }
     }
 
