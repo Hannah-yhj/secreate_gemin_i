@@ -146,8 +146,8 @@ document.addEventListener('DOMContentLoaded', () => {
       
       el.innerHTML = `
         <div class="item-info">
-          <div class="item-provider">${item.provider}</div>
-          <h3 class="item-name">${item.card_name}</h3>
+          <input type="text" class="edit-provider input-field" value="${item.provider.replace(/"/g, '&quot;')}" style="margin-bottom: 4px;" />
+          <input type="text" class="edit-card-name input-field" value="${item.card_name.replace(/"/g, '&quot;')}" style="margin-bottom: 4px;" />
           <div class="item-date">수집일: ${new Date(item.created_at).toLocaleString()} ${isFailed ? '<span style="color:red">(이전 처리 실패)</span>' : ''}</div>
         </div>
         <div class="item-actions">
@@ -181,6 +181,9 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.textContent = '처리 중...';
 
     try {
+      const updatedProvider = rowEl.querySelector('.edit-provider').value.trim();
+      const updatedCardName = rowEl.querySelector('.edit-card-name').value.trim();
+
       // 1. Upload to Supabase Storage (card-pdfs bucket)
       const fileName = `${Date.now()}_${file.name}`;
       const { data: uploadData, error: uploadError } = await supabase.storage
@@ -204,8 +207,8 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         body: JSON.stringify({
           queue_id: item.id,
-          provider: item.provider,
-          product_name: item.card_name,
+          provider: updatedProvider,
+          product_name: updatedCardName,
           storage_path: storagePath,
           preview: true
         })
@@ -223,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
         type: 'admin_queue',
         previewData: resData.previewData,
         rowEl, btn,
-        info: { provider: item.provider, name: item.card_name }
+        info: { provider: updatedProvider, name: updatedCardName }
       };
       
       showPreviewModal(resData.previewData);
@@ -233,7 +236,6 @@ document.addEventListener('DOMContentLoaded', () => {
       alert(err.message);
       btn.disabled = false;
       btn.textContent = '다시 시도';
-      // Revert status on UI level if needed, or leave it for next load
     }
   }
 
@@ -277,8 +279,8 @@ document.addEventListener('DOMContentLoaded', () => {
       
       el.innerHTML = `
         <div class="item-info">
-          <div class="item-provider">${item.provider_hint}</div>
-          <h3 class="item-name">${item.card_name_hint}</h3>
+          <input type="text" class="edit-provider input-field" value="${item.provider_hint.replace(/"/g, '&quot;')}" style="margin-bottom: 4px;" />
+          <input type="text" class="edit-card-name input-field" value="${item.card_name_hint.replace(/"/g, '&quot;')}" style="margin-bottom: 4px;" />
           <div class="item-date">유저: ${item.user_contact || '익명'} | 요청일: ${new Date(item.created_at).toLocaleString()} ${isFailed ? '<span style="color:red">(이전 처리 실패)</span>' : ''}</div>
           ${hasPdf ? `<div style="color:green; font-size:0.8rem; margin-top:5px;">✅ 유저가 첨부한 PDF가 있습니다.</div>` : ''}
         </div>
@@ -304,8 +306,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function handleUserApprove(item, fileInput, btn, rowEl) {
-    let storagePath = item.attached_file_path;
     const file = fileInput.files[0];
+    let storagePath = item.attached_file_path;
     
     if (!file && !storagePath) {
       alert('약관 PDF 파일을 첨부해주세요. (유저가 첨부하지 않음)');
@@ -316,6 +318,9 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.textContent = '처리 중...';
 
     try {
+      const updatedProvider = rowEl.querySelector('.edit-provider').value.trim();
+      const updatedCardName = rowEl.querySelector('.edit-card-name').value.trim();
+
       if (file) {
         // Upload new file
         const fileName = `${Date.now()}_${file.name}`;
@@ -340,8 +345,8 @@ document.addEventListener('DOMContentLoaded', () => {
         body: JSON.stringify({
           type: 'user_request',
           queue_id: item.id,
-          provider: item.provider_hint,
-          product_name: item.card_name_hint,
+          provider: updatedProvider,
+          product_name: updatedCardName,
           storage_path: storagePath,
           preview: true
         })
@@ -359,7 +364,7 @@ document.addEventListener('DOMContentLoaded', () => {
         type: 'user_request',
         previewData: resData.previewData,
         rowEl, btn,
-        info: { provider: item.provider_hint, name: item.card_name_hint }
+        info: { provider: updatedProvider, name: updatedCardName }
       };
       
       showPreviewModal(resData.previewData);
@@ -486,22 +491,41 @@ document.addEventListener('DOMContentLoaded', () => {
       
       const provider = item._type === 'admin_queue' ? item.provider : item.provider_hint;
       const name = item._type === 'admin_queue' ? item.card_name : item.card_name_hint;
+      const typeLabel = item._type === 'admin_queue' ? '크롤러' : '유저요청';
       
       el.innerHTML = `
         <div class="item-info">
-          <div class="item-provider">${provider} <span style="font-size:0.8rem; color:#888;">(${item._type === 'admin_queue' ? '크롤러' : '유저요청'})</span></div>
+          <div class="item-provider">${provider} <span style="font-size:0.8rem; color:#888;">(${typeLabel})</span></div>
           <h3 class="item-name" style="text-decoration: line-through; color:#9ca3af;">${name}</h3>
-          <div class="item-date">수집일: ${new Date(item.created_at).toLocaleString()}</div>
+          <div class="item-date">제외일: ${new Date(item.created_at).toLocaleString()}</div>
         </div>
         <div class="item-actions">
           <button class="btn-secondary" id="restore-btn-${item.id}">복구 (대기열로 이동)</button>
+          <button class="btn-action" id="delete-btn-${item.id}" style="background:#dc2626;">영구 삭제</button>
         </div>
       `;
       
       ignoredList.appendChild(el);
 
       document.getElementById(`restore-btn-${item.id}`).addEventListener('click', () => handleRestore(item, el, item._type));
+      document.getElementById(`delete-btn-${item.id}`).addEventListener('click', () => handlePermanentDelete(item, el, item._type));
     });
+  }
+
+  async function handlePermanentDelete(item, rowEl, type) {
+    if (!confirm('정말로 영구 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
+    
+    try {
+      const table = type === 'admin_queue' ? 'admin_card_queue' : 'user_card_requests';
+      const { error } = await supabase.from(table).delete().eq('id', item.id);
+      
+      if (error) throw error;
+      
+      rowEl.remove();
+      allIgnoredQueueItems = allIgnoredQueueItems.filter(i => i.id !== item.id);
+    } catch (err) {
+      alert('영구 삭제 실패: ' + err.message);
+    }
   }
 
   async function handleIgnore(item, rowEl, type) {
