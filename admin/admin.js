@@ -739,7 +739,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         <div class="item-actions">
           <button class="btn-secondary" id="edit-btn-${card.product_id}" style="color:#2563eb; background:#eff6ff;">DB 수정 (JSON)</button>
-          <button class="btn-secondary" id="del-btn-${card.product_id}" style="color:#dc2626; background:#fee2e2;">삭제 (휴지통으로 롤백)</button>
+          <button class="btn-secondary" id="del-btn-${card.product_id}" style="color:#dc2626; background:#fee2e2;">삭제</button>
         </div>
       `;
       cardsList.appendChild(el);
