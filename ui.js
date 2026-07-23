@@ -1060,7 +1060,7 @@ function fabAndPanel() {
       </button>
       <button type="button" data-open-add="request">
         <span class="fi">📝</span>
-        <span><b>없는 카드 요청</b><small>찾는 카드가 없다면?</small></span>
+        <span><b>카드 등록 요청</b><small>찾는 카드가 없다면?</small></span>
       </button>
     </div>
     <button type="button" class="fab ${open ? 'on' : ''}" id="fabAdd" aria-label="추가" aria-expanded="${open ? 'true' : 'false'}">
