@@ -1555,7 +1555,7 @@ function viewMore() {
   return `
   <div class="page-head">
     <h2>카드 추천</h2>
-    <p>소비 패턴에 맞는 카드를 대화로 찾아요</p>
+    <p>소비 패턴에 맞는 카드를 챗봇으로 찾아요</p>
   </div>
   <div class="more-layout chat-only">
     <div class="chat-wrap">
