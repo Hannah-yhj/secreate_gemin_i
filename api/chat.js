@@ -5,6 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 import { getUpstageApiKey, getUpstageModel, loadEnv } from "../lib/load-env.js";
 import {
   detectCategory,
+  detectBrand,
   detectAmount,
   findBestCards,
   buildCandidateText,
@@ -29,6 +30,22 @@ function hasCardProducts(data) {
   return Array.isArray(data?.products) && data.products.some((p) => p && p.service_type !== "통신사");
 }
 
+// Supabase/PostgREST는 .select()에 range를 안 주면 기본 1000행까지만 돌려준다.
+// benefits처럼 1000행을 넘는 테이블은 range를 밀어가며 전부 받아야 한다.
+async function fetchAll(supabase, table) {
+  const pageSize = 1000;
+  let all = [];
+  let from = 0;
+  while (true) {
+    const { data, error } = await supabase.from(table).select("*").range(from, from + pageSize - 1);
+    if (error) return { data: null, error };
+    all = all.concat(data);
+    if (data.length < pageSize) break;
+    from += pageSize;
+  }
+  return { data: all, error: null };
+}
+
 async function loadCatalog() {
   loadEnv();
   const url = (process.env.SUPABASE_URL || "").trim();
@@ -37,8 +54,8 @@ async function loadCatalog() {
   if (url && key) {
     try {
       const supabase = createClient(url, key, { auth: { persistSession: false } });
-      const { data: products, error: pErr } = await supabase.from("products").select("*");
-      const { data: benefits, error: bErr } = await supabase.from("benefits").select("*");
+      const { data: products, error: pErr } = await fetchAll(supabase, "products");
+      const { data: benefits, error: bErr } = await fetchAll(supabase, "benefits");
 
       if (!pErr && !bErr) {
         const payload = { products: products || [], benefits: benefits || [] };
@@ -64,7 +81,9 @@ function systemPrompt(candidateText, { includeMembership = false } = {}) {
 
   return `당신은 "결제 지시서" 서비스의 카드 추천 챗봇입니다.
 아래 [추천 후보]는 이미 시스템이 규칙 기반으로 계산해서 선정한 결과입니다.
-당신의 역할은 이 후보를 사용자에게 자연스럽게 설명하는 것뿐입니다.
+절대로 순서를 변경하지 마세요.
+절대로 새로운 카드를 추가하지 마세요.
+당신의 역할은 이 후보 카드만 사용자에게 자연스럽게 설명하는 것뿐입니다.
 ${scope}
 
 절대 하지 말아야 할 것:
@@ -113,29 +132,24 @@ export default async function handler(req, res) {
     const message = String(body.message || "").trim();
     if (!message) return res.status(400).json({ error: "message가 비어 있습니다." });
 
-    const history = Array.isArray(body.history) ? body.history.slice(-8) : [];
-
     /* ---- ① 질문 분석 (AI 호출 없음, Node에서 키워드로 판단) ---- */
     const category = detectCategory(message);
     const amount = detectAmount(message);
     const includeMembership = wantsMembership(message);
-
-    /* ---- ② 카탈로그 로드 ---- */
     const { data: catalog, source } = await loadCatalog();
+    const brand = detectBrand(message, catalog);
+
 
     /* ---- ③ Engine.findBestCards() — TOP3를 Node가 결정 (기본: 카드만) ---- */
-    const candidates = findBestCards(catalog, { category, amount, includeMembership }, 3);
+    const candidates = findBestCards(catalog, { category, brand, amount, includeMembership }, 3);
 
     /* ---- ④ candidateText 생성 (후보 3개만, 카탈로그 전체 아님) ---- */
-    const candidateText = buildCandidateText(candidates, { category, amount });
+    const candidateText = buildCandidateText(candidates, { category, brand, amount });
 
     /* ---- ⑤ Solar-Pro: 설명만 작성 ---- */
     const model = getUpstageModel();
     const messages = [
       { role: "system", content: systemPrompt(candidateText, { includeMembership }) },
-      ...history
-        .filter((m) => m && (m.role === "user" || m.role === "assistant") && m.content)
-        .map((m) => ({ role: m.role, content: String(m.content).slice(0, 2000) })),
       { role: "user", content: message.slice(0, 2000) },
     ];
 
@@ -163,6 +177,7 @@ export default async function handler(req, res) {
         model,
         dataSource: source,
         category,
+        brand,
         amount,
         includeMembership,
         candidateCount: candidates.length,

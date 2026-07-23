@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/refresh-payment-benefits",
+      "schedule": "0 0 1 * *"
+    }
+  ]
+}

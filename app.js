@@ -69,11 +69,19 @@ const Engine = (() => {
   // ---------- 매칭 ----------
   // input: { brand, category, amount, channel('offline'|'online'|null), date(Date), time('HH:MM'|null) }
   function matchesTarget(b, input) {
-    // KB Pay 등 결제방식 스코프 혜택: 국내 모든 가맹점에서 해당 방식으로 결제 시 적용
-    if (b.merchant_scope_type === 'payment_method') return !input.overseas && !input.categoryOnly;
+    const bCats = cats(b.category);
+    // KB Pay 등 결제방식 스코프 혜택: 브랜드를 콕 집어 검색할 땐 그 결제수단으로 결제하면
+    // 어디서든 적용되니 항상 매치하되, 카테고리만으로 훑어볼 땐 이 혜택 자체의 category와
+    // 일치할 때만 보여준다 - 안 그러면 "일반 가맹점 적립"류 혜택이 13개 카테고리 전부에
+    // 찍히는 문제가 생김(실제로 한 번 이렇게 됐다가 되돌린 적 있음).
+    if (b.merchant_scope_type === 'payment_method') {
+      if (input.overseas) return false;
+      if (input.brand) return true;
+      if (input.category) return bCats.some(c => cats(input.category).includes(c) || c === input.category);
+      return false;
+    }
     if (b.merchant_scope_type === 'region') return !!input.overseas;
     const toks = split(b.merchants_or_scope);
-    const bCats = cats(b.category);
     if (input.brand) {
       // 1) 브랜드 직접 매칭
       if (toks.some(t => t === input.brand || t.includes(input.brand) || input.brand.includes(t.replace(' 업종', '')))) return true;
@@ -375,8 +383,11 @@ const Engine = (() => {
         const bestStack = stackers.reduce((m, r) => r.value > m.value ? r : m, stackers[0]);
         if (items.length) {
           bestStack.notes.push('기본 혜택과 중복 적용(추가 환급)');
-          items.push(bestStack);
         }
+        // 기본(order 1) 혜택이 없으면 추가 적립형(order>1) 혜택 하나만 있어도
+        // 그게 이 카드의 유일한 후보이므로 그대로 보여준다 (이전엔 items.length가 0이면
+        // 조용히 버려져서, 실제로 유효한 혜택인데도 화면에 아예 안 뜨는 버그가 있었음).
+        items.push(bestStack);
       }
       if (gifts.length) {
         items.push(gifts[0]);
@@ -400,40 +411,46 @@ const Engine = (() => {
   }
 
   // ---------- 홈: 카테고리별 최고 혜택 ----------
+  // 카테고리를 13개로 통합 (카페/편의점/배달->외식, 구독->통신, 택시/주유->교통,
+  // 온라인쇼핑/패션->쇼핑, 항공/교육/금융/렌탈/해외/면세점/공과금/간편결제->기타)
   const HOME_CATS = [
-    { key: '카페', icon: '☕', sample: 6000 },
-    { key: '편의점', icon: '🏪', sample: 8000 },
     { key: '외식', icon: '🍽️', sample: 30000 },
-    { key: '배달', icon: '🛵', sample: 25000 },
     { key: '영화', icon: '🎬', sample: 15000 },
-    { key: '구독', icon: '📺', sample: 17000 },
     { key: '통신', icon: '📱', sample: 60000 },
-    { key: '교통', icon: '🚌', sample: 60000 },
-    { key: '택시', icon: '🚕', sample: 12000 },
+    { key: '교통', icon: '🚌', sample: 65000 },
     { key: '대형마트', icon: '🛒', sample: 80000 },
-    { key: '주유', icon: '⛽', sample: 70000 },
-    { key: '온라인쇼핑', icon: '📦', sample: 50000 },
+    { key: '쇼핑', icon: '🏬', sample: 60000 },
     { key: '의료', icon: '💊', sample: 15000 },
     { key: '도서', icon: '📚', sample: 20000 },
-    { key: '패션', icon: '👕', sample: 80000 },
     { key: '뷰티', icon: '💄', sample: 30000 },
     { key: '테마파크', icon: '🎢', sample: 62000 },
     { key: '여행', icon: '✈️', sample: 200000 },
-    { key: '면세점', icon: '🛍️', sample: 300000 },
-    { key: '공과금', icon: '🧾', sample: 50000 },
+    { key: '문화', icon: '🎭', sample: 20000 },
+    { key: '기타', icon: '🗂️', sample: 20000 },
   ];
 
   function homeBoard(state, wallet, date) {
     return HOME_CATS.map(c => {
-      const input = { category: c.key, amount: c.sample, channel: null, date: date || new Date(), time: null, ignoreDays: true, categoryOnly: true };
+      const input = { category: c.key, amount: c.sample, channel: null, date: date || new Date(), time: null, ignoreDays: true };
       const combos = buildCombos(input, state, wallet);
-      const best = combos[0] || null;
-      return { ...c, best };
+      return { ...c, combos, best: combos[0] || null };
     });
   }
 
   function sourceById(id) { return engineDB.sources.find(s => s.source_id === id); }
 
-  return { init, brandList, brandsByCategory, categoriesOfBrand, buildCombos, homeBoard, sourceById, won, HOME_CATS, productById: () => productById };
+  // 혜택의 성격: 특정 브랜드 할인(brand) / 업종·결제수단 전체 적용(scope) / 적립·캐시백형(reward).
+  // 스코프와 지급 방식은 서로 다른 축이지만(예: 특정 브랜드에서도 캐시백 지급 가능), 화면에 하나의
+  // 색으로만 표시해야 하므로 지급 방식(적립·캐시백)을 우선 판정하고, 아니면 스코프 넓이로 구분한다.
+  function benefitKind(b) {
+    const type = String(b.benefit_type || '');
+    const unit = String(b.benefit_unit || '');
+    if (/적립|캐시백|캐쉬백/.test(type) || /포인트|마일/.test(unit)) return 'reward';
+    const toks = split(b.merchants_or_scope);
+    const isBroad = b.merchant_scope_type === 'payment_method' || b.merchant_scope_type === 'mixed' || toks.some(t => t.includes('업종'));
+    return isBroad ? 'scope' : 'brand';
+  }
+
+  return { init, brandList, brandsByCategory, categoriesOfBrand, buildCombos, homeBoard, sourceById, benefitKind, won, HOME_CATS, productById: () => productById };
 })();
 

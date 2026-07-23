@@ -15,7 +15,12 @@
     "benefit_id": { "type": "string", "minLength": 1 },
     "product_id": { "type": "string", "minLength": 1 },
     "benefit_name": { "type": "string", "minLength": 1 },
-    "category": { "type": "string", "minLength": 1 },
+    "category": {
+      "enum": [
+        "외식", "영화", "통신", "교통", "대형마트", "쇼핑", "의료", "도서",
+        "뷰티", "테마파크", "여행", "문화", "기타"
+      ]
+    },
     "merchant_scope_type": { "type": ["string", "null"] },
     "merchants_or_scope": { "type": ["string", "null"] },
     "benefit_type": { "type": "string", "minLength": 1 },
@@ -36,6 +41,7 @@
     "payment_channel": { "type": ["string", "null"] },
     "required_funding_method": { "type": ["string", "null"] },
     "requires_coupon": { "type": "boolean" },
+    "required_grade": { "type": ["string", "null"] },
     "user_segment": { "type": ["string", "null"] },
     "option_group_id": { "type": ["string", "null"] },
     "option_value": { "type": ["string", "null"] },

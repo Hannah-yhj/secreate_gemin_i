@@ -12,10 +12,12 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@sparticuz/chromium": "^149.0.0",
     "@supabase/supabase-js": "^2.110.6",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
     "dotenv": "^17.2.2",
-    "playwright": "^1.61.1"
+    "playwright": "^1.61.1",
+    "playwright-core": "^1.61.1"
   }
 }

@@ -47,6 +47,7 @@ const S = {
   cardSearch: '',
   cardProvider: 'all',
   addPanel: null,
+  walletTab: 'card',
   resultsExpanded: false,
   q: {
     brand: '', category: null, amount: 10000,
@@ -55,7 +56,7 @@ const S = {
   chat: {
     busy: false,
     messages: [
-      { role: 'bot', text: '안녕하세요! 카드 추천이에요.\n소비 패턴이나 원하는 혜택을 말씀해 주세요. 예: "카페 많이 가요", "교통비 아끼고 싶어요"\n통신사 멤버십이 궁금하면 멤버십이라고 말씀해 주세요.', html: null }
+      { role: 'bot', text: '안녕하세요! 카드 추천이에요.\n소비 패턴이나 원하는 혜택을 말씀해 주세요. 예: "카페 많이 가요", "교통비 아끼고 싶어요","버스","편의점"\n통신사 멤버십이 궁금하면 멤버십이라고 말씀해 주세요.', html: null }
     ]
   }
 };
@@ -204,6 +205,7 @@ function loadPersisted() {
     const pages = ['home', 'mypage', 'benefits', 'more'];
     if (pages.includes(d.page)) S.page = d.page;
     if (d.benefitTab === 'map' || d.benefitTab === 'calc') S.benefitTab = d.benefitTab;
+    if (d.walletTab === 'card' || d.walletTab === 'payment') S.walletTab = d.walletTab;
   } catch (_) { /* ignore corrupt storage */ }
 }
 
@@ -217,6 +219,7 @@ function savePersisted() {
       grade: S.grade,
       page: S.page,
       benefitTab: S.benefitTab,
+      walletTab: S.walletTab,
     }));
   } catch (_) { /* quota / private mode */ }
   // 로그인 상태면 클라우드(Supabase)에도 반영 예약
@@ -396,21 +399,13 @@ document.addEventListener('click', e => {
 });
 
 function startApp() {
-  if (!S.wallet.length) {
-    S.page = 'mypage';
-    S.addPanel = 'card';
-    S.showLoginForm = false;
-  } else {
-    S.page = 'benefits';
-    S.benefitTab = 'calc';
-    S.addPanel = null;
-  }
+  S.page = 'benefits';
+  S.benefitTab = 'map';
+  S.addPanel = null;
+  S.showLoginForm = false;
   closeDrawer();
   savePersisted();
   render();
-  if (S.page === 'benefits' && S.benefitTab === 'calc') {
-    requestAnimationFrame(() => renderResults());
-  }
 }
 
 function isCardProduct(p) {
@@ -528,6 +523,21 @@ function shortName(p) {
   return p.product_name
     .replace('KB국민 ', '').replace('신한카드 ', '')
     .replace(' 카드', '').replace(' 체크카드', '').replace(' 체크', '');
+}
+
+const KIND_META = {
+  brand: { cls: 'brand', label: '특정 브랜드 할인' },
+  scope: { cls: 'scope', label: '업종·결제수단 전체 적용' },
+  reward: { cls: 'reward', label: '적립·캐시백' },
+};
+function kindDotHtml(bf) {
+  const meta = KIND_META[Engine.benefitKind(bf)];
+  return `<span class="kind-dot ${meta.cls}" title="${esc(meta.label)}"></span>`;
+}
+function kindLegendHtml() {
+  return Object.values(KIND_META)
+    .map(m => `<span class="kind-legend-item"><span class="kind-dot ${m.cls}"></span>${esc(m.label)}</span>`)
+    .join('');
 }
 
 function telecomProductId() {
@@ -768,16 +778,28 @@ function viewProfileEdit() {
 }
 
 function viewMyCards() {
-  const cards = cardProducts().filter(p => S.wallet.includes(p.product_id));
-  
-  cards.sort((a, b) => {
+  const sortByCorp = (a, b) => {
     const aCorp = getCorpShortName(a.provider);
     const bCorp = getCorpShortName(b.provider);
     if (aCorp !== bCorp) return aCorp.localeCompare(bCorp);
     return (a.product_name || '').localeCompare(b.product_name || '');
-  });
+  };
+
+  const myCardOnly = cardOnlyProducts().filter(p => S.wallet.includes(p.product_id)).sort(sortByCorp);
+  const myPaymentApps = paymentAppProducts().filter(p => S.wallet.includes(p.product_id)).sort(sortByCorp);
+
+  const walletTab = S.walletTab === 'payment' ? 'payment' : 'card';
+  const cards = walletTab === 'payment' ? myPaymentApps : myCardOnly;
+  const sectionLabel = walletTab === 'payment' ? '간편결제' : '내 카드';
+  const openAddType = walletTab === 'payment' ? 'payment' : 'card';
 
   const cardTiles = cards.map(ownedCardTile).join('');
+
+  const walletTabs = `
+    <div class="subtabs">
+      <button type="button" data-wtab="card" class="${walletTab === 'card' ? 'on' : ''}">내 카드${myCardOnly.length ? ` (${myCardOnly.length})` : ''}</button>
+      <button type="button" data-wtab="payment" class="${walletTab === 'payment' ? 'on' : ''}">간편결제${myPaymentApps.length ? ` (${myPaymentApps.length})` : ''}</button>
+    </div>`;
 
   const carrierLabel = S.carrier === 'LGU+' ? 'LG U+' : S.carrier;
   const carrierBar = S.carrier ? `
@@ -803,9 +825,9 @@ function viewMyCards() {
   const cardsEmpty = !cards.length ? `
     <div class="owned-empty">
       <div class="empty-illu sm" aria-hidden="true">${Ico.wallet}</div>
-      <b>등록된 카드가 없어요</b>
-      <p>오른쪽 아래 <strong>+</strong> 버튼에서 카드를 추가해 주세요.</p>
-      <button type="button" class="cta" data-open-add="card">카드 추가하기</button>
+      <b>등록된 ${esc(sectionLabel)}이(가) 없어요</b>
+      <p>오른쪽 아래 <strong>+</strong> 버튼에서 ${esc(sectionLabel)}을(를) 추가해 주세요.</p>
+      <button type="button" class="cta" data-open-add="${openAddType}">${esc(sectionLabel)} 추가하기</button>
     </div>` : '';
 
   const sub = S.user.loggedIn
@@ -836,8 +858,9 @@ function viewMyCards() {
   ${carrierBar}
 
   <div class="cards-section">
+    ${walletTabs}
     <div class="cards-section-head">
-      <h3>내 카드</h3>
+      <h3>${esc(sectionLabel)}</h3>
       <span class="cards-count">${cards.length}장</span>
     </div>
     <div class="owned-grid">
@@ -913,7 +936,8 @@ function ownedCardTile(p) {
     </select>`;
   }
 
-  const spend = p.product_type === '간편결제' ? '' : `
+  const hasSpendCondition = DB.benefits.some(b => b.product_id === p.product_id && b.spend_min);
+  const spend = (p.product_type === '간편결제' || !hasSpendCondition) ? '' : `
     <div class="owned-spend">
       <span class="spend-badge ${st.cls}">${st.label}</span>
       <select data-spend="${p.product_id}" aria-label="${esc(p.product_name)} 전월실적">
@@ -1051,8 +1075,9 @@ function fabAndPanel() {
 }
 
 const PROVIDER_SHORT = {
-  'KB국민카드': '국민',
-  '신한카드': '신한',
+  'KB국민카드': '국민카드',
+  '신한카드': '신한카드',
+  '우체국': '우체국카드',
   '토스': '토스',
   '네이버파이낸셜': '네이버',
 };
@@ -1150,17 +1175,30 @@ function bindProviderTabs() {
 }
 
 function updateBrandDatalist() {
-  const brands = S.q.category
-    ? Engine.brandsByCategory(S.q.category)
-    : Engine.brandList();
-  const dl = $('#brandDl');
-  if (dl) dl.innerHTML = brands.map(b => `<option value="${esc(b)}">`).join('');
   const bi = $('#brandInput');
   if (bi) {
     bi.placeholder = S.q.category
       ? `${S.q.category} 브랜드만 검색됩니다…`
       : '예: 스타벅스, CU, 넷플릭스…';
   }
+  const box = $('#brandSuggest');
+  if (box) { box.innerHTML = ''; box.classList.remove('show'); }
+}
+
+function renderBrandSuggest(query) {
+  const box = $('#brandSuggest');
+  if (!box) return;
+  const q = query.trim();
+  if (!q) { box.innerHTML = ''; box.classList.remove('show'); return; }
+  const list = S.q.category ? Engine.brandsByCategory(S.q.category) : Engine.brandList();
+  const matches = list.filter(b => b.toLowerCase().includes(q.toLowerCase())).slice(0, 8);
+  if (!matches.length) {
+    box.innerHTML = '<div class="brand-suggest-empty">일치하는 브랜드가 없어요</div>';
+    box.classList.add('show');
+    return;
+  }
+  box.innerHTML = matches.map(b => `<button type="button" class="brand-suggest-item" data-brand="${esc(b)}">${esc(b)}</button>`).join('');
+  box.classList.add('show');
 }
 
 /* ==================== 혜택 추천 ==================== */
@@ -1177,6 +1215,61 @@ function viewBenefits() {
   ${S.benefitTab === 'map' ? viewHome() : viewCalc()}`;
 }
 
+// 큰 카테고리 안을 다시 나누는 소분류 키워드 규칙. category 컬럼 자체는 29->13개로
+// 합쳐버려서 원래 세부값이 DB에 안 남아있어, merchants_or_scope/benefit_name 텍스트를
+// 보고 화면에서만 즉석으로 재분류한다 (DB 재마이그레이션 없이 바로 조정 가능).
+const SUBCAT_RULES = {
+  외식: [
+    ['카페', ['카페', '커피', '스타벅스', '이디야', '투썸', '폴바셋', '블루보틀', '커피빈', '할리스', '탐앤탐스', '엔제리너스', '파스쿠찌', '아티제', 'mgc', '매머드']],
+    ['배달앱', ['배달의민족', '요기요', '쿠팡이츠', '배달특급', '배달']],
+    ['편의점', ['편의점', 'cu', 'gs25', '세븐일레븐', '미니스톱', '이마트24']],
+  ],
+  교통: [
+    ['대중교통', ['버스', '지하철', '대중교통', '환승', 'k-패스', 'k패스', '하이패스']],
+    ['택시', ['택시', '카카오t', '우티', '대리운전']],
+    ['주유', ['주유', '오일뱅크', '칼텍스', 's-oil', '에너지', '전기차', 'ev충전']],
+  ],
+  쇼핑: [
+    ['온라인몰', ['쿠팡', '11번가', 'g마켓', '옥션', 'ssg', '티몬', '위메프', '인터파크', '무신사', '지그재그', 'w컨셉', '29cm', '크림', '오늘의집', '올리브영']],
+    ['홈쇼핑', ['홈쇼핑', 'gs샵', 'cj온스타일', 'ns홈쇼핑', '공영쇼핑']],
+    ['마트/백화점', ['이마트', '롯데마트', '홈플러스', '백화점', '트레이더스', '대형마트', '대형할인점']],
+    ['면세점', ['면세점']],
+  ],
+  통신: [
+    ['통신요금', ['통신', '이동전화', '요금제', '자동이체', 'skt', 'kt', 'lgu', '컬러링']],
+    ['구독/OTT', ['넷플릭스', '왓챠', '유튜브', '멜론', '지니', '디즈니', '티빙', '웨이브', 'ott', '구독']],
+  ],
+  여행: [
+    ['항공', ['항공', '비행기', '대한항공', '아시아나', '마일리지', '스카이패스']],
+    ['숙박', ['호텔', '숙소', '아고다', '여기어때', '야놀자', '리조트']],
+    ['라운지', ['라운지']],
+    ['투어/액티비티', ['투어', '여행사', '클룩', '마이리얼트립', 'nol', '하나투어', '트립비토즈']],
+  ],
+  문화: [
+    ['영화관', ['cgv', '롯데시네마', '메가박스', '영화']],
+    ['서점', ['교보문고', '영풍문고', '예스24', '알라딘', '서점']],
+    ['공연/전시', ['공연', '전시', '티켓', '콘서트', '인터파크']],
+    ['테마파크/레저', ['에버랜드', '롯데월드', '캐리비안베이', '서울랜드', '워터파크', '아쿠아리움', '골프', '헬스', '사우나', '찜질방', '스포츠센터']],
+  ],
+  기타: [
+    ['항공/면세점', ['항공', '면세', '공항']],
+    ['교육', ['교육', '학원', '토익', '인강']],
+    ['금융', ['보험', '금융', '대출']],
+    ['렌탈/구독', ['렌탈', '정기결제', '구독']],
+    ['간편결제', ['pay', '카카오페이', '네이버페이', '삼성페이']],
+    ['공과금', ['공과금', '관리비', '전기', '가스', '수도']],
+  ],
+};
+function deriveSubcat(categoryKey, benefit) {
+  const rules = SUBCAT_RULES[categoryKey];
+  if (!rules) return null;
+  const hay = `${benefit.merchants_or_scope || ''} ${benefit.benefit_name || ''}`.toLowerCase();
+  for (const [label, keywords] of rules) {
+    if (keywords.some(k => hay.includes(k))) return label;
+  }
+  return '기타';
+}
+
 function viewHome() {
   const wallet = effectiveWallet();
   if (!wallet.length) {
@@ -1187,13 +1280,15 @@ function viewHome() {
     });
   }
   const board = Engine.homeBoard(engineState(), wallet, new Date());
-  const cards = board.map(c => {
-    if (!c.best) {
-      return `<button type="button" class="cat" data-cat="${c.key}">
-        <span class="ic">${c.icon}</span><span class="ct">${c.key}</span>
-        <span class="none">등록된 혜택 없음</span></button>`;
-    }
-    const b = c.best, it = b.items[0], bf = it.benefit;
+
+  function itemLabel(bf) {
+    const scope = String(bf.merchants_or_scope || '').trim();
+    if (scope) return scope.split('|')[0].trim();
+    return bf.benefit_name;
+  }
+
+  function comboRowHtml(b, sample) {
+    const it = b.items[0], bf = it.benefit;
     const isWknd = b.items.some(x => x.checks.some(k => k.includes('토·일')));
     const dday = b.items.map(x => (x.notes.find(n => n.includes('D-')) || '').match(/D-\d+/)).find(Boolean);
     const rate = bf.benefit_unit === '증정' ? '무료 증정'
@@ -1201,23 +1296,61 @@ function viewHome() {
       : bf.benefit_unit === '원/L' ? `L당 ${bf.benefit_value}원`
       : bf.benefit_unit === '원_결제가' ? `${won(bf.benefit_value)}원 정액`
       : `${won(bf.benefit_value)}${bf.benefit_unit === '포인트' ? 'P' : '원'}`;
-    const valLabel = it.isGift ? '🎁 무료 증정' : `~${won(b.grandTotal)}원`;
-    return `<button type="button" class="cat" data-cat="${c.key}">
+    return `<li class="cat-row">
       ${dday ? `<span class="badge dday">${dday[0]}</span>` : isWknd ? `<span class="badge wknd">주말</span>` : ''}
-      <span class="ic">${c.icon}</span><span class="ct">${c.key}</span>
-      <span class="best"><b>${esc(shortName(b.product))}</b> · ${esc(bf.benefit_name)} <b>${rate}</b></span>
-      <span class="val">${valLabel} <small>${won(c.sample)}원 결제 시</small></span>
-    </button>`;
-  }).join('');
+      <div class="row-main">
+        ${kindDotHtml(bf)}
+        <span class="item-name" title="가맹점">${esc(itemLabel(bf))}</span>
+        <span class="pay-method" title="결제수단">${esc(shortName(b.product))}</span>
+        <span class="item-rate">${rate}</span>
+      </div>
+    </li>`;
+  }
 
-  const carrierNote = S.carrier
-    ? `${S.carrier}${S.grade ? ' · ' + S.grade : ''} 기준으로도 함께 보면 좋아요.`
-    : '통신사는 마이페이지에서 설정할 수 있어요.';
+  // '기타'는 개수가 많아도 항상 맨 뒤로, 나머지는 개수 많은 순
+  const cards = board
+    .filter(c => c.combos.length)
+    .sort((a, b) => {
+      const aEtc = a.key === '기타' ? 1 : 0;
+      const bEtc = b.key === '기타' ? 1 : 0;
+      if (aEtc !== bEtc) return aEtc - bEtc;
+      return b.combos.length - a.combos.length;
+    })
+    .map(c => {
+      const groups = {};
+      c.combos.forEach(b => {
+        const sub = deriveSubcat(c.key, b.items[0].benefit) || '기타';
+        (groups[sub] = groups[sub] || []).push(b);
+      });
+      const order = Object.keys(groups).sort((a, b) => {
+        const aEtc = a === '기타' ? 1 : 0;
+        const bEtc = b === '기타' ? 1 : 0;
+        if (aEtc !== bEtc) return aEtc - bEtc;
+        return groups[b].length - groups[a].length;
+      });
+      const row = b => comboRowHtml(b, c.sample);
+      const body = order.length <= 1
+        ? `<ul class="cat-list-body">${c.combos.map(row).join('')}</ul>`
+        : order.map(sub => `
+          <div class="subcat-block">
+            <div class="subcat-head">${esc(sub)}</div>
+            <ul class="cat-list-body">${groups[sub].map(row).join('')}</ul>
+          </div>`).join('');
+      return `<div class="cat cat-list">
+      <button type="button" class="cat-list-head" data-cat="${c.key}">
+        <span class="ic">${c.icon}</span><span class="ct">${c.key}</span>
+        <span class="cat-list-count">${c.combos.length}개 수단</span>
+      </button>
+      ${body}
+    </div>`;
+    })
+    .join('');
 
   return `
-  <div class="hint-bar">카테고리를 누르면 결제 계산으로 넘어가요. ${carrierNote}</div>
-  <div class="homegrid">${cards}</div>
-  <p class="homenote">기간 한정은 D-day, 주말 전용은 '주말' 뱃지로 표시해요. 실적 미입력 시 최소 구간 기준으로 보수적으로 계산합니다.</p>`;
+  <div class="hint-bar">카테고리를 누르면 결제 계산으로 넘어가요.</div>
+  <p class="homenote">기간 한정은 D-day, 주말 전용은 '주말' 뱃지로 표시해요. 실적 미입력 시 최소 구간 기준으로 보수적으로 계산합니다.<br>예상 절감액·결제 기준금액 등 자세한 내용은 '결제 계산' 탭에서 확인하세요.</p>
+  <div class="kind-legend">${kindLegendHtml()}</div>
+  <div class="homegrid">${cards}</div>`;
 }
 
 function viewCalc() {
@@ -1241,8 +1374,14 @@ function viewCalc() {
       </div>
       <div class="field">
         <label class="fl" for="brandInput">브랜드/매장 ${S.q.category ? `<span class="cat-filter-tag">${esc(S.q.category)}</span>` : ''}</label>
-        <input type="search" id="brandInput" list="brandDl" placeholder="${esc(brandPh)}" value="${esc(S.q.brand)}" autocomplete="off">
-        <datalist id="brandDl">${brands.map(b => `<option value="${esc(b)}">`).join('')}</datalist>
+        <label class="catall-toggle" id="catAllRow" style="${S.q.category ? '' : 'display:none'}">
+          <input type="checkbox" id="catAllChk">
+          <span id="catAllTxt">${esc(S.q.category || '')} 전체보기 (브랜드 무관)</span>
+        </label>
+        <div class="brand-search">
+          <input type="text" id="brandInput" placeholder="${esc(brandPh)}" value="${esc(S.q.brand)}" autocomplete="off">
+          <div class="brand-suggest" id="brandSuggest"></div>
+        </div>
         ${S.q.category && !brands.length ? '<p class="sub" style="margin-top:8px">이 카테고리에 등록된 브랜드가 없어요. 카테고리만으로도 계산할 수 있어요.</p>' : ''}
       </div>
       <div class="field">
@@ -1256,26 +1395,23 @@ function viewCalc() {
           <button type="button" data-amt="100000">10만</button>
         </div>
       </div>
-      <details class="more" ${S.q.channel || S.q.time || S.q.dayMode !== 'today' ? 'open' : ''}>
-        <summary>선택 정보 입력 — 정확도가 올라가요</summary>
-        <div class="field"><label class="fl">결제 채널</label>
-          <div class="seg" data-seg="channel">
-            <button type="button" data-v="" class="${!S.q.channel ? 'on' : ''}">모름</button>
-            <button type="button" data-v="offline" class="${S.q.channel === 'offline' ? 'on' : ''}">오프라인</button>
-            <button type="button" data-v="online" class="${S.q.channel === 'online' ? 'on' : ''}">온라인</button>
-          </div></div>
-        <div class="field"><label class="fl">결제 시점</label>
-          <div class="timegrid">
-            <select id="daySel">
-              <option value="today" ${S.q.dayMode === 'today' ? 'selected' : ''}>오늘 (${dayNames[new Date().getDay()]}요일)</option>
-              ${dayNames.map((d, i) =>
-                `<option value="${i}" ${S.q.dayMode === 'day' && S.q.day == i ? 'selected' : ''}>${d}요일</option>`
-              ).join('')}
-            </select>
-            <input type="time" id="timeInput" value="${S.q.time}" aria-label="결제 시간 (선택)">
-          </div></div>
-        <p class="hintlink">카드별 전월 실적은 <a id="goMyPageLink">마이페이지</a>에서 입력할 수 있어요.</p>
-      </details>
+      <div class="field"><label class="fl">결제 채널</label>
+        <div class="seg" data-seg="channel">
+          <button type="button" data-v="" class="${!S.q.channel ? 'on' : ''}">모름</button>
+          <button type="button" data-v="offline" class="${S.q.channel === 'offline' ? 'on' : ''}">오프라인</button>
+          <button type="button" data-v="online" class="${S.q.channel === 'online' ? 'on' : ''}">온라인</button>
+        </div></div>
+      <div class="field"><label class="fl">결제 시점</label>
+        <div class="timegrid">
+          <select id="daySel">
+            <option value="today" ${S.q.dayMode === 'today' ? 'selected' : ''}>오늘 (${dayNames[new Date().getDay()]}요일)</option>
+            ${dayNames.map((d, i) =>
+              `<option value="${i}" ${S.q.dayMode === 'day' && S.q.day == i ? 'selected' : ''}>${d}요일</option>`
+            ).join('')}
+          </select>
+          <input type="time" id="timeInput" value="${S.q.time}" aria-label="결제 시간 (선택)">
+        </div></div>
+      <p class="hintlink">카드별 전월 실적은 <a id="goMyPageLink">마이페이지</a>에서 입력할 수 있어요.</p>
       <p class="auto-hint">입력하면 지시서가 자동으로 갱신돼요</p>
     </section>
     <div class="results" id="results"></div>
@@ -1333,6 +1469,7 @@ function renderResults() {
 
   box.innerHTML = `<div class="res-head"><span><span class="q">${esc(target)}</span> · ${won(S.q.amount)}원 결제</span>
     <span class="cnt">${combos.length}개 수단 비교</span></div>
+    <div class="kind-legend">${kindLegendHtml()}</div>
     <div class="results-grid">
       ${visible.map((c, i) => receiptHtml(c, i)).join('')}
       ${moreBtn}
@@ -1349,20 +1486,31 @@ function renderResults() {
   });
 }
 
+// 카테고리로만 찾을 때(특정 브랜드를 안 골랐을 때)는 결과 카드마다 혜택이 서로 다른
+// 매장/브랜드에 적용될 수 있는데 그게 안 보이면 헷갈리므로, 그럴 때만 매장명을 붙여준다.
+function benefitMerchantTag(bf) {
+  const scope = String(bf.merchants_or_scope || '').trim();
+  if (!scope || scope.includes('업종')) return '';
+  return scope.split('|')[0].trim();
+}
+
 function receiptHtml(c, i) {
   const p = c.product;
   const allChecks = [...new Set(c.items.flatMap(x => x.checks))];
   const allNotes = [...new Set(c.items.flatMap(x => x.notes))];
-  const items = c.items.map(x => x.isGift
-    ? `<div class="r-it gift"><span class="n">🎁 ${esc(x.benefit.benefit_name)}</span>
+  const showMerchant = !S.q.brand;
+  const items = c.items.map(x => {
+    const tag = showMerchant ? benefitMerchantTag(x.benefit) : '';
+    const tagHtml = tag ? `<span class="r-it-merchant">${esc(tag)}</span>` : '';
+    return x.isGift
+      ? `<div class="r-it gift"><span class="n">${kindDotHtml(x.benefit)}${tagHtml}🎁 ${esc(x.benefit.benefit_name)}</span>
     <span class="v gift">무료 증정</span></div>`
-    : `<div class="r-it"><span class="n">${esc(x.benefit.benefit_name)}${x.estimate ? ' <small style="color:var(--mut)">(추정)</small>' : ''}</span>
-    <span class="v ${x.isPoint ? 'pt' : ''}">${x.isPoint ? '+' : '-'}${won(x.value)}${x.isPoint ? 'P' : '원'}</span></div>`
-  ).join('');
-  const how = buildInstruction(c);
+      : `<div class="r-it"><span class="n">${kindDotHtml(x.benefit)}${tagHtml}${esc(x.benefit.benefit_name)}${x.estimate ? ' <small style="color:var(--mut)">(추정)</small>' : ''}</span>
+    <span class="v ${x.isPoint ? 'pt' : ''}">${x.isPoint ? '+' : '-'}${won(x.value)}${x.isPoint ? 'P' : '원'}</span></div>`;
+  }).join('');
   const srcs = c.sourceIds.map(id => Engine.sourceById(id)).filter(Boolean);
   const srcTxt = srcs.map(s =>
-    `${esc(s.title)}${s.published_or_reviewed_date ? ` (기준 ${String(s.published_or_reviewed_date).slice(0, 10)})` : ''}`
+    `${esc(s.title)}${s.published_or_reviewed_date ? `<br>(${String(s.published_or_reviewed_date).slice(0, 10)} 기준)` : ''}`
   ).join('<br>');
   return `<article class="receipt ${i === 0 ? 'top1' : ''}">
     <div class="r-body">
@@ -1380,9 +1528,8 @@ function receiptHtml(c, i) {
           <span class="n" style="color:var(--mut-ink)">실 부담 예상</span>
           <span class="v">${won(Math.max(0, S.q.amount - c.total))}원</span></div>
       </div>
-      ${how ? `<div class="r-how">${how}</div>` : ''}
       ${allChecks.length ? `<div class="r-checks"><div class="ck-t">결제 전 확인하세요</div><ul>${allChecks.map(k => `<li>${esc(k)}</li>`).join('')}</ul></div>` : ''}
-      ${allNotes.length ? `<ul class="r-notes">${allNotes.map(n => `<li>${esc(n)}</li>`).join('')}</ul>` : ''}
+      ${allNotes.length ? `<div class="r-notes-wrap"><div class="nt-t">참고</div><ul class="r-notes">${allNotes.map(n => `<li>${esc(n)}</li>`).join('')}</ul></div>` : ''}
     </div>
     <div class="r-foot">
       <span class="conf ${c.confidence}">${c.confidence === 'high' ? '신뢰도 높음 · 약관 기반' : '프로모션 · 변동 가능'}</span>
@@ -1391,26 +1538,6 @@ function receiptHtml(c, i) {
   </article>`;
 }
 
-function buildInstruction(c) {
-  const steps = [];
-  c.items.forEach(x => {
-    const b = x.benefit;
-    if (b.merchant_scope_type === 'payment_method')
-      steps.push(`<b>${esc(b.merchants_or_scope)}</b>에 이 카드를 등록하고 ${esc(b.merchants_or_scope)}로 결제`);
-    else if (/결제창/.test(b.payment_channel || ''))
-      steps.push(`브랜드 결제창에서 <b>${esc(shortName(c.product))}</b> 선택 후 결제`);
-    else if (/자동납부/.test(b.payment_channel || ''))
-      steps.push(`<b>자동납부 수단</b>을 이 카드로 등록`);
-    else if (/앱 내/.test(b.payment_channel || ''))
-      steps.push(`앱 안에서 <b>이 카드로 직접 결제</b>`);
-    else if (b.benefit_id === 'B_NARA_CU_EVENT')
-      steps.push(`행사상품은 <b>즉시할인</b> 먼저 적용`);
-    else if (b.benefit_id === 'B_NARA_CVS')
-      steps.push(`남은 금액에 <b>캐시백 20%</b> 중복 적용`);
-  });
-  if (!steps.length) steps.push(`<b>${esc(c.product.product_name)}</b>(으)로 결제`);
-  return '결제 방법: ' + steps.join(' <span class="arrow">→</span> ');
-}
 
 function disclaimHtml() {
   return `<p class="disclaim">이 지시서는 첨부된 약관·프로모션 데이터(샘플 6종) 기준의 예상치예요. 잔여 한도·사용 횟수·매장별 제외 조건에 따라 실제 혜택은 달라질 수 있어요.</p>`;
@@ -1865,6 +1992,12 @@ function bind() {
     if (S.benefitTab === 'calc') requestAnimationFrame(() => renderResults());
   }));
 
+  $$('[data-wtab]').forEach(el => el.addEventListener('click', () => {
+    S.walletTab = el.dataset.wtab;
+    savePersisted();
+    render();
+  }));
+
   $$('[data-cat]').forEach(el => el.addEventListener('click', () => {
     const c = Engine.HOME_CATS.find(x => x.key === el.dataset.cat);
     S.q.category = c.key;
@@ -1882,10 +2015,43 @@ function bind() {
   if (brandInput) {
     brandInput.addEventListener('input', e => {
       S.q.brand = e.target.value.trim();
+      renderBrandSuggest(e.target.value);
       scheduleCalc();
     });
+    brandInput.addEventListener('focus', e => renderBrandSuggest(e.target.value));
+    brandInput.addEventListener('blur', () => setTimeout(() => {
+      const box = $('#brandSuggest');
+      if (box) { box.innerHTML = ''; box.classList.remove('show'); }
+    }, 150));
     brandInput.addEventListener('keydown', e => {
       if (e.key === 'Enter') { updateAmt(); S.resultsExpanded = false; renderResults(); }
+    });
+  }
+  const brandSuggest = $('#brandSuggest');
+  if (brandSuggest) {
+    brandSuggest.addEventListener('mousedown', e => {
+      const btn = e.target.closest('[data-brand]');
+      if (!btn) return;
+      e.preventDefault();
+      S.q.brand = btn.dataset.brand;
+      if (brandInput) brandInput.value = btn.dataset.brand;
+      brandSuggest.innerHTML = '';
+      brandSuggest.classList.remove('show');
+      scheduleCalc();
+    });
+  }
+  const catAllChk = $('#catAllChk');
+  if (catAllChk) {
+    catAllChk.addEventListener('change', e => {
+      const bi = $('#brandInput');
+      if (e.target.checked) {
+        S.q.brand = '';
+        if (bi) { bi.value = ''; bi.disabled = true; }
+      } else if (bi) {
+        bi.disabled = false;
+        bi.focus();
+      }
+      scheduleCalc();
     });
   }
   $$('[data-chip]').forEach(el => el.addEventListener('click', () => {
@@ -1893,7 +2059,7 @@ function bind() {
     S.q.category = S.q.category === key ? null : key;
     S.q.brand = '';
     const bi = $('#brandInput');
-    if (bi) bi.value = '';
+    if (bi) { bi.value = ''; bi.disabled = false; }
     $$('[data-chip]').forEach(b => b.classList.toggle('on', b.dataset.chip === S.q.category));
     updateBrandDatalist();
     const label = document.querySelector('label[for="brandInput"]');
@@ -1902,6 +2068,12 @@ function bind() {
         ? `브랜드/매장 <span class="cat-filter-tag">${esc(S.q.category)}</span>`
         : '브랜드/매장';
     }
+    const catAllRow = $('#catAllRow');
+    const catAllTxt = $('#catAllTxt');
+    const chk = $('#catAllChk');
+    if (catAllRow) catAllRow.style.display = S.q.category ? '' : 'none';
+    if (catAllTxt) catAllTxt.textContent = `${S.q.category || ''} 전체보기 (브랜드 무관)`;
+    if (chk) chk.checked = false;
     scheduleCalc();
   }));
 
