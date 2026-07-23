@@ -39,23 +39,33 @@ export default async function handler(req, res) {
 
     if (url && key) {
       const supabase = createClient(url, key);
-      const { data: products, error: pErr } = await fetchAll(supabase, "products");
-      const { data: benefits, error: bErr } = await fetchAll(supabase, "benefits");
-      const { data: rules, error: rErr } = await fetchAll(supabase, "rules");
-      const { data: sources, error: sErr } = await fetchAll(supabase, "sources");
+      const [
+        { data: products, error: pErr },
+        { data: benefits, error: bErr },
+        { data: rules, error: rErr },
+        { data: sources, error: sErr }
+      ] = await Promise.all([
+        fetchAll(supabase, "products"),
+        fetchAll(supabase, "benefits"),
+        fetchAll(supabase, "rules"),
+        fetchAll(supabase, "sources")
+      ]);
 
       if (!pErr && !bErr && !rErr && !sErr) {
         const payload = { products, benefits, rules, sources };
         if (hasCardProducts(payload)) {
+          res.setHeader('Cache-Control', 's-maxage=600, stale-while-revalidate=300');
           return res.status(200).json(payload);
         }
       }
     }
 
     // Supabase 미설정·오류·카드 데이터 부족 시 로컬 db.json 사용
+    res.setHeader('Cache-Control', 's-maxage=600, stale-while-revalidate=300');
     return res.status(200).json(loadLocalDB());
   } catch (error) {
     try {
+      res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=30');
       return res.status(200).json(loadLocalDB());
     } catch (e) {
       return res.status(500).json({ error: error.message || e.message });
