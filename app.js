@@ -289,15 +289,7 @@ const Engine = (() => {
     }
 
     // 결제 방식 지시
-    if (b.merchant_scope_type === 'payment_method') {
-      const scopeParts = split(b.merchants_or_scope);
-      if (scopeParts.length > 0 && scopeParts[0] && scopeParts[0] !== 'undefined' && scopeParts[0] !== 'null') {
-        notes.push(`${scopeParts[0]}(으)로 결제해야 적용`);
-      } else {
-        checks.push('특정 결제 조건 확인 필요');
-        if (status === 'eligible') status = 'conditional';
-      }
-    }
+    if (b.merchant_scope_type === 'payment_method') notes.push(`${split(b.merchants_or_scope)[0]}(으)로 결제해야 적용`);
 
     // 제외 조건
     if (b.exclusions_summary) { checks.push(`제외: ${b.exclusions_summary}`); }
