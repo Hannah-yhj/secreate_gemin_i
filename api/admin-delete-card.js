@@ -22,29 +22,29 @@ export default async function handler(req, res) {
     console.log(`Rolling back card: ${product_id} (${provider} ${product_name})`);
 
     // 1. Delete dependent rows
-    await supabase.table('benefits').delete().eq('product_id', product_id);
-    await supabase.table('rules').delete().eq('product_id', product_id);
-    await supabase.table('product_aliases').delete().eq('product_id', product_id);
-    await supabase.table('sources').delete().eq('product_id', product_id);
+    await supabase.from('benefits').delete().eq('product_id', product_id);
+    await supabase.from('rules').delete().eq('product_id', product_id);
+    await supabase.from('product_aliases').delete().eq('product_id', product_id);
+    await supabase.from('sources').delete().eq('product_id', product_id);
     
     // 2. Delete main product row
-    const { error: delErr } = await supabase.table('products').delete().eq('product_id', product_id);
+    const { error: delErr } = await supabase.from('products').delete().eq('product_id', product_id);
     if (delErr) throw new Error('Failed to delete product: ' + delErr.message);
 
     // 3. Revert queue status (if it exists)
     if (provider && product_name) {
-      const { data: adminQ } = await supabase.table('admin_card_queue')
+      const { data: adminQ } = await supabase.from('admin_card_queue')
         .select('id').eq('provider', provider).eq('card_name', product_name).limit(1);
       
       if (adminQ && adminQ.length > 0) {
-        await supabase.table('admin_card_queue').update({ status: 'pending' }).eq('id', adminQ[0].id);
+        await supabase.from('admin_card_queue').update({ status: 'pending' }).eq('id', adminQ[0].id);
       }
 
-      const { data: userQ } = await supabase.table('user_card_requests')
+      const { data: userQ } = await supabase.from('user_card_requests')
         .select('id').eq('provider_hint', provider).eq('card_name_hint', product_name).limit(1);
       
       if (userQ && userQ.length > 0) {
-        await supabase.table('user_card_requests').update({ status: 'pending' }).eq('id', userQ[0].id);
+        await supabase.from('user_card_requests').update({ status: 'pending' }).eq('id', userQ[0].id);
       }
     }
 
