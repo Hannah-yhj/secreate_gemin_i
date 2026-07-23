@@ -146,11 +146,18 @@ document.addEventListener('DOMContentLoaded', () => {
       
       el.innerHTML = `
         <div class="item-info">
-          <input type="text" class="edit-provider input-field" value="${item.provider.replace(/"/g, '&quot;')}" style="margin-bottom: 4px;" />
-          <input type="text" class="edit-card-name input-field" value="${item.card_name.replace(/"/g, '&quot;')}" style="margin-bottom: 4px;" />
+          <div class="display-view">
+            <div class="item-provider">${item.provider}</div>
+            <h3 class="item-name">${item.card_name}</h3>
+          </div>
+          <div class="edit-view" style="display: none;">
+            <input type="text" class="edit-provider input-field" value="${item.provider.replace(/"/g, '&quot;')}" style="margin-bottom: 4px;" />
+            <input type="text" class="edit-card-name input-field" value="${item.card_name.replace(/"/g, '&quot;')}" style="margin-bottom: 4px;" />
+          </div>
           <div class="item-date">수집일: ${new Date(item.created_at).toLocaleString()} ${isFailed ? '<span style="color:red">(이전 처리 실패)</span>' : ''}</div>
         </div>
         <div class="item-actions">
+          <button class="btn-secondary" id="toggle-edit-${item.id}" style="font-size:0.85rem; padding:0.4rem 0.8rem; background:#374151; color:#fff; border:none; border-radius:6px; cursor:pointer;">정보 수정</button>
           <button class="btn-secondary" id="ignore-btn-${item.id}" style="font-size:0.85rem; padding:0.4rem 0.8rem; background:#fee2e2; color:#dc2626; border:none; border-radius:6px; cursor:pointer;">제외</button>
           <div class="file-upload-wrapper">
             <input type="file" id="file-${item.id}" accept="application/pdf">
@@ -161,11 +168,31 @@ document.addEventListener('DOMContentLoaded', () => {
       
       queueList.appendChild(el);
 
-      const btn = document.getElementById(`btn-${item.id}`);
+      const btn = el.querySelector(`#btn-${item.id}`);
       const fileInput = document.getElementById(`file-${item.id}`);
       const ignoreBtn = document.getElementById(`ignore-btn-${item.id}`);
-
+      
       btn.addEventListener('click', () => handleApprove(item, fileInput, btn, el));
+      
+      const toggleEditBtn = el.querySelector(`#toggle-edit-${item.id}`);
+      const displayView = el.querySelector('.display-view');
+      const editView = el.querySelector('.edit-view');
+      
+      toggleEditBtn.addEventListener('click', () => {
+        const isEditing = editView.style.display !== 'none';
+        if (isEditing) {
+          el.querySelector('.item-provider').textContent = el.querySelector('.edit-provider').value.trim();
+          el.querySelector('.item-name').textContent = el.querySelector('.edit-card-name').value.trim();
+          editView.style.display = 'none';
+          displayView.style.display = 'block';
+          toggleEditBtn.textContent = '정보 수정';
+        } else {
+          editView.style.display = 'block';
+          displayView.style.display = 'none';
+          toggleEditBtn.textContent = '수정 완료';
+        }
+      });
+      
       ignoreBtn.addEventListener('click', () => handleIgnore(item, el, 'admin_queue'));
     });
   }
@@ -279,12 +306,19 @@ document.addEventListener('DOMContentLoaded', () => {
       
       el.innerHTML = `
         <div class="item-info">
-          <input type="text" class="edit-provider input-field" value="${item.provider_hint.replace(/"/g, '&quot;')}" style="margin-bottom: 4px;" />
-          <input type="text" class="edit-card-name input-field" value="${item.card_name_hint.replace(/"/g, '&quot;')}" style="margin-bottom: 4px;" />
+          <div class="display-view">
+            <div class="item-provider">${item.provider_hint}</div>
+            <h3 class="item-name">${item.card_name_hint}</h3>
+          </div>
+          <div class="edit-view" style="display: none;">
+            <input type="text" class="edit-provider input-field" value="${item.provider_hint.replace(/"/g, '&quot;')}" style="margin-bottom: 4px;" />
+            <input type="text" class="edit-card-name input-field" value="${item.card_name_hint.replace(/"/g, '&quot;')}" style="margin-bottom: 4px;" />
+          </div>
           <div class="item-date">유저: ${item.user_contact || '익명'} | 요청일: ${new Date(item.created_at).toLocaleString()} ${isFailed ? '<span style="color:red">(이전 처리 실패)</span>' : ''}</div>
           ${hasPdf ? `<div style="color:green; font-size:0.8rem; margin-top:5px;">✅ 유저가 첨부한 PDF가 있습니다.</div>` : ''}
         </div>
         <div class="item-actions">
+          <button class="btn-secondary" id="toggle-edit-${item.id}" style="font-size:0.85rem; padding:0.4rem 0.8rem; background:#374151; color:#fff; border:none; border-radius:6px; cursor:pointer;">정보 수정</button>
           <button class="btn-secondary" id="user-ignore-btn-${item.id}" style="font-size:0.85rem; padding:0.4rem 0.8rem; background:#fee2e2; color:#dc2626; border:none; border-radius:6px; cursor:pointer;">제외</button>
           <div class="file-upload-wrapper">
             <input type="file" id="user-file-${item.id}" accept="application/pdf">
@@ -296,11 +330,31 @@ document.addEventListener('DOMContentLoaded', () => {
       
       userQueueList.appendChild(el);
 
-      const btn = document.getElementById(`user-btn-${item.id}`);
+      const btn = el.querySelector(`#user-btn-${item.id}`);
       const fileInput = document.getElementById(`user-file-${item.id}`);
       const ignoreBtn = document.getElementById(`user-ignore-btn-${item.id}`);
 
       btn.addEventListener('click', () => handleUserApprove(item, fileInput, btn, el));
+
+      const toggleEditBtn = el.querySelector(`#toggle-edit-${item.id}`);
+      const displayView = el.querySelector('.display-view');
+      const editView = el.querySelector('.edit-view');
+      
+      toggleEditBtn.addEventListener('click', () => {
+        const isEditing = editView.style.display !== 'none';
+        if (isEditing) {
+          el.querySelector('.item-provider').textContent = el.querySelector('.edit-provider').value.trim();
+          el.querySelector('.item-name').textContent = el.querySelector('.edit-card-name').value.trim();
+          editView.style.display = 'none';
+          displayView.style.display = 'block';
+          toggleEditBtn.textContent = '정보 수정';
+        } else {
+          editView.style.display = 'block';
+          displayView.style.display = 'none';
+          toggleEditBtn.textContent = '수정 완료';
+        }
+      });
+      
       ignoreBtn.addEventListener('click', () => handleIgnore(item, el, 'user_request'));
     });
   }
