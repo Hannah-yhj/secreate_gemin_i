@@ -1611,9 +1611,9 @@ function viewMore() {
       <div class="chat-msgs" id="chatMsgs">${msgs}</div>
       <div class="chat-quick">
         <button type="button" data-quick="스타벅스 2만원 결제할 건데 좋은 카드 추천해줘">스타벅스 2만원 결제</button>
-        <button type="button" data-quick="아웃백 10만원 쓸 때 혜택 제일 큰 카드는?">아웃백 10만원 결제</button>
-        <button type="button" data-quick="배달의민족 3만원 시킬 건데 찾아줘">배민 3만원 결제</button>
-        <button type="button" data-quick="주유소 한 달에 10만원 쓰는데 할인 카드 추천해줘">주유소 10만원 결제</button>
+        <button type="button" data-quick="카페 자주 갈 때 혜택이 가장 좋은 카드 추천해줘">카페 자주 가요</button>
+        <button type="button" data-quick="해외여행 갈 때 쓰기 좋은 카드 추천해줘">해외 여행 자주 가요</button>
+        <button type="button" data-quick="편의점 자주 갈 때 혜택이 가장 좋은 카드 추천해줘">편의점 자주 가요</button>
       </div>
       <div class="chat-input">
         <input type="text" id="chatInput" placeholder="원하는 혜택을 적어 주세요" autocomplete="off">
