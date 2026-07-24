@@ -55,8 +55,9 @@ const S = {
   },
   chat: {
     busy: false,
+    candidates: null,
     messages: [
-      { role: 'bot', text: '안녕하세요! 카드 추천이에요.\n소비 패턴이나 원하는 혜택을 말씀해 주세요. 예: "카페 많이 가요", "교통비 아끼고 싶어요","버스","편의점"\n통신사 멤버십이 궁금하면 멤버십이라고 말씀해 주세요.', html: null }
+      { role: 'bot', text: '안녕하세요! AI 결제수단 추천 챗봇입니다. \'스타벅스 15000원 쓸 건데 할인카드 찾아줘\'처럼 구체적인 브랜드나 결제 금액을 말씀해 주시면, 제가 직접 혜택을 계산해서 가장 좋은 카드를 찾아드려요!', html: null }
     ]
   }
 };
@@ -1553,27 +1554,70 @@ function chatBubbleHtml(m) {
   return `<div class="bubble user">${esc(m.text)}</div>`;
 }
 
+function renderChatSidePanel() {
+  if (!S.chat.candidates || S.chat.candidates.length === 0) {
+    return `<div class="empty-state">
+      <span class="icon" style="font-size:3rem;">📊</span>
+      <p style="margin-top:1rem; color:var(--mut-ink);">AI가 추천하는 카드의<br>상세 혜택 비교표가 여기에 표시됩니다.</p>
+    </div>`;
+  }
+  let html = `<h3 style="margin-top:0; margin-bottom:1rem; font-size:16px;">추천 카드 혜택 비교</h3>
+  <table class="benefit-compare-table">
+    <thead>
+      <tr>
+        <th>순위</th>
+        <th>카드명</th>
+        <th>예상 혜택</th>
+        <th>주요 내용</th>
+      </tr>
+    </thead>
+    <tbody>`;
+  S.chat.candidates.forEach((combo, idx) => {
+    let details = combo.items.map(item => {
+      let d = `<strong>${esc(item.benefit.benefit_name)}</strong>`;
+      if (item.value > 0) d += ` (${won(item.value)}원)`;
+      if (item.notes && item.notes.length) d += `<br><span style="font-size:11px;color:var(--mut-ink)">${esc(item.notes.join(', '))}</span>`;
+      return d;
+    }).join('<br><br>');
+    
+    html += `
+      <tr>
+        <td style="text-align:center; font-weight:bold;">${idx + 1}위</td>
+        <td style="font-weight:600;">${esc(combo.product.product_name)}<br><span style="font-size:11px;color:var(--mut-ink);font-weight:normal;">${esc(combo.product.provider)}</span></td>
+        <td style="color:var(--blue); font-weight:bold; white-space:nowrap;">${won(combo.grandTotal)}원</td>
+        <td style="font-size:12px; line-height:1.4;">${details}</td>
+      </tr>
+    `;
+  });
+  html += `</tbody></table>`;
+  return html;
+}
+
 function viewMore() {
   const msgs = S.chat.messages.map(chatBubbleHtml).join('');
+  const sidePanelHtml = renderChatSidePanel();
 
   return `
   <div class="page-head">
     <h2>카드 추천</h2>
     <p>소비 패턴에 맞는 카드를 챗봇으로 찾아요</p>
   </div>
-  <div class="more-layout chat-only">
+  <div class="chat-layout">
     <div class="chat-wrap">
       <div class="chat-msgs" id="chatMsgs">${msgs}</div>
       <div class="chat-quick">
-        <button type="button" data-quick="카페를 자주 가요">카페 많이 가요</button>
-        <button type="button" data-quick="교통·택시 혜택 원해요">교통 아끼고 싶어요</button>
-        <button type="button" data-quick="편의점이랑 배달을 자주 시켜요">편의점·배달</button>
-        <button type="button" data-quick="통신비 할인 되는 카드 알려줘">통신 할인</button>
+        <button type="button" data-quick="스타벅스 2만원 결제할 건데 좋은 카드 추천해줘">스타벅스 2만원 결제</button>
+        <button type="button" data-quick="아웃백 10만원 쓸 때 혜택 제일 큰 카드는?">아웃백 10만원 결제</button>
+        <button type="button" data-quick="배달의민족 3만원 시킬 건데 찾아줘">배민 3만원 결제</button>
+        <button type="button" data-quick="주유소 한 달에 10만원 쓰는데 할인 카드 추천해줘">주유소 10만원 결제</button>
       </div>
       <div class="chat-input">
         <input type="text" id="chatInput" placeholder="원하는 혜택을 적어 주세요" autocomplete="off">
         <button type="button" id="chatSend" aria-label="전송">➤</button>
       </div>
+    </div>
+    <div class="chat-side-panel" id="chatSidePanel">
+      ${sidePanelHtml}
     </div>
   </div>`;
 }
@@ -1615,6 +1659,7 @@ async function sendChat(text) {
     if (!res.ok) throw new Error(data.error || `요청 실패 (${res.status})`);
     const reply = String(data.reply || '').trim();
     if (!reply) throw new Error('응답이 비어 있어요');
+    S.chat.candidates = data.meta?.candidates || null;
     S.chat.messages[S.chat.messages.length - 1] = {
       role: 'bot',
       text: reply,

@@ -254,6 +254,7 @@ export default async function handler(req, res) {
         amount: entities.amount,
         includeMembership: entities.includeMembership,
         candidateCount: candidates.length,
+        candidates: candidates,
         candidateProducts: candidates.map((c) => c.product_id),
       },
     });

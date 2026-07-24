@@ -812,15 +812,67 @@ button.cat{display:flex;align-items:center;gap:10px}
 .more-results.ghost{color:var(--mut-ink);border-style:solid}
 
 /* ---- 카드 추천 챗봇 ---- */
+.chat-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  align-items: start;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+@media (min-width: 800px) {
+  .chat-layout {
+    grid-template-columns: 420px 1fr;
+  }
+}
+.chat-side-panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 24px;
+  height: min(72dvh, 640px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.benefit-compare-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.benefit-compare-table th, .benefit-compare-table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+.benefit-compare-table th {
+  background: var(--bg);
+  color: var(--mut-ink);
+  font-weight: 600;
+  font-size: 13px;
+  position: sticky;
+  top: 0;
+}
+.benefit-compare-table tr:last-child td {
+  border-bottom: none;
+}
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  color: var(--mut-ink);
+}
+
 .more-layout{
   display:grid;
   grid-template-columns:280px 1fr;
   gap:20px;
   align-items:start;
-}
-.more-layout.chat-only{
-  grid-template-columns:1fr;
-  max-width:720px;
 }
 .chat-wrap{
   display:flex;flex-direction:column;height:min(72dvh,640px);
