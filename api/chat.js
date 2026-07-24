@@ -287,6 +287,24 @@ export default async function handler(req, res) {
       ];
       reply = await callLLM(messages, apiKey, model);
       if (!reply) return res.status(502).json({ error: "Solar 응답이 비어 있습니다." });
+
+      // 응답에서 언급된 카드 추출하여 candidates로 구성
+      const mentionedProducts = catalog.products.filter(p => reply.includes(p.product_name));
+      candidates = mentionedProducts.map(p => {
+        // 해당 카드의 주요 혜택 3개를 items에 넣어줌
+        const bens = catalog.benefits.filter(b => b.product_id === p.product_id).slice(0, 3);
+        const items = bens.map(b => ({
+          benefit: b,
+          value: 0,
+          notes: [b.merchant_scope_type === 'category' ? b.category : (b.merchants_or_scope || '')],
+          checks: []
+        }));
+        return {
+          product: p,
+          grandTotal: 0,
+          items: items
+        };
+      });
     }
 
     return res.status(200).json({

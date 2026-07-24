@@ -1565,13 +1565,14 @@ function renderChatSidePanel() {
       <p style="margin-top:1rem; color:var(--mut-ink);">AI가 추천하는 카드의<br>상세 혜택 비교표가 여기에 표시됩니다.</p>
     </div>`;
   }
-  let html = `<h3 style="margin-top:0; margin-bottom:1rem; font-size:16px;">추천 카드 혜택 비교</h3>
+  const isModeA = !S.chat.mode || S.chat.mode === 'A';
+  let html = `<h3 style="margin-top:0; margin-bottom:1rem; font-size:16px;">${isModeA ? '추천 카드 혜택 비교' : '관련 카드 목록'}</h3>
   <table class="benefit-compare-table">
     <thead>
       <tr>
-        <th>순위</th>
+        <th>${isModeA ? '순위' : '연번'}</th>
         <th>카드명</th>
-        <th>예상 혜택</th>
+        ${isModeA ? `<th>예상 혜택</th>` : ''}
         <th>주요 내용</th>
       </tr>
     </thead>
@@ -1583,12 +1584,13 @@ function renderChatSidePanel() {
       if (item.notes && item.notes.length) d += `<br><span style="font-size:11px;color:var(--mut-ink)">${esc(item.notes.join(', '))}</span>`;
       return d;
     }).join('<br><br>');
+    if (!details) details = '<span style="color:var(--mut-ink)">상세 내용은 챗봇 답변을 참고하세요</span>';
     
     html += `
       <tr>
-        <td style="text-align:center; font-weight:bold;">${idx + 1}위</td>
+        <td style="text-align:center; font-weight:bold;">${isModeA ? idx + 1 + '위' : idx + 1}</td>
         <td style="font-weight:600;">${esc(combo.product.product_name)}<br><span style="font-size:11px;color:var(--mut-ink);font-weight:normal;">${esc(combo.product.provider)}</span></td>
-        <td style="color:var(--blue); font-weight:bold; white-space:nowrap;">${won(combo.grandTotal)}원</td>
+        ${isModeA ? `<td style="color:var(--blue); font-weight:bold; white-space:nowrap;">${won(combo.grandTotal)}원</td>` : ''}
         <td style="font-size:12px; line-height:1.4;">${details}</td>
       </tr>
     `;
@@ -1627,6 +1629,11 @@ function viewMore() {
 }
 
 function formatBotHtml(text) {
+  if (typeof marked !== 'undefined') {
+    // marked 라이브러리가 로드되어 있으면 마크다운 파싱
+    return marked.parse(text);
+  }
+  // 로드 실패 시 기존의 단순 치환 로직 폴백
   return esc(text)
     .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
     .replace(/\n/g, '<br>');
