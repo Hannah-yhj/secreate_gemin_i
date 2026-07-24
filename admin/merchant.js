@@ -59,22 +59,22 @@ function renderList(aliases) {
     let actionHtml = '';
     if (a.status === 'pending_review') {
       actionHtml = `
-        <button class="btn" style="background-color: var(--admin-primary); color: white; display: flex; align-items: center; justify-content: center; gap: 4px; border: none; padding: 6px 12px; border-radius: 4px;" onclick="handleApprove('${a.id}')">
+        <button class="btn-approve" onclick="handleApprove('${a.id}')">
           <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg>
           승인
         </button>
-        <button class="btn" style="background-color: var(--admin-danger); color: white; display: flex; align-items: center; justify-content: center; gap: 4px; border: none; padding: 6px 12px; border-radius: 4px;" onclick="handleReject('${a.id}')">
+        <button class="btn-reject" onclick="handleReject('${a.id}')">
           <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"></path></svg>
           거절
         </button>
       `;
     } else if (a.status === 'rejected') {
       actionHtml = `
-        <button class="btn" style="background-color: #555; color: white; display: flex; align-items: center; justify-content: center; gap: 4px; border: none; padding: 6px 12px; border-radius: 4px;" onclick="handleRestore('${a.id}')">
+        <button class="btn-restore" onclick="handleRestore('${a.id}')">
           <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
           복구
         </button>
-        <button class="btn" style="background-color: #d32f2f; color: white; display: flex; align-items: center; justify-content: center; gap: 4px; border: none; padding: 6px 12px; border-radius: 4px;" onclick="handleDelete('${a.id}')">
+        <button class="btn-delete" onclick="handleDelete('${a.id}')">
           <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
           삭제
         </button>
