@@ -878,10 +878,21 @@ button.cat{display:flex;align-items:center;gap:10px}
 @keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .bubble.user{align-self:flex-end;background:var(--blue);color:#fff;border-bottom-right-radius:4px}
 .bubble.bot{align-self:flex-start;background:var(--blue-soft);color:var(--ink);border-bottom-left-radius:4px}
-.bubble.bot p{margin:0 0 0.5rem 0;}
-.bubble.bot p:last-child{margin-bottom:0;}
-.bubble.bot ul,.bubble.bot ol{margin:0.5rem 0 0.5rem 1.5rem;padding:0;}
-.bubble.bot h1,.bubble.bot h2,.bubble.bot h3{margin:1rem 0 0.5rem 0;font-size:1.1em;}
+.bubble.bot p { margin: 0 0 8px 0; line-height: 1.6; }
+.bubble.bot p:last-child { margin-bottom: 0; }
+.bubble.bot ul, .bubble.bot ol { margin: 8px 0 8px 20px; padding: 0; line-height: 1.6; }
+.bubble.bot li { margin-bottom: 4px; }
+.bubble.bot h1, .bubble.bot h2, .bubble.bot h3, .bubble.bot h4 { margin: 16px 0 8px 0; font-weight: 700; color: var(--blue); }
+.bubble.bot h1 { font-size: 1.25em; }
+.bubble.bot h2 { font-size: 1.15em; }
+.bubble.bot h3 { font-size: 1.05em; }
+.bubble.bot strong { font-weight: 700; color: #0d4aab; /* 약간 더 진한 파란색 포인트 */ }
+.bubble.bot table { width: 100%; border-collapse: collapse; margin: 12px 0; background: #fff; font-size: 13px; }
+.bubble.bot th, .bubble.bot td { padding: 8px 10px; border: 1px solid rgba(0,0,0,0.08); text-align: left; }
+.bubble.bot th { background: rgba(0, 0, 0, 0.03); font-weight: 600; color: var(--blue); }
+.bubble.bot blockquote { margin: 12px 0; padding: 8px 12px; border-left: 3px solid var(--blue); color: var(--mut-ink); background: rgba(255,255,255,0.6); border-radius: 0 4px 4px 0; font-style: normal; }
+.bubble.bot hr { border: 0; height: 1px; background: rgba(0,0,0,0.08); margin: 16px 0; }
+.bubble.bot code { background: rgba(0,0,0,0.05); padding: 2px 4px; border-radius: 4px; font-family: monospace; font-size: 0.9em; }
 .bubble .bot-label{display:block;font-size:11px;font-weight:800;color:var(--blue);margin-bottom:4px}
 .chat-quick{display:flex;flex-wrap:wrap;gap:8px;padding:0 16px 12px}
 .chat-quick button{
