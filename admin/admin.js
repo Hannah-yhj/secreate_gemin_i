@@ -910,3 +910,22 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
+// Check if we need to auto-open an edit modal
+supabase.auth.onAuthStateChange((event, session) => {
+  if (session) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const editId = urlParams.get('edit');
+    if (editId && window.editCard) {
+      // Small delay to ensure the cards list and editor is initialized
+      setTimeout(() => {
+        // Find the button and click it to ensure tabs are correct, or just call editCard
+        document.querySelector('.tab-btn[data-target="cardsTab"]').click();
+        window.editCard(editId);
+        
+        // Remove the param so it doesn't re-trigger on refresh
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }, 500);
+    }
+  }
+});

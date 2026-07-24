@@ -18,6 +18,13 @@
     <header class="admin-header">
       <div class="header-content">
         <h1>Admin Dashboard <span class="badge">BETA</span></h1>
+        
+        <nav class="admin-gnb">
+          <a href="index.html" class="gnb-link active">결제수단 큐 관리</a>
+          <a href="merchant.html" class="gnb-link">가맹점 정규화</a>
+          <a href="anomaly.html" class="gnb-link">이상 혜택 검토</a>
+        </nav>
+
         <div id="authPanel" class="auth-panel">
           <!-- Auth state injected by JS -->
         </div>
@@ -43,7 +50,6 @@
           <button class="tab-btn active" data-target="queueTab">크롤러 큐</button>
           <button class="tab-btn" data-target="userRequestTab">유저 요청</button>
           <button class="tab-btn" data-target="manualAddTab">직접 추가</button>
-          <a href="merchant.html" class="tab-btn">가맹점 정규화 검토</a>
           <button class="tab-btn" data-target="ignoredTab">제외된 결제수단</button>
           <button class="tab-btn" data-target="cardsTab">등록된 결제수단 관리</button>
         </div>

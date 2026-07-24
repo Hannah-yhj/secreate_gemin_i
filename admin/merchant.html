@@ -3,7 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <title>가맹점 정규화 검토</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../style.css">
+  <link rel="stylesheet" href="admin.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/9.10.2/jsoneditor.min.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
   <style>
     .status-badge {
       padding: 4px 8px;
@@ -14,15 +18,37 @@
     .status-pending_review { background: #ffebee; color: #c62828; }
     .status-approved { background: #e8f5e9; color: #2e7d32; }
     .status-rejected { background: #eeeeee; color: #616161; }
+    
+    .merchant-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>가맹점 정규화 검토</h1>
+  <div class="admin-container">
+    <header class="admin-header">
+      <div class="header-content">
+        <h1>Admin Dashboard <span class="badge">BETA</span></h1>
+        
+        <nav class="admin-gnb">
+          <a href="index.html" class="gnb-link">결제수단 큐 관리</a>
+          <a href="merchant.html" class="gnb-link active">가맹점 정규화</a>
+          <a href="anomaly.html" class="gnb-link">이상 혜택 검토</a>
+        </nav>
+        
+        <div id="authPanel" class="auth-panel"></div>
+      </div>
+    </header>
     
-    <div style="margin-bottom: 20px;">
-      <a href="index.html" class="btn secondary">← 돌아가기</a>
-      <select id="status-filter">
+    <main class="admin-main">
+      <section class="dashboard-view">
+        <div class="merchant-container glass-panel">
+          <h2>가맹점 정규화 큐</h2>
+          
+          <div style="margin-bottom: 20px; display: flex; gap: 10px; align-items: center;">
+            <select id="status-filter" style="padding: 0.5rem; border-radius: 6px; background: #222; color: white; border: 1px solid #444;">
         <option value="pending_review">검토 대기중 (pending)</option>
         <option value="approved">승인됨 (approved)</option>
         <option value="rejected">거절됨 (rejected)</option>
@@ -30,11 +56,14 @@
       </select>
     </div>
 
-    <div class="content-box">
-      <ul class="queue-list" id="merchant-list">
-        <!-- JS will populate -->
-      </ul>
-    </div>
+          <div class="content-box" style="margin-top: 20px;">
+            <ul class="queue-list" id="merchant-list">
+              <!-- JS will populate -->
+            </ul>
+          </div>
+        </div>
+      </section>
+    </main>
   </div>
   <script type="module" src="merchant.js"></script>
 </body>

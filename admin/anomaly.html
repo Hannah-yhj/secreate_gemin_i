@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>이상 혜택 검토 (Anomaly)</title>
+  <link rel="stylesheet" href="../style.css">
+  <link rel="stylesheet" href="admin.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/9.10.2/jsoneditor.min.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    .anomaly-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .anomaly-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .anomaly-info {
+      flex: 1;
+    }
+    .anomaly-title {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: var(--admin-danger);
+      margin-bottom: 0.5rem;
+    }
+    .anomaly-details {
+      color: #ccc;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+    .anomaly-reasons {
+      margin-top: 0.8rem;
+      padding-left: 1.2rem;
+      color: #ffb74d;
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-container">
+    <header class="admin-header">
+      <div class="header-content">
+        <h1>Admin Dashboard <span class="badge">BETA</span></h1>
+        
+        <nav class="admin-gnb">
+          <a href="index.html" class="gnb-link">결제수단 큐 관리</a>
+          <a href="merchant.html" class="gnb-link">가맹점 정규화</a>
+          <a href="anomaly.html" class="gnb-link active">이상 혜택 검토</a>
+        </nav>
+        
+        <div id="authPanel" class="auth-panel"></div>
+      </div>
+    </header>
+    
+    <main class="admin-main">
+      <section class="dashboard-view">
+        <div class="anomaly-container glass-panel">
+          <h2>이상 혜택 탐지 목록</h2>
+          <p style="color: #999; margin-bottom: 2rem;">비정상적인 할인율이나 한도를 가진 혜택들을 시스템이 자동 탐지하여 보여줍니다.</p>
+          
+          <div id="anomaly-list">
+            <!-- JS will populate -->
+            <div style="text-align: center; color: #666; padding: 2rem;">조회 중...</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+  
+  <script type="module" src="anomaly.js"></script>
+</body>
+</html>
