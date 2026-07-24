@@ -168,7 +168,22 @@ function findBestCards(catalog, entities, topN = 3) {
     ignoreDays: true
   };
   
-  const combos = Engine.buildCombos(input, state, wallet) || [];
+  let combos = Engine.buildCombos(input, state, wallet) || [];
+  
+  // 챗봇 맞춤형 필터링 로직:
+  // 사용자가 특정 브랜드를 명시하지 않고 카테고리(예: 햄버거, 외식)만 물어본 경우,
+  // 연간 1회 제공되는 프리미엄 바우처(예: 호텔 뷔페 25만원)나 과도한 혜택이 일상 소비 추천 1위로 뜨는 것을 방지
+  if (!entities.brand) {
+    combos = combos.filter(combo => {
+      return !combo.items.some(item => {
+        const b = item.benefit;
+        const isAnnualVoucher = b.frequency_period === 'year' || b.frequency_period === '연';
+        const isExcessiveFixed = b.benefit_unit === '원' && item.value > Math.max(input.amount, 20000);
+        return isAnnualVoucher || isExcessiveFixed;
+      });
+    });
+  }
+
   return combos.slice(0, topN);
 }
 
