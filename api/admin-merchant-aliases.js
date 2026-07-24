@@ -23,7 +23,54 @@ export default async function handler(req, res) {
 
       const { data, error } = await query;
       if (error) throw error;
-      return res.status(200).json({ aliases: data });
+      
+      // Fetch sample context for each alias
+      const aliasesWithContext = await Promise.all(data.map(async (alias) => {
+        // Find one benefit containing this original_name
+        const { data: benData } = await supabase
+          .from('benefits')
+          .select('product_id')
+          .ilike('merchants_or_scope', `%${alias.original_name}%`)
+          .limit(1);
+          
+        let sampleContext = null;
+        if (benData && benData.length > 0 && benData[0].product_id) {
+          const productId = benData[0].product_id;
+          // Find product details
+          const { data: prodData } = await supabase
+            .from('products')
+            .select('provider, product_name, source_id')
+            .eq('product_id', productId)
+            .limit(1);
+            
+          if (prodData && prodData.length > 0) {
+            const product = prodData[0];
+            let pdfUrl = null;
+            if (product.source_id) {
+              const { data: sourceData } = await supabase
+                .from('sources')
+                .select('source_url')
+                .eq('source_id', product.source_id)
+                .limit(1);
+              if (sourceData && sourceData.length > 0) {
+                pdfUrl = sourceData[0].source_url;
+              }
+            }
+            sampleContext = {
+              provider: product.provider,
+              product_name: product.product_name,
+              pdf_url: pdfUrl
+            };
+          }
+        }
+        
+        return {
+          ...alias,
+          sampleContext
+        };
+      }));
+
+      return res.status(200).json({ aliases: aliasesWithContext });
 
     } else if (req.method === 'POST') {
       const { id, status, canonical_name } = req.body;
