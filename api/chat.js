@@ -241,7 +241,9 @@ ${catalogSummary}
 답변은 한국어로 친절하게 작성하며, 마크다운(굵은 글씨, 목록 등)을 적절히 사용하여 가독성 있게 작성하세요.
 답변의 시작과 끝에는 반드시 다음 문장을 그대로 출력하세요:
 - 시작: "기다려주셔서 감사합니다. 질문하신 내용에 딱 맞는 카드들을 소개해 드릴게요. 👇"
-- 끝: "💡 **Tip!** 마이페이지에 지금 지갑 속에 있는 카드를 미리 등록해두시면, 결제할 때마다 어떤 카드를 꺼내는 게 이득인지 더 정확하게 알려드려요!"`;
+- 끝: "💡 **Tip!** 마이페이지에 지금 지갑 속에 있는 카드를 미리 등록해두시면, 결제할 때마다 어떤 카드를 꺼내는 게 이득인지 더 정확하게 알려드려요!"
+
+추가로, 당신이 답변에서 추천하거나 비교한 카드의 정확한 'product_name' 원문을 쉼표로 구분하여 답변 가장 마지막 줄에 무조건 \`[추천카드: 상품명1, 상품명2]\` 형식으로 적어주세요. (예: [추천카드: KB국민 My WE:SH 카드, 신한카드 Mr.Life])`;
 }
 
 export default async function handler(req, res) {
@@ -294,7 +296,16 @@ export default async function handler(req, res) {
       if (!reply) return res.status(502).json({ error: "Solar 응답이 비어 있습니다." });
 
       // 응답에서 언급된 카드 추출하여 candidates로 구성
-      const mentionedProducts = catalog.products.filter(p => reply.includes(p.product_name));
+      let extractedProductNames = [];
+      const match = reply.match(/\[추천카드:\s*(.*?)\]/);
+      if (match) {
+        extractedProductNames = match[1].split(',').map(s => s.trim());
+        reply = reply.replace(/\[추천카드:\s*(.*?)\]/, '').trim();
+      }
+
+      const mentionedProducts = catalog.products.filter(p => 
+        extractedProductNames.includes(p.product_name) || (!match && reply.includes(p.product_name))
+      );
       candidates = mentionedProducts.map(p => {
         // 해당 카드의 주요 혜택 3개를 items에 넣어줌
         const bens = catalog.benefits.filter(b => b.product_id === p.product_id).slice(0, 3);
