@@ -59,11 +59,26 @@ function renderList(aliases) {
     let actionHtml = '';
     if (a.status === 'pending_review') {
       actionHtml = `
-        <button class="btn" onclick="handleApprove('${a.id}')">승인</button>
-        <button class="btn secondary" onclick="handleReject('${a.id}')">거절</button>
+        <button class="btn" style="background-color: var(--admin-primary); color: white; display: flex; align-items: center; justify-content: center; gap: 4px; border: none; padding: 6px 12px; border-radius: 4px;" onclick="handleApprove('${a.id}')">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg>
+          승인
+        </button>
+        <button class="btn" style="background-color: var(--admin-danger); color: white; display: flex; align-items: center; justify-content: center; gap: 4px; border: none; padding: 6px 12px; border-radius: 4px;" onclick="handleReject('${a.id}')">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+          거절
+        </button>
       `;
     } else {
       actionHtml = `<span class="status-badge status-${a.status}">${a.status}</span>`;
+    }
+
+    let contextHtml = '';
+    if (a.sampleContext) {
+      const pdfLink = a.sampleContext.pdf_url ? `<a href="${a.sampleContext.pdf_url}" target="_blank" style="color:var(--admin-primary); text-decoration: underline; margin-left: 8px;">📄 약관 PDF 보기</a>` : '';
+      contextHtml = `<div style="margin-top: 12px; font-size: 0.85em; color: #aaa; background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 6px; border-left: 3px solid var(--admin-primary);">
+        <strong>발견된 카드:</strong> ${a.sampleContext.provider} ${a.sampleContext.product_name}
+        ${pdfLink}
+      </div>`;
     }
 
     li.innerHTML = `
@@ -76,8 +91,9 @@ function renderList(aliases) {
           <button id="edit-btn-${a.id}" class="btn secondary" style="padding: 2px 8px; font-size: 0.8rem;" onclick="toggleEdit('${a.id}')">수정</button>
         </div>
         <div class="meta">Confidence: ${a.status === 'approved' ? 'high' : 'medium/low'} | 생성일: ${new Date(a.created_at).toLocaleString()}</div>
+        ${contextHtml}
       </div>
-      <div class="item-actions">
+      <div class="item-actions" style="display: flex; flex-direction: column; gap: 8px; justify-content: center;">
         ${actionHtml}
       </div>
     `;
