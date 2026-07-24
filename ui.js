@@ -1601,8 +1601,6 @@ function renderChatSidePanel() {
 
 function viewMore() {
   const msgs = S.chat.messages.map(chatBubbleHtml).join('');
-  const sidePanelHtml = renderChatSidePanel();
-
   return `
   <div class="page-head">
     <h2>카드 추천</h2>
@@ -1621,9 +1619,6 @@ function viewMore() {
         <input type="text" id="chatInput" placeholder="원하는 혜택을 적어 주세요" autocomplete="off">
         <button type="button" id="chatSend" aria-label="전송">➤</button>
       </div>
-    </div>
-    <div class="chat-side-panel" id="chatSidePanel">
-      ${sidePanelHtml}
     </div>
   </div>`;
 }
