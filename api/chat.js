@@ -166,8 +166,16 @@ async function analyzeIntentAndExtract(message, apiKey, model) {
 }
 
 function findBestCards(catalog, entities, topN = 3) {
-  Engine.init(catalog);
-  const wallet = catalog.products.map(p => p.product_id); // 기본적으로 모든 카드를 대상으로 검색
+  // Mode A에서는 엔진 오작동(해외수수료 100% 면제를 결제액 100% 할인으로 계산)을 방지하기 위해 필터링
+  const filteredCatalog = {
+    products: catalog.products,
+    benefits: catalog.benefits.filter(b => {
+      if (b.benefit_unit === '%' && b.benefit_value >= 50 && (b.benefit_name.includes('해외') || b.benefit_name.includes('수수료'))) return false;
+      return true;
+    })
+  };
+  Engine.init(filteredCatalog);
+  const wallet = filteredCatalog.products.map(p => p.product_id); // 기본적으로 모든 카드를 대상으로 검색
   const state = { spend: {}, grade: 'VIP' }; // 최고 혜택을 보여주기 위해 실적 및 등급을 낙관적으로 가정
   
   const input = {
