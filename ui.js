@@ -49,6 +49,8 @@ const S = {
   addPanel: null,
   walletTab: 'card',
   resultsExpanded: false,
+  chatExpanded: false,
+  chatLoading: false,
   q: {
     brand: '', category: null, amount: 10000,
     channel: null, dayMode: 'today', day: null, time: ''
@@ -66,6 +68,8 @@ const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 const won = n => Math.round(n).toLocaleString('ko-KR');
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+let DB = null; // Fix ReferenceError
 
 let calcTimer = null;
 let toastTimer = null;

@@ -106,50 +106,59 @@ ${scope}
 ${candidateText}`;
 }
 
-async function extractEntities(message, apiKey, model) {
-  const systemPrompt = `당신은 사용자의 질문에서 결제 혜택 검색을 위한 핵심 키워드를 추출하는 AI입니다. 
-오직 JSON 형식으로만 응답해야 합니다. 다른 말은 덧붙이지 마세요.
+async function callLLM(messages, apiKey, model) {
+  const upstream = await fetch(UPSTAGE_URL, {
+    method: "POST",
+    headers: { Authorization: "Bearer " + apiKey, "Content-Type": "application/json" },
+    body: JSON.stringify({ model, messages }),
+  });
+  const raw = await upstream.json().catch(() => ({}));
+  if (!upstream.ok) {
+    throw new Error(raw?.error?.message || raw?.message || `Upstage HTTP ${upstream.status}`);
+  }
+  return raw?.choices?.[0]?.message?.content?.trim();
+}
 
-추출할 키워드:
-- brand: 사용자가 언급한 특정 브랜드나 매장 이름 (예: "스타벅스", "아웃백", "배달의민족", "넷플릭스"). 언급이 없으면 null.
-- category: 사용자가 언급한 업종 카테고리 (예: "카페", "영화", "통신", "교통", "쇼핑", "편의점", "외식"). 언급이 없으면 null.
-- amount: 예상 결제 금액 (숫자만 추출, 예: 50000). 금액 언급이 없으면 기본값 30000.
-- wantsMembership: 통신사 멤버십 할인 등 멤버십 혜택을 원하면 true, 아니면 false.
+async function analyzeIntentAndExtract(message, apiKey, model) {
+  const systemPrompt = `당신은 사용자의 질문 의도를 분석하고 필요한 정보를 추출하는 라우터(Router) AI입니다.
+오직 JSON 형식으로만 응답하세요.
 
-응답 예시:
-{"brand": "아웃백", "category": null, "amount": 100000, "wantsMembership": false}
-{"brand": null, "category": "영화", "amount": 15000, "wantsMembership": true}`;
+질문을 다음 3가지 모드 중 하나로 분류하세요:
+- "A": 정확한 계산 필요 (특정 브랜드, 업종, 결제 금액 등 명시적인 조건이 있는 경우. 예: "스타벅스 15000원 결제", "배민 할인카드", "햄버거 먹을건데 어떤 카드")
+- "B": 추상적 추천 필요 (상황, 대상, 목적 등 모호한 조건으로 카드를 추천받으려는 경우. 예: "해외여행 갈 때 쓸 카드", "20대 대학생 카드 추천")
+- "C": 비교 및 정보 조회 (특정 카드들의 혜택을 비교하거나 상세 정보를 물어보는 경우. 예: "A카드랑 B카드 비교해줘", "내 통신사 혜택 알려줘")
+
+응답 JSON 구조:
+{
+  "mode": "A", // 또는 "B", "C"
+  "brand": "아웃백", // Mode A인 경우 (언급 없으면 null)
+  "category": "영화", // Mode A인 경우 (언급 없으면 null)
+  "amount": 50000, // Mode A인 경우 (언급 없으면 기본값 30000)
+  "wantsMembership": false, // Mode A인 경우
+  "keywords": ["해외여행", "라운지"] // Mode B, C인 경우 검색 키워드
+}`;
 
   try {
-    const upstream = await fetch(UPSTAGE_URL, {
-      method: "POST",
-      headers: {
-        Authorization: "Bearer " + apiKey,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: message }
-        ]
-      }),
-    });
-    const raw = await upstream.json();
-    let text = raw?.choices?.[0]?.message?.content?.trim() || "{}";
-    if (text.startsWith("```json")) {
-      text = text.replace(/^```json\n?/, "").replace(/\n?```$/, "");
-    }
-    const parsed = JSON.parse(text);
+    const text = await callLLM([
+      { role: "system", content: systemPrompt },
+      { role: "user", content: message }
+    ], apiKey, model);
+    
+    let cleanText = text || "{}";
+    if (cleanText.startsWith("```json")) cleanText = cleanText.replace(/^```json\n?/, "").replace(/\n?```$/, "");
+    
+    const parsed = JSON.parse(cleanText);
     return {
+      mode: parsed.mode === "B" || parsed.mode === "C" ? parsed.mode : "A",
       brand: parsed.brand || null,
       category: parsed.category || null,
       amount: parsed.amount || 30000,
-      includeMembership: !!parsed.wantsMembership
+      includeMembership: !!parsed.wantsMembership,
+      keywords: parsed.keywords || []
     };
   } catch (e) {
-    console.error("Entity extraction failed:", e);
-    return { brand: null, category: null, amount: 30000, includeMembership: false };
+    console.error("Intent extraction failed:", e);
+    return { mode: "A", brand: null, category: null, amount: 30000, includeMembership: false, keywords: [] };
   }
 }
 
@@ -178,7 +187,9 @@ function findBestCards(catalog, entities, topN = 3) {
       return !combo.items.some(item => {
         const b = item.benefit;
         const isAnnualVoucher = b.frequency_period === 'year' || b.frequency_period === '연';
-        const isExcessiveFixed = b.benefit_unit === '원' && item.value > Math.max(input.amount, 20000);
+        // 카테고리만 검색 시, 고액 고정(원) 혜택(공항 커피 3만원, 이벤트성 1.5만원 등)이 1위로 도배되는 것을 방지.
+        // 일반적인 일상 카테고리 고정 할인은 대개 1000원~3000원 선이므로 5000원 초과를 고액으로 간주하여 필터링합니다.
+        const isExcessiveFixed = b.benefit_unit === '원' && item.value > 5000;
         return isAnnualVoucher || isExcessiveFixed;
       });
     });
@@ -203,6 +214,31 @@ function buildCandidateText(candidates) {
   return text.trim();
 }
 
+function buildCatalogSummary(catalog) {
+  let summary = "";
+  catalog.products.forEach(p => {
+    const bens = catalog.benefits.filter(b => b.product_id === p.product_id);
+    const keyBenefits = bens.map(b => b.benefit_name).slice(0, 10).join(", ");
+    summary += `- ${p.product_name} (${p.provider}): 주요 혜택 [${keyBenefits}]\n`;
+  });
+  return summary;
+}
+
+function systemPromptForModeBC(catalogSummary, mode) {
+  return `당신은 "결제 지시서" 서비스의 카드 추천/상담 챗봇입니다.
+사용자의 질문이 ${mode === "B" ? "추상적인 상황/목적을 가진 카드 추천" : "카드 혜택 비교나 정보 조회"}입니다.
+
+아래는 현재 시스템에 등록된 전체 카드들의 이름과 주요 혜택 요약 목록입니다.
+이 정보를 참고하여 사용자에게 가장 적합한 대답을 생성해주세요.
+만약 모르는 정보라면 지어내지 말고, "현재 등록된 카드 정보에서는 확인이 어렵습니다"라고 정직하게 대답하세요.
+
+[카드 카탈로그 요약]
+${catalogSummary}
+
+답변은 한국어로 친절하게 작성하며, 마크다운(굵은 글씨, 목록 등)을 적절히 사용하여 가독성 있게 작성하세요.
+답변 마지막에는 항상 "마이페이지에서 카드/통신사를 등록하면 더 정확한 혜택 비교가 가능합니다." 라고 안내해주세요.`;
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
@@ -222,52 +258,47 @@ export default async function handler(req, res) {
     const message = String(body.message || "").trim();
     if (!message) return res.status(400).json({ error: "message가 비어 있습니다." });
 
-    /* ---- ① LLM을 이용한 질문 분석 (엔티티 추출) ---- */
+    /* ---- ① LLM을 이용한 질문 분석 (인텐트 라우팅) ---- */
     const model = getUpstageModel();
-    const entities = await extractEntities(message, apiKey, model);
+    const intent = await analyzeIntentAndExtract(message, apiKey, model);
     
     /* ---- ② 카탈로그 로드 ---- */
     const { data: catalog, source } = await loadCatalog();
 
-    /* ---- ③ Engine.buildCombos() — 규칙 기반 엔진으로 혜택액 정확히 계산 ---- */
-    const candidates = findBestCards(catalog, entities, 3);
+    let reply = "";
+    let candidates = [];
 
-    /* ---- ④ 설명 생성을 위한 텍스트 조립 ---- */
-    const candidateText = buildCandidateText(candidates);
-
-    /* ---- ⑤ Solar-Pro: 설명만 작성 ---- */
-    const messages = [
-      { role: "system", content: systemPrompt(candidateText, { includeMembership: entities.includeMembership }) },
-      { role: "user", content: message.slice(0, 2000) },
-    ];
-
-    const upstream = await fetch(UPSTAGE_URL, {
-      method: "POST",
-      headers: {
-        Authorization: "Bearer " + apiKey,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ model, messages }),
-    });
-
-    const raw = await upstream.json().catch(() => ({}));
-    if (!upstream.ok) {
-      const detail = raw?.error?.message || raw?.message || `Upstage HTTP ${upstream.status}`;
-      return res.status(502).json({ error: `Solar API 오류: ${detail}` });
+    if (intent.mode === "A") {
+      /* ---- Mode A: 규칙 엔진 기반 정확한 계산 ---- */
+      candidates = findBestCards(catalog, intent, 3);
+      const candidateText = buildCandidateText(candidates);
+      const messages = [
+        { role: "system", content: systemPrompt(candidateText, { includeMembership: intent.includeMembership }) },
+        { role: "user", content: message.slice(0, 2000) },
+      ];
+      reply = await callLLM(messages, apiKey, model);
+      if (!reply) return res.status(502).json({ error: "Solar 응답이 비어 있습니다." });
+    } else {
+      /* ---- Mode B/C: LLM 중심의 시맨틱 검색 / 펑션 콜링 모방 ---- */
+      const catalogSummary = buildCatalogSummary(catalog);
+      const messages = [
+        { role: "system", content: systemPromptForModeBC(catalogSummary, intent.mode) },
+        { role: "user", content: message.slice(0, 2000) },
+      ];
+      reply = await callLLM(messages, apiKey, model);
+      if (!reply) return res.status(502).json({ error: "Solar 응답이 비어 있습니다." });
     }
-
-    const reply = raw?.choices?.[0]?.message?.content?.trim();
-    if (!reply) return res.status(502).json({ error: "Solar 응답이 비어 있습니다." });
 
     return res.status(200).json({
       reply,
       meta: {
         model,
         dataSource: source,
-        category: entities.category,
-        brand: entities.brand,
-        amount: entities.amount,
-        includeMembership: entities.includeMembership,
+        mode: intent.mode,
+        category: intent.category,
+        brand: intent.brand,
+        amount: intent.amount,
+        includeMembership: intent.includeMembership,
         candidateCount: candidates.length,
         candidates: candidates,
         candidateProducts: candidates.map((c) => c.product_id),
