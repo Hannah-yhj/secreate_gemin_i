@@ -50,42 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const confirmCommitBtn = document.getElementById('confirmCommitBtn');
   const previewMeta = document.getElementById('previewMeta');
   const previewJson = document.getElementById('previewJson');
-  const previewAnomalyWarnings = document.getElementById('previewAnomalyWarnings');
-  const editAnomalyWarnings = document.getElementById('editAnomalyWarnings');
   let pendingCommit = null;
-
-  // --- Anomaly Detection Logic ---
-  function detectAnomalies(payload) {
-    if (!payload || !payload.benefits) return [];
-    const warnings = [];
-    payload.benefits.forEach(b => {
-      // 보수적인 룰: 단위가 %인데 값이 100을 초과하는 경우
-      if (b.benefit_unit === '%' && b.benefit_value > 100) {
-        warnings.push({
-          name: b.benefit_name || '이름 없음',
-          reason: `할인율(적립률)이 100%를 초과합니다. (현재값: ${b.benefit_value}%)`
-        });
-      }
-    });
-    return warnings;
-  }
-
-  function renderAnomalyWarnings(containerEl, warnings) {
-    if (!warnings || warnings.length === 0) {
-      containerEl.style.display = 'none';
-      containerEl.innerHTML = '';
-      return;
-    }
-    
-    let html = '<strong>⚠️ AI 추출 데이터 이상 감지 (환각 의심)</strong><ul style="margin-top: 8px; margin-bottom: 0; padding-left: 20px;">';
-    warnings.forEach(w => {
-      html += `<li><b>[${w.name}]</b> ${w.reason}</li>`;
-    });
-    html += '</ul>';
-    
-    containerEl.innerHTML = html;
-    containerEl.style.display = 'block';
-  }
 
   // Tabs logic
   document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -484,10 +449,9 @@ document.addEventListener('DOMContentLoaded', () => {
       ? `<span style="color:#d97706;">⚠️ 기존에 등록된 카드를 찾아 덮어쓰기(업데이트) 합니다.</span>`
       : `<span style="color:#059669;">✨ 새로운 카드로 신규 등록됩니다.</span>`;
     
-    const warnings = detectAnomalies(previewData.payload);
-    renderAnomalyWarnings(previewAnomalyWarnings, warnings);
-    
-    previewJson.textContent = JSON.stringify(previewData.payload, null, 2);
+    // Validate final struct before saving
+    let payloadStr = JSON.stringify(previewData.payload, null, 2);
+    previewJson.textContent = payloadStr;
     previewModal.removeAttribute('hidden');
     previewModal.style.display = 'flex';
   }
@@ -830,9 +794,6 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         editJsonContainer.innerText = JSON.stringify(json.payload, null, 2);
       }
-      
-      const warnings = detectAnomalies(json.payload);
-      renderAnomalyWarnings(editAnomalyWarnings, warnings);
       
       editModal.hidden = false;
     } catch (err) {
