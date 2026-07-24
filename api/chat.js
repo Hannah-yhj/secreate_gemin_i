@@ -263,6 +263,7 @@ export default async function handler(req, res) {
   try {
     const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body || {};
     const message = String(body.message || "").trim();
+    const history = Array.isArray(body.history) ? body.history : [];
     if (!message) return res.status(400).json({ error: "message가 비어 있습니다." });
 
     /* ---- ① LLM을 이용한 질문 분석 (인텐트 라우팅) ---- */
@@ -281,6 +282,7 @@ export default async function handler(req, res) {
       const candidateText = buildCandidateText(candidates);
       const messages = [
         { role: "system", content: systemPrompt(candidateText, { includeMembership: intent.includeMembership }) },
+        ...history,
         { role: "user", content: message.slice(0, 2000) },
       ];
       reply = await callLLM(messages, apiKey, model);
@@ -290,6 +292,7 @@ export default async function handler(req, res) {
       const catalogSummary = buildCatalogSummary(catalog);
       const messages = [
         { role: "system", content: systemPromptForModeBC(catalogSummary, intent.mode) },
+        ...history,
         { role: "user", content: message.slice(0, 2000) },
       ];
       reply = await callLLM(messages, apiKey, model);
