@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>가맹점 정규화 검토</title>
+  <title>브랜드/매장 관리</title>
   <link rel="stylesheet" href="../style.css">
   <link rel="stylesheet" href="admin.css">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/9.10.2/jsoneditor.min.css" rel="stylesheet" type="text/css">
@@ -33,9 +33,9 @@
         <h1>Admin Dashboard <span class="badge">BETA</span></h1>
         
         <nav class="admin-gnb">
-          <a href="index.html" class="gnb-link">결제수단 큐 관리</a>
-          <a href="merchant.html" class="gnb-link active">가맹점 정규화</a>
-          <a href="anomaly.html" class="gnb-link">이상 혜택 검토</a>
+          <a href="index.html" class="gnb-link">결제수단 관리</a>
+          <a href="merchant.html" class="gnb-link active">브랜드/매장 관리</a>
+          <a href="anomaly.html" class="gnb-link">혜택 이상탐지</a>
         </nav>
         
         <div id="authPanel" class="auth-panel"></div>
@@ -45,16 +45,13 @@
     <main class="admin-main">
       <section class="dashboard-view">
         <div class="merchant-container glass-panel">
-          <h2>가맹점 정규화 큐</h2>
+          <h2>브랜드/매장 관리 큐</h2>
           
-          <div style="margin-bottom: 20px; display: flex; gap: 10px; align-items: center;">
-            <select id="status-filter" style="padding: 0.5rem; border-radius: 6px; background: #222; color: white; border: 1px solid #444;">
-        <option value="pending_review">검토 대기중 (pending)</option>
-        <option value="approved">승인됨 (approved)</option>
-        <option value="rejected">거절됨 (rejected)</option>
-        <option value="all">전체 보기</option>
-      </select>
-    </div>
+          <div class="tabs" style="margin-bottom: 20px;">
+            <button class="tab-btn active" data-status="pending_review">검토 대기</button>
+            <button class="tab-btn" data-status="approved">정규화 사전</button>
+            <button class="tab-btn" data-status="rejected">거절됨</button>
+          </div>
 
           <div class="content-box" style="margin-top: 20px;">
             <ul class="queue-list" id="merchant-list">

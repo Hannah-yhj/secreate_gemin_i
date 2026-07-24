@@ -69,7 +69,12 @@ function renderList(aliases) {
     li.innerHTML = `
       <div class="item-info">
         <strong>원문:</strong> ${a.original_name} <br/>
-        <strong>대표명:</strong> <input type="text" id="canonical-${a.id}" value="${a.canonical_name || ''}" />
+        <div style="display: flex; align-items: center; gap: 8px; margin: 4px 0;">
+          <strong>대표명:</strong> 
+          <span id="canonical-text-${a.id}" class="canonical-text" style="font-weight:bold; color:var(--admin-primary);">${a.canonical_name || ''}</span>
+          <input type="text" id="canonical-input-${a.id}" value="${a.canonical_name || ''}" style="display:none; padding: 4px; border-radius:4px; border:1px solid #ccc; background: white; color: black;" />
+          <button id="edit-btn-${a.id}" class="btn secondary" style="padding: 2px 8px; font-size: 0.8rem;" onclick="toggleEdit('${a.id}')">수정</button>
+        </div>
         <div class="meta">Confidence: ${a.status === 'approved' ? 'high' : 'medium/low'} | 생성일: ${new Date(a.created_at).toLocaleString()}</div>
       </div>
       <div class="item-actions">
@@ -80,10 +85,11 @@ function renderList(aliases) {
   });
 }
 
+let currentStatus = 'pending_review';
+
 async function loadData() {
-  const status = document.getElementById('status-filter').value;
   try {
-    const aliases = await fetchAliases(status);
+    const aliases = await fetchAliases(currentStatus);
     renderList(aliases || []);
   } catch (err) {
     console.error(err);
@@ -91,8 +97,59 @@ async function loadData() {
   }
 }
 
+window.toggleEdit = async (id) => {
+  const textSpan = document.getElementById(`canonical-text-${id}`);
+  const inputEl = document.getElementById(`canonical-input-${id}`);
+  const btn = document.getElementById(`edit-btn-${id}`);
+  
+  if (inputEl.style.display === 'none') {
+    // Switch to edit mode
+    textSpan.style.display = 'none';
+    inputEl.style.display = 'inline-block';
+    btn.textContent = '수정완료';
+    btn.classList.remove('secondary');
+    inputEl.focus();
+  } else {
+    // Save changes
+    const newName = inputEl.value.trim();
+    if (!newName) {
+      alert("대표명을 입력하세요.");
+      return;
+    }
+    
+    btn.textContent = '저장 중...';
+    btn.disabled = true;
+    
+    try {
+      // Find the current alias status to preserve it
+      const res = await fetch(`${API_URL}/admin-merchant-aliases?status=all`, {
+        headers: { 'Authorization': `Bearer ${currentToken}` }
+      });
+      const data = await res.json();
+      const alias = data.aliases.find(a => a.id === id);
+      
+      if (alias) {
+        await updateAlias(id, alias.status, newName);
+      }
+      
+      // Update UI manually to avoid full reload if preferred, but reload is safer
+      textSpan.textContent = newName;
+      textSpan.style.display = 'inline-block';
+      inputEl.style.display = 'none';
+      btn.textContent = '수정';
+      btn.classList.add('secondary');
+      btn.disabled = false;
+    } catch (err) {
+      alert('수정 실패: ' + err.message);
+      btn.textContent = '수정완료';
+      btn.disabled = false;
+    }
+  }
+};
+
 window.handleApprove = async (id) => {
-  const canonical = document.getElementById(`canonical-${id}`).value;
+  const inputEl = document.getElementById(`canonical-input-${id}`);
+  const canonical = inputEl ? inputEl.value : '';
   try {
     await updateAlias(id, 'approved', canonical);
     loadData();
@@ -102,22 +159,34 @@ window.handleApprove = async (id) => {
 };
 
 window.handleReject = async (id) => {
+  if (!confirm('정말 거절하시겠습니까?')) return;
+  const inputEl = document.getElementById(`canonical-input-${id}`);
+  const canonical = inputEl ? inputEl.value : '';
   try {
-    await updateAlias(id, 'rejected', null);
+    await updateAlias(id, 'rejected', canonical);
     loadData();
   } catch (err) {
     alert(err.message);
   }
 };
 
-document.getElementById('status-filter').addEventListener('change', loadData);
+// Event Listeners for tabs
+document.addEventListener('DOMContentLoaded', () => {
+  const tabs = document.querySelectorAll('.tab-btn');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', (e) => {
+      tabs.forEach(t => t.classList.remove('active'));
+      e.target.classList.add('active');
+      currentStatus = e.target.getAttribute('data-status');
+      loadData();
+    });
+  });
+});
 
-// 초기 로딩
 supabase.auth.onAuthStateChange((event, session) => {
   if (session) {
     loadData();
   } else {
-    // 로그인이 안되어있으면 index.html 로 보내거나 알림 표시
     alert("관리자 로그인이 필요합니다.");
     location.href = "index.html";
   }

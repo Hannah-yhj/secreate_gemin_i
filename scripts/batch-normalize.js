@@ -126,17 +126,21 @@ ${merchants.join('\n')}
       if (!flag.original || !flag.normalized) continue;
       if (flag.original === flag.normalized) continue;
       
-      const status = flag.confidence === 'high' ? 'approved' : 'pending_review';
+      // Force pending_review for ALL items so the admin can review them,
+      // and when they click "Approve", the `benefits` table gets properly updated via API!
+      const status = 'pending_review';
       
-      await supabase.from('merchant_aliases').upsert({
+      const { error: upsertErr } = await supabase.from('merchant_aliases').upsert({
         original_name: flag.original,
         canonical_name: flag.normalized,
         status: status
-      }, { onConflict: 'original_name' }).catch(err => {
-        console.error("Failed to upsert alias:", flag.original, err.message);
-      });
-      
-      console.log(`Upserted: ${flag.original} -> ${flag.normalized} (${status})`);
+      }, { onConflict: 'original_name' });
+
+      if (upsertErr) {
+        console.error("Failed to upsert alias:", flag.original, upsertErr.message);
+      } else {
+        console.log(`Upserted: ${flag.original} -> ${flag.normalized} (${status})`);
+      }
     }
   } catch (err) {
     console.error("Failed to process chunk:", err);
