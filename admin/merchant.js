@@ -68,6 +68,17 @@ function renderList(aliases) {
           거절
         </button>
       `;
+    } else if (a.status === 'rejected') {
+      actionHtml = `
+        <button class="btn" style="background-color: #555; color: white; display: flex; align-items: center; justify-content: center; gap: 4px; border: none; padding: 6px 12px; border-radius: 4px;" onclick="handleRestore('${a.id}')">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
+          복구
+        </button>
+        <button class="btn" style="background-color: #d32f2f; color: white; display: flex; align-items: center; justify-content: center; gap: 4px; border: none; padding: 6px 12px; border-radius: 4px;" onclick="handleDelete('${a.id}')">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+          삭제
+        </button>
+      `;
     } else {
       actionHtml = `<span class="status-badge status-${a.status}">${a.status}</span>`;
     }
@@ -81,8 +92,14 @@ function renderList(aliases) {
       </div>`;
     }
 
+    const catLabel = a.category || '기타';
+    li.dataset.original = (a.original_name || '').toLowerCase();
+    li.dataset.canonical = (a.canonical_name || '').toLowerCase();
+    li.dataset.category = catLabel;
+    
     li.innerHTML = `
       <div class="item-info">
+        <div style="display: inline-block; padding: 2px 8px; border-radius: 12px; background: rgba(255,255,255,0.1); font-size: 0.75em; margin-bottom: 4px;">${catLabel}</div><br/>
         <strong>원문:</strong> ${a.original_name} <br/>
         <div style="display: flex; align-items: center; gap: 8px; margin: 4px 0;">
           <strong>대표명:</strong> 
@@ -99,18 +116,55 @@ function renderList(aliases) {
     `;
     list.appendChild(li);
   });
+  
+  applyFilters();
 }
 
+let allAliases = [];
 let currentStatus = 'pending_review';
+let currentCategory = '전체';
+let currentSearch = '';
 
 async function loadData() {
   try {
     const aliases = await fetchAliases(currentStatus);
-    renderList(aliases || []);
+    allAliases = aliases || [];
+    renderList(allAliases);
   } catch (err) {
     console.error(err);
     alert(err.message);
   }
+}
+
+function applyFilters() {
+  const listItems = document.querySelectorAll('#merchant-list .queue-item');
+  if (listItems.length === 1 && listItems[0].textContent.includes('데이터가 없습니다')) return;
+
+  listItems.forEach(li => {
+    const orig = li.dataset.original || '';
+    const can = li.dataset.canonical || '';
+    const cat = li.dataset.category || '';
+    
+    let matchSearch = true;
+    if (currentSearch) {
+      matchSearch = orig.includes(currentSearch) || can.includes(currentSearch);
+    }
+    
+    let matchCat = true;
+    if (currentCategory !== '전체') {
+      if (currentCategory === '기타') {
+        matchCat = cat === '기타' || cat === '';
+      } else {
+        matchCat = cat.includes(currentCategory);
+      }
+    }
+    
+    if (matchSearch && matchCat) {
+      li.style.display = 'flex';
+    } else {
+      li.style.display = 'none';
+    }
+  });
 }
 
 window.toggleEdit = async (id) => {
@@ -175,7 +229,6 @@ window.handleApprove = async (id) => {
 };
 
 window.handleReject = async (id) => {
-  if (!confirm('정말 거절하시겠습니까?')) return;
   const inputEl = document.getElementById(`canonical-input-${id}`);
   const canonical = inputEl ? inputEl.value : '';
   try {
@@ -186,7 +239,36 @@ window.handleReject = async (id) => {
   }
 };
 
-// Event Listeners for tabs
+window.handleRestore = async (id) => {
+  const inputEl = document.getElementById(`canonical-input-${id}`);
+  const canonical = inputEl ? inputEl.value : '';
+  try {
+    await updateAlias(id, 'pending_review', canonical);
+    loadData();
+  } catch (err) {
+    alert(err.message);
+  }
+};
+
+window.handleDelete = async (id) => {
+  if (!confirm('이 항목을 정말 데이터베이스에서 영구 삭제하시겠습니까? 복구할 수 없습니다.')) return;
+  await getToken();
+  try {
+    const res = await fetch(`${API_URL}/admin-merchant-aliases?id=${id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${currentToken}` }
+    });
+    if (!res.ok) {
+      const errJson = await res.json();
+      throw new Error(errJson.error || '삭제 실패');
+    }
+    loadData();
+  } catch (err) {
+    alert(err.message);
+  }
+};
+
+// Event Listeners for tabs and filters
 document.addEventListener('DOMContentLoaded', () => {
   const tabs = document.querySelectorAll('.tab-btn');
   tabs.forEach(tab => {
@@ -197,9 +279,38 @@ document.addEventListener('DOMContentLoaded', () => {
       loadData();
     });
   });
+  
+  const searchInput = document.getElementById('searchInput');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      currentSearch = e.target.value.toLowerCase().trim();
+      applyFilters();
+    });
+  }
+  
+  const chips = document.querySelectorAll('.chip');
+  chips.forEach(chip => {
+    chip.addEventListener('click', (e) => {
+      chips.forEach(c => {
+        c.classList.remove('active');
+        c.style.background = 'transparent';
+        c.style.color = '#aaa';
+      });
+      e.target.classList.add('active');
+      e.target.style.background = '#333';
+      e.target.style.color = 'white';
+      currentCategory = e.target.getAttribute('data-category');
+      applyFilters();
+    });
+  });
 });
 
 supabase.auth.onAuthStateChange((event, session) => {
+  const nav = document.getElementById('main-nav');
+  if (nav) {
+    nav.style.display = session ? 'flex' : 'none';
+  }
+  
   if (session) {
     loadData();
   } else {

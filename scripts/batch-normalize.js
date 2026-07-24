@@ -78,9 +78,11 @@ async function run() {
 
 async function normalizeChunk(merchants) {
   const prompt = `
-당신은 가맹점 명칭을 널리 쓰이는 대표 브랜드명으로 정규화하는 도우미입니다.
-다음 가맹점 목록을 보고, 널리 쓰이는 대표 브랜드명으로 정규화한 뒤 확신도(confidence)와 함께 JSON 형식으로 반환해 주세요.
+당신은 가맹점 명칭을 널리 쓰이는 대표 브랜드명과 업종 카테고리로 분류하는 도우미입니다.
+다음 가맹점 목록을 보고, 널리 쓰이는 대표 브랜드명으로 정규화하고 가장 알맞은 카테고리로 분류한 뒤 JSON 형식으로 반환해 주세요.
 확신이 서지 않는다면 원문을 그대로 유지하고 confidence를 low로 설정하세요.
+
+카테고리는 다음 중 하나를 선택하세요: 외식, 카페/베이커리, 쇼핑, 배달, 마트/편의점, 교통, 주유/차량, 통신/공과금, 의료, 여행/숙박, 뷰티/미용, 교육, 엔터/문화, 기타.
 
 목록:
 ${merchants.join('\n')}
@@ -91,6 +93,7 @@ ${merchants.join('\n')}
     {
       "original": "원문 가맹점명",
       "normalized": "정규화된 대표명",
+      "category": "분류된 카테고리",
       "confidence": "high | medium | low"
     }
   ]
@@ -133,6 +136,7 @@ ${merchants.join('\n')}
       const { error: upsertErr } = await supabase.from('merchant_aliases').upsert({
         original_name: flag.original,
         canonical_name: flag.normalized,
+        category: flag.category || '기타',
         status: status
       }, { onConflict: 'original_name' });
 

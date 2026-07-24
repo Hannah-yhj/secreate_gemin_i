@@ -142,6 +142,22 @@ export default async function handler(req, res) {
       }
 
       return res.status(200).json({ success: true });
+
+    } else if (req.method === 'DELETE') {
+      const { id } = req.query;
+      if (!id) {
+        return res.status(400).json({ error: 'Missing required field: id' });
+      }
+
+      const { error: deleteErr } = await supabase
+        .from('merchant_aliases')
+        .delete()
+        .eq('id', id);
+
+      if (deleteErr) throw deleteErr;
+
+      return res.status(200).json({ success: true });
+
     } else {
       return res.status(405).json({ error: 'Method Not Allowed' });
     }

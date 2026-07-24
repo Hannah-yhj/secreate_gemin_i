@@ -913,6 +913,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Check if we need to auto-open an edit modal
 supabase.auth.onAuthStateChange((event, session) => {
+  const nav = document.getElementById('main-nav');
+  if (nav) {
+    nav.style.display = session ? 'flex' : 'none';
+  }
+
   if (session) {
     const urlParams = new URLSearchParams(window.location.search);
     const editId = urlParams.get('edit');

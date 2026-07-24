@@ -84,6 +84,11 @@ async function loadData() {
 }
 
 supabase.auth.onAuthStateChange((event, session) => {
+  const nav = document.getElementById('main-nav');
+  if (nav) {
+    nav.style.display = session ? 'flex' : 'none';
+  }
+  
   if (session) {
     loadData();
   } else {

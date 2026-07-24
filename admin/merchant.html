@@ -47,10 +47,28 @@
         <div class="merchant-container glass-panel">
           <h2>브랜드/매장 관리 큐</h2>
           
-          <div class="tabs" style="margin-bottom: 20px;">
+          <div class="tabs" style="margin-bottom: 12px;">
             <button class="tab-btn active" data-status="pending_review">검토 대기</button>
             <button class="tab-btn" data-status="approved">정규화 사전</button>
             <button class="tab-btn" data-status="rejected">거절됨</button>
+          </div>
+          
+          <div class="filters" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; background: rgba(255,255,255,0.02); padding: 16px; border-radius: 8px; border: 1px solid #333;">
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <svg width="16" height="16" fill="none" stroke="#888" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+              <input type="text" id="searchInput" placeholder="가맹점명 또는 대표명 검색..." style="flex: 1; padding: 8px; border-radius: 4px; border: 1px solid #444; background: #222; color: white;">
+            </div>
+            <div id="categoryChips" style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button class="chip active" data-category="전체" style="padding: 4px 12px; border-radius: 16px; border: 1px solid #555; background: #333; color: white; cursor: pointer; font-size: 0.85em;">전체</button>
+              <button class="chip" data-category="외식" style="padding: 4px 12px; border-radius: 16px; border: 1px solid #555; background: transparent; color: #aaa; cursor: pointer; font-size: 0.85em;">외식</button>
+              <button class="chip" data-category="카페/베이커리" style="padding: 4px 12px; border-radius: 16px; border: 1px solid #555; background: transparent; color: #aaa; cursor: pointer; font-size: 0.85em;">카페/베이커리</button>
+              <button class="chip" data-category="쇼핑" style="padding: 4px 12px; border-radius: 16px; border: 1px solid #555; background: transparent; color: #aaa; cursor: pointer; font-size: 0.85em;">쇼핑</button>
+              <button class="chip" data-category="배달" style="padding: 4px 12px; border-radius: 16px; border: 1px solid #555; background: transparent; color: #aaa; cursor: pointer; font-size: 0.85em;">배달</button>
+              <button class="chip" data-category="마트/편의점" style="padding: 4px 12px; border-radius: 16px; border: 1px solid #555; background: transparent; color: #aaa; cursor: pointer; font-size: 0.85em;">마트/편의점</button>
+              <button class="chip" data-category="교통" style="padding: 4px 12px; border-radius: 16px; border: 1px solid #555; background: transparent; color: #aaa; cursor: pointer; font-size: 0.85em;">교통</button>
+              <button class="chip" data-category="주유/차량" style="padding: 4px 12px; border-radius: 16px; border: 1px solid #555; background: transparent; color: #aaa; cursor: pointer; font-size: 0.85em;">주유/차량</button>
+              <button class="chip" data-category="기타" style="padding: 4px 12px; border-radius: 16px; border: 1px solid #555; background: transparent; color: #aaa; cursor: pointer; font-size: 0.85em;">기타 등</button>
+            </div>
           </div>
 
           <div class="content-box" style="margin-top: 20px;">
