@@ -20,7 +20,7 @@ async function fetchAliases(status) {
   await getToken();
   if (!currentToken) throw new Error("로그인이 필요합니다.");
   
-  const res = await fetch(`${API_URL}/admin-get-merchant-aliases?status=${status}`, {
+  const res = await fetch(`${API_URL}/admin-merchant-aliases?status=${status}`, {
     headers: { 'Authorization': `Bearer ${currentToken}` }
   });
   if (!res.ok) throw new Error('조회 실패');
@@ -32,7 +32,7 @@ async function updateAlias(id, status, canonicalName) {
   await getToken();
   if (!currentToken) throw new Error("로그인이 필요합니다.");
 
-  const res = await fetch(`${API_URL}/admin-update-merchant-alias`, {
+  const res = await fetch(`${API_URL}/admin-merchant-aliases`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

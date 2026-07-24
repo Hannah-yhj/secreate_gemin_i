@@ -792,8 +792,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch('/api/admin-delete-card', {
-        method: 'POST',
+      const res = await fetch('/api/admin-card-details', {
+        method: 'DELETE',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
         body: JSON.stringify({ product_id: card.product_id, provider: card.provider, product_name: card.product_name })
       });
@@ -818,7 +818,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function handleEditCard(card) {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch(`/api/admin-get-card-details?product_id=${card.product_id}`, {
+      const res = await fetch(`/api/admin-card-details?product_id=${card.product_id}`, {
         headers: { 'Authorization': `Bearer ${session.access_token}` }
       });
       if (!res.ok) throw new Error('상세 정보 불러오기 실패');
@@ -848,8 +848,8 @@ document.addEventListener('DOMContentLoaded', () => {
       saveEditBtn.textContent = '저장 중...';
 
       const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch('/api/admin-update-card', {
-        method: 'POST',
+      const res = await fetch('/api/admin-card-details', {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
         body: JSON.stringify({ payload: parsed })
       });
