@@ -24,43 +24,37 @@ export default async function handler(req, res) {
       const { data, error } = await query;
       if (error) throw error;
       
-      // Fetch sample context for each alias
-      const aliasesWithContext = await Promise.all(data.map(async (alias) => {
-        // Find one benefit containing this original_name
-        const { data: benData } = await supabase
-          .from('benefits')
-          .select('product_id')
-          .ilike('merchants_or_scope', `%${alias.original_name}%`)
-          .limit(1);
-          
+      // OPTIMIZATION: Fetch all benefits, products, and sources once to prevent N+1 queries
+      const [{ data: allBenefits }, { data: allProducts }, { data: allSources }] = await Promise.all([
+        supabase.from('benefits').select('product_id, merchants_or_scope').not('merchants_or_scope', 'is', null),
+        supabase.from('products').select('product_id, provider, product_name, source_id'),
+        supabase.from('sources').select('source_id, source_url')
+      ]);
+
+      const productMap = {};
+      if (allProducts) allProducts.forEach(p => productMap[p.product_id] = p);
+      const sourceMap = {};
+      if (allSources) allSources.forEach(s => sourceMap[s.source_id] = s);
+
+      // Resolve context in memory
+      const aliasesWithContext = data.map(alias => {
         let sampleContext = null;
-        if (benData && benData.length > 0 && benData[0].product_id) {
-          const productId = benData[0].product_id;
-          // Find product details
-          const { data: prodData } = await supabase
-            .from('products')
-            .select('provider, product_name, source_id')
-            .eq('product_id', productId)
-            .limit(1);
-            
-          if (prodData && prodData.length > 0) {
-            const product = prodData[0];
-            let pdfUrl = null;
-            if (product.source_id) {
-              const { data: sourceData } = await supabase
-                .from('sources')
-                .select('source_url')
-                .eq('source_id', product.source_id)
-                .limit(1);
-              if (sourceData && sourceData.length > 0) {
-                pdfUrl = sourceData[0].source_url;
+        
+        if (allBenefits) {
+          const ben = allBenefits.find(b => b.merchants_or_scope.includes(alias.original_name));
+          if (ben && ben.product_id) {
+            const prod = productMap[ben.product_id];
+            if (prod) {
+              let pdfUrl = null;
+              if (prod.source_id && sourceMap[prod.source_id]) {
+                pdfUrl = sourceMap[prod.source_id].source_url;
               }
+              sampleContext = {
+                provider: prod.provider,
+                product_name: prod.product_name,
+                pdf_url: pdfUrl
+              };
             }
-            sampleContext = {
-              provider: product.provider,
-              product_name: product.product_name,
-              pdf_url: pdfUrl
-            };
           }
         }
         
@@ -68,7 +62,7 @@ export default async function handler(req, res) {
           ...alias,
           sampleContext
         };
-      }));
+      });
 
       return res.status(200).json({ aliases: aliasesWithContext });
 
@@ -133,12 +127,12 @@ export default async function handler(req, res) {
           }
         }
 
-        for (const update of updates) {
-          await supabase
+        await Promise.all(updates.map(update => 
+          supabase
             .from('benefits')
             .update({ merchants_or_scope: update.merchants_or_scope })
-            .eq('benefit_id', update.benefit_id);
-        }
+            .eq('benefit_id', update.benefit_id)
+        ));
       }
 
       return res.status(200).json({ success: true });
