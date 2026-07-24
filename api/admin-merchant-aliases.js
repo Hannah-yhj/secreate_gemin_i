@@ -41,7 +41,12 @@ export default async function handler(req, res) {
         let sampleContext = null;
         
         if (allBenefits) {
-          const ben = allBenefits.find(b => b.merchants_or_scope.includes(alias.original_name));
+          const ben = allBenefits.find(b => {
+            const matchOriginal = b.merchants_or_scope.includes(alias.original_name);
+            const matchCanonical = alias.status === 'approved' && alias.canonical_name && b.merchants_or_scope.includes(alias.canonical_name);
+            return matchOriginal || matchCanonical;
+          });
+          
           if (ben && ben.product_id) {
             const prod = productMap[ben.product_id];
             if (prod) {
