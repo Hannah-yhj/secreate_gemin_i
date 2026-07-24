@@ -3,14 +3,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { createClient } from "@supabase/supabase-js";
 import { getUpstageApiKey, getUpstageModel, loadEnv } from "../lib/load-env.js";
-import {
-  detectCategory,
-  detectBrand,
-  detectAmount,
-  findBestCards,
-  buildCandidateText,
-  wantsMembership,
-} from "../lib/engine.js";
+import { Engine } from "../lib/engine.js";
 
 loadEnv();
 
@@ -113,6 +106,88 @@ ${scope}
 ${candidateText}`;
 }
 
+async function extractEntities(message, apiKey, model) {
+  const systemPrompt = `당신은 사용자의 질문에서 결제 혜택 검색을 위한 핵심 키워드를 추출하는 AI입니다. 
+오직 JSON 형식으로만 응답해야 합니다. 다른 말은 덧붙이지 마세요.
+
+추출할 키워드:
+- brand: 사용자가 언급한 특정 브랜드나 매장 이름 (예: "스타벅스", "아웃백", "배달의민족", "넷플릭스"). 언급이 없으면 null.
+- category: 사용자가 언급한 업종 카테고리 (예: "카페", "영화", "통신", "교통", "쇼핑", "편의점", "외식"). 언급이 없으면 null.
+- amount: 예상 결제 금액 (숫자만 추출, 예: 50000). 금액 언급이 없으면 기본값 30000.
+- wantsMembership: 통신사 멤버십 할인 등 멤버십 혜택을 원하면 true, 아니면 false.
+
+응답 예시:
+{"brand": "아웃백", "category": null, "amount": 100000, "wantsMembership": false}
+{"brand": null, "category": "영화", "amount": 15000, "wantsMembership": true}`;
+
+  try {
+    const upstream = await fetch(UPSTAGE_URL, {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer " + apiKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: message }
+        ]
+      }),
+    });
+    const raw = await upstream.json();
+    let text = raw?.choices?.[0]?.message?.content?.trim() || "{}";
+    if (text.startsWith("```json")) {
+      text = text.replace(/^```json\n?/, "").replace(/\n?```$/, "");
+    }
+    const parsed = JSON.parse(text);
+    return {
+      brand: parsed.brand || null,
+      category: parsed.category || null,
+      amount: parsed.amount || 30000,
+      includeMembership: !!parsed.wantsMembership
+    };
+  } catch (e) {
+    console.error("Entity extraction failed:", e);
+    return { brand: null, category: null, amount: 30000, includeMembership: false };
+  }
+}
+
+function findBestCards(catalog, entities, topN = 3) {
+  Engine.init(catalog);
+  const wallet = catalog.products.map(p => p.product_id); // 기본적으로 모든 카드를 대상으로 검색
+  const state = { spend: {}, grade: 'VIP' }; // 최고 혜택을 보여주기 위해 실적 및 등급을 낙관적으로 가정
+  
+  const input = {
+    brand: entities.brand,
+    category: entities.category,
+    amount: entities.amount,
+    channel: null,
+    date: new Date(),
+    time: null,
+    ignoreDays: true
+  };
+  
+  const combos = Engine.buildCombos(input, state, wallet) || [];
+  return combos.slice(0, topN);
+}
+
+function buildCandidateText(candidates) {
+  if (!candidates || candidates.length === 0) return "조건에 맞는 추천 카드나 혜택이 없습니다.";
+  let text = "";
+  candidates.forEach((combo, idx) => {
+    text += `[후보 ${idx + 1}] 상품명: ${combo.product.product_name} (${combo.product.provider})\n`;
+    text += `- 총 할인/적립 예상 금액: ${Engine.won(combo.grandTotal)}\n`;
+    combo.items.forEach(item => {
+      text += `  * 혜택명: ${item.benefit.benefit_name} (${item.value > 0 ? Engine.won(item.value) : '포인트/기타'})\n`;
+      if (item.notes && item.notes.length > 0) text += `    참고사항: ${item.notes.join(', ')}\n`;
+      if (item.checks && item.checks.length > 0) text += `    확인조건: ${item.checks.join(', ')}\n`;
+    });
+    text += "\n";
+  });
+  return text.trim();
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
@@ -132,24 +207,22 @@ export default async function handler(req, res) {
     const message = String(body.message || "").trim();
     if (!message) return res.status(400).json({ error: "message가 비어 있습니다." });
 
-    /* ---- ① 질문 분석 (AI 호출 없음, Node에서 키워드로 판단) ---- */
-    const category = detectCategory(message);
-    const amount = detectAmount(message);
-    const includeMembership = wantsMembership(message);
+    /* ---- ① LLM을 이용한 질문 분석 (엔티티 추출) ---- */
+    const model = getUpstageModel();
+    const entities = await extractEntities(message, apiKey, model);
+    
+    /* ---- ② 카탈로그 로드 ---- */
     const { data: catalog, source } = await loadCatalog();
-    const brand = detectBrand(message, catalog);
 
+    /* ---- ③ Engine.buildCombos() — 규칙 기반 엔진으로 혜택액 정확히 계산 ---- */
+    const candidates = findBestCards(catalog, entities, 3);
 
-    /* ---- ③ Engine.findBestCards() — TOP3를 Node가 결정 (기본: 카드만) ---- */
-    const candidates = findBestCards(catalog, { category, brand, amount, includeMembership }, 3);
-
-    /* ---- ④ candidateText 생성 (후보 3개만, 카탈로그 전체 아님) ---- */
-    const candidateText = buildCandidateText(candidates, { category, brand, amount });
+    /* ---- ④ 설명 생성을 위한 텍스트 조립 ---- */
+    const candidateText = buildCandidateText(candidates);
 
     /* ---- ⑤ Solar-Pro: 설명만 작성 ---- */
-    const model = getUpstageModel();
     const messages = [
-      { role: "system", content: systemPrompt(candidateText, { includeMembership }) },
+      { role: "system", content: systemPrompt(candidateText, { includeMembership: entities.includeMembership }) },
       { role: "user", content: message.slice(0, 2000) },
     ];
 
@@ -176,10 +249,10 @@ export default async function handler(req, res) {
       meta: {
         model,
         dataSource: source,
-        category,
-        brand,
-        amount,
-        includeMembership,
+        category: entities.category,
+        brand: entities.brand,
+        amount: entities.amount,
+        includeMembership: entities.includeMembership,
         candidateCount: candidates.length,
         candidateProducts: candidates.map((c) => c.product_id),
       },
